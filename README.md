@@ -178,8 +178,9 @@ tools/make_key.py   mints the key: generates a real ed25519 BrAIn Key and
 tools/make_world.py builds the entity's own disk (persists across rebuilds)
 tools/body_daemon.py the tethered cognitive limb (mind pool + STT + TTS + lens)
 key/brain_key.json  the private seed (chmod 600 — one key, one owner)
-brainos-key.img     the universal boot medium (§9.1):
-                p1 BRAINOS-BOOT   FAT16 ESP: /EFI/BOOT/BOOTX64.EFI + BOOTAA64.EFI,
+brainos-key.img     the boot medium (§9.1) — universal only if built --arm:
+                p1 BRAINOS-BOOT   FAT16 ESP: /EFI/BOOT/BOOTX64.EFI (+ BOOTAA64.EFI
+                                  when the key was built for both arches),
                                   /BRAIN/KEY.PUB, /BRAIN/GENESIS.TXT,
                                   the CRC-sealed two-slot memory journal
                                   (EPI_A/EPI_B, NOTE_A/NOTE_B) and BOOT.LOG
@@ -193,8 +194,25 @@ brainos-world.img   the entity's files — a SEPARATE disk, so a growing file
 ## Build
 
 ```sh
-./build.sh          # needs rustup targets x86_64-unknown-uefi + aarch64-unknown-uefi
+./build.sh          # x86_64 only (default) — needs rustup target x86_64-unknown-uefi
+./build.sh --arm    # x86_64 + aarch64 — also needs rustup target aarch64-unknown-uefi
 ```
+
+aarch64 is opt-in so the everyday loop stays fast and does not require the
+aarch64 target to be installed at all. **A default build produces an
+x86_64-only key, which will not boot a Pi 5 or a Jetson.** You do not have to
+remember which mode you used: the key says so when it is minted, in its own
+`README.TXT`, and in p2's `MANIFEST.TXT`.
+
+```
+key minted: brainos-key.img (86 MiB)
+  arches: x86_64 ONLY
+  WARNING: this key will NOT boot aarch64 devices (Pi 5 / Jetson Orin).
+  rebuild with ./build.sh --arm for a universal key.
+```
+
+Build `--arm` for anything that leaves this machine — a demo, a board, a
+stick you hand to someone.
 
 ## Write it to a USB stick
 
@@ -207,6 +225,8 @@ Then plug it into any machine: boot menu (usually F12/F10/ESC at power-on),
 pick the USB device, **UEFI mode, Secure Boot off**. x86_64 laptops boot
 `BOOTX64.EFI`; aarch64 boards with UEFI firmware (Pi 5 with the EDK2
 firmware, Jetson with UEFI) boot `BOOTAA64.EFI` — same key, same entity.
+That second half only holds for a key built with `--arm`; check `README.TXT`
+on the stick if you are not sure what you are holding.
 
 ## Tested
 

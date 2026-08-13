@@ -5,7 +5,7 @@ make_key.py — mint a BrAIn Key (BrAInOS Architecture §9).
 Builds a universal-boot USB image, pure Python, no root, no mtools:
 
   GPT
-   ├─ p1  BRAINOS-BOOT    64 MiB FAT16 ESP   /EFI/BOOT/BOOTX64.EFI + BOOTAA64.EFI
+   ├─ p1  BRAINOS-BOOT    64 MiB FAT16 ESP   /EFI/BOOT/BOOTX64.EFI [+ BOOTAA64.EFI]
    │                                          /BRAIN/KEY.PUB  /BRAIN/GENESIS.TXT
    ├─ p2  BRAINOS-CORE    16 MiB FAT16       portable core payloads, one per arch
    └─ p3  BRAINOS-SECURE   4 MiB raw         brain_key (ed25519, software-emulated
@@ -13,6 +13,11 @@ Builds a universal-boot USB image, pure Python, no root, no mtools:
 
 The firmware is the sweep: it picks BOOTX64.EFI or BOOTAA64.EFI by its own
 architecture (§9.2). One key, one owner, one entity.
+
+--arch=x86_64|aarch64|both|auto selects which cores ride along (default auto:
+whatever has been built). A key carrying only one arch is NOT universal — it
+says so in its own README.TXT, in p2's MANIFEST.TXT, and on stdout at mint
+time, so a laptop-only key can never be mistaken for one that boots a Pi.
 """
 
 import hashlib
@@ -418,11 +423,37 @@ def main():
     out_path = args[0] if args else os.path.join(root, "brainos-key.img")
     x64 = os.path.join(root, "core/target/x86_64-unknown-uefi/release/brainos.efi")
     a64 = os.path.join(root, "core/target/aarch64-unknown-uefi/release/brainos.efi")
-    for p in (x64, a64):
-        if not os.path.exists(p):
-            sys.exit(f"missing {p} — build the core first (see build.sh)")
-    core_x64 = open(x64, "rb").read()
-    core_a64 = open(a64, "rb").read()
+
+    # Which arches go on the key. build.sh states this explicitly so a stale
+    # binary from an earlier build can never smuggle itself onto a key that
+    # was not asked for it; a bare invocation falls back to whatever exists.
+    arch_arg = next(
+        (a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--arch=")),
+        "auto",
+    )
+    if arch_arg not in ("auto", "x86_64", "aarch64", "both"):
+        sys.exit(f"--arch must be auto, x86_64, aarch64 or both (got {arch_arg!r})")
+    if arch_arg == "auto":
+        want_x64 = os.path.exists(x64)
+        want_a64 = os.path.exists(a64)
+    else:
+        want_x64 = arch_arg in ("x86_64", "both")
+        want_a64 = arch_arg in ("aarch64", "both")
+
+    for want, p, tgt in ((want_x64, x64, "x86_64"), (want_a64, a64, "aarch64")):
+        if want and not os.path.exists(p):
+            sys.exit(
+                f"missing {p} — build the core for {tgt} first.\n"
+                f"  ./build.sh{'' if tgt == 'x86_64' else ' --arm'}\n"
+                f"(needs: rustup target add {tgt}-unknown-uefi)"
+            )
+    if not (want_x64 or want_a64):
+        sys.exit("no core binaries built — run ./build.sh first")
+
+    core_x64 = open(x64, "rb").read() if want_x64 else None
+    core_a64 = open(a64, "rb").read() if want_a64 else None
+    arch_names = [n for n, w in (("x86_64", want_x64), ("aarch64", want_a64)) if w]
+    universal = want_x64 and want_a64
 
     # --- identity: same entity across rebuilds unless told otherwise ---
     kpath0 = os.path.join(root, "key", "brain_key.json")
@@ -478,20 +509,41 @@ def main():
         "the seed of a state graph.\r\n"
     ).encode()
 
+    # The key states its own reach, so months later you can plug it in and
+    # read what it actually carries instead of trusting your memory of it.
+    if universal:
+        reach = (
+            "BRAINOS BRAIN KEY - universal boot media\r\n"
+            "\r\n"
+            "arches on this key: x86_64 + aarch64 (universal)\r\n"
+            "\r\n"
+            "plug into any UEFI machine (x86_64 or aarch64), boot from USB,\r\n"
+            "secure boot off. the firmware picks the right core by itself.\r\n"
+        )
+    else:
+        only = arch_names[0]
+        other = "aarch64" if only == "x86_64" else "x86_64"
+        reach = (
+            f"BRAINOS BRAIN KEY - {only}-only boot media\r\n"
+            "\r\n"
+            f"arches on this key: {only} ONLY\r\n"
+            f"this key will NOT boot {other} machines. rebuild with\r\n"
+            "./build.sh --arm for a universal key.\r\n"
+            "\r\n"
+            f"plug into a {only} UEFI machine, boot from USB, secure boot off.\r\n"
+        )
     readme = (
-        "BRAINOS BRAIN KEY - universal boot media\r\n"
-        "\r\n"
-        "plug into any UEFI machine (x86_64 or aarch64), boot from USB,\r\n"
-        "secure boot off. the firmware picks the right core by itself.\r\n"
-        "the entity wakes, warms the room, and says BRAINOS.\r\n"
+        reach + "the entity wakes, warms the room, and says BRAINOS.\r\n"
     ).encode()
 
     # --- partition 1: ESP ---
     esp = Fat16(64 * 1024 * 2, 4, "BRAINOS EFI", hidden=2048)
     esp.mkdir("EFI")
     esp.mkdir("EFI/BOOT")
-    esp.add_file("EFI/BOOT/BOOTX64.EFI", core_x64)
-    esp.add_file("EFI/BOOT/BOOTAA64.EFI", core_a64)
+    if core_x64 is not None:
+        esp.add_file("EFI/BOOT/BOOTX64.EFI", core_x64)
+    if core_a64 is not None:
+        esp.add_file("EFI/BOOT/BOOTAA64.EFI", core_a64)
     esp.mkdir("BRAIN")
     esp.add_file("BRAIN/KEY.PUB", (pub.hex() + "\r\n").encode())
     # phase 0: the seed rides the ESP so the core can sign (software-
@@ -509,14 +561,19 @@ def main():
 
     # --- partition 2: core payloads, one per supported arch (§9.1) ---
     corefs = Fat16(16 * 1024 * 2, 1, "BRAINOSCORE")
-    corefs.add_file("CORE_X64.EFI", core_x64)
-    corefs.add_file("CORE_A64.EFI", core_a64)
-    corefs.add_file(
-        "MANIFEST.TXT",
-        b"portable_core.x86_64 -> CORE_X64.EFI\r\n"
-        b"portable_core.aarch64 -> CORE_A64.EFI\r\n"
-        b"one source, compiled per target. cognition never touches an ISA.\r\n",
+    manifest = ""
+    if core_x64 is not None:
+        corefs.add_file("CORE_X64.EFI", core_x64)
+        manifest += "portable_core.x86_64 -> CORE_X64.EFI\r\n"
+    if core_a64 is not None:
+        corefs.add_file("CORE_A64.EFI", core_a64)
+        manifest += "portable_core.aarch64 -> CORE_A64.EFI\r\n"
+    manifest += (
+        f"arches: {' + '.join(arch_names)}"
+        f"{' (universal)' if universal else ' ONLY — not universal'}\r\n"
+        "one source, compiled per target. cognition never touches an ISA.\r\n"
     )
+    corefs.add_file("MANIFEST.TXT", manifest.encode())
 
     # --- partition 3: secure area (software-emulated, phase 0) ---
     secure = json.dumps(key_record, indent=2).encode()
@@ -532,6 +589,18 @@ def main():
     with open(out_path, "wb") as f:
         f.write(img)
     print(f"key minted: {out_path} ({len(img)//(1024*1024)} MiB)")
+    # Say plainly what this key can boot. Nobody should have to remember
+    # which mode they built in — least of all in front of an audience.
+    if universal:
+        print("  arches: x86_64 + aarch64 (universal)")
+        print("  boots UEFI machines of either architecture.")
+    else:
+        only = arch_names[0]
+        other = "aarch64" if only == "x86_64" else "x86_64"
+        print(f"  arches: {only} ONLY")
+        print(f"  WARNING: this key will NOT boot {other} devices"
+              f"{' (Pi 5 / Jetson Orin)' if other == 'aarch64' else ''}.")
+        print("  rebuild with ./build.sh --arm for a universal key.")
     print(f"entity id (ed25519 pub): {pub.hex()[:16]}...{pub.hex()[-8:]}")
     print(f"private seed kept at:    {kpath}  (chmod 600 — guard it)")
     print("\nwrite it to a USB stick (DOUBLE-CHECK the device!):")

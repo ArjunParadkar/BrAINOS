@@ -8,7 +8,10 @@ should claim them done until they physically happened).
 ## What is being booted
 
 `brainos-key.img` — GPT image: ESP (BOOTX64.EFI + BOOTAA64.EFI, firmware
-picks by arch) + data partition + sealed key record. The world disk
+picks by arch) + data partition + sealed key record. **Build it with
+`./build.sh --arm`** — a default build is x86_64-only and will not boot an
+aarch64 board. The key states its own reach in `README.TXT` and in p2's
+`MANIFEST.TXT`; check that before you walk to the hardware. The world disk
 (`brainos-world.img`) can ride on a second USB stick, or stay home: the
 core incorporates the filesystem limb only if a volume whose `WORLD.ID`
 *content* matches is present (VERIFIED in VM; a decoy volume with a fake
