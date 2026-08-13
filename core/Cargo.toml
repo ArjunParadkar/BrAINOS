@@ -1,0 +1,19 @@
+[package]
+name = "brainos-core"
+version = "0.2.0"
+edition = "2021"
+
+[[bin]]
+name = "brainos"
+path = "src/main.rs"
+
+[dependencies]
+# the portable mind: identity, KIRA, memory, cognition — the same rlib
+# the host-side regression/adversarial suites test (../mind/tests)
+brainos-mind = { path = "../mind" }
+
+[profile.release]
+panic = "abort"
+lto = true
+opt-level = "s"
+codegen-units = 1

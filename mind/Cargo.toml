@@ -1,0 +1,19 @@
+[package]
+name = "brainos-mind"
+version = "0.2.0"
+edition = "2021"
+
+# The portable mind: identity, KIRA, the state graph, the experience loop,
+# the script interpreter, proposal parsing, and the memory journal. Pure
+# no_std logic with zero firmware dependencies — the exact same rlib links
+# into the UEFI core and into the host test suite, so what the tests prove
+# is what the entity runs.
+
+[lib]
+doctest = false
+
+[dependencies]
+# the BrAIn Key is real cryptography, not theater
+ed25519-dalek = { version = "2", default-features = false }
+
+[dev-dependencies]
