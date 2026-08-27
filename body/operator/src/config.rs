@@ -59,9 +59,17 @@ pub struct AnthropicCfg {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default)]
 pub struct VoiceCfg {
+    pub whisper_bin: String,
     pub whisper_model: String,
+    pub whisper_threads: u32,
+    pub piper_bin: String,
     pub piper_voice: String,
+    /// default length for the `voice.listen` hand
     pub record_seconds: u32,
+    /// a push-to-talk that is never released stops here
+    pub max_record_seconds: u32,
+    /// speak replies to voice-initiated turns aloud
+    pub speak_replies: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -136,9 +144,14 @@ impl Default for AnthropicCfg {
 impl Default for VoiceCfg {
     fn default() -> Self {
         VoiceCfg {
+            whisper_bin: "/usr/bin/whisper-cli".into(),
             whisper_model: "/opt/brainos/models/ggml-base.en.bin".into(),
-            piper_voice: "/opt/brainos/voices/en_US-amy-medium.onnx".into(),
+            whisper_threads: 4,
+            piper_bin: "/opt/brainos/piper/piper".into(),
+            piper_voice: "/opt/brainos/voices/en_US-lessac-medium.onnx".into(),
             record_seconds: 5,
+            max_record_seconds: 30,
+            speak_replies: true,
         }
     }
 }

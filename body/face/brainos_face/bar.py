@@ -54,6 +54,10 @@ class Bar:
         exp.append(self.keybox)
 
         # streaming reply
+        # what the ears heard (the human's own line, shown above the reply)
+        self.heard = Gtk.Label(xalign=0, wrap=True, wrap_mode=Pango.WrapMode.WORD_CHAR, selectable=True)
+        self.heard.add_css_class("heard"); self.heard.set_max_width_chars(60); self.heard.set_visible(False)
+        exp.append(self.heard)
         self.reply = Gtk.Label(xalign=0, wrap=True, wrap_mode=Pango.WrapMode.WORD_CHAR, selectable=True, use_markup=True)
         self.reply.add_css_class("reply"); self.reply.set_max_width_chars(60)
         self.reply_scroll = Gtk.ScrolledWindow(); self.reply_scroll.add_css_class("reply-scroll")
@@ -106,7 +110,7 @@ class Bar:
         text = self.entry.get_text().strip()
         if not text: return
         self.send({"t": "utter", "text": text}); self.entry.set_text("")
-        self.reply_id = None; self._set_reply(""); self.expand()
+        self.heard.set_visible(False); self.reply_id = None; self._set_reply(""); self.expand()
     def _ptt(self, on):
         self.send({"t": "ptt", "on": bool(on)})
         if on: self.expand()
@@ -136,7 +140,7 @@ class Bar:
         if force: self.collapse()
         else: self._schedule_collapse()
     def _anything(self):
-        return any(x.get_visible() for x in (self.keybox, self.reply_scroll, self.task, self.ledger))
+        return any(x.get_visible() for x in (self.keybox, self.heard, self.reply_scroll, self.task, self.ledger))
 
     # ── operator messages ───────────────────────────────────────────────────
     def on_conn(self, up):
@@ -168,6 +172,13 @@ class Bar:
             self.reply.set_markup(""); self.reply_scroll.set_visible(False)
     def _scroll_end(self):
         adj = self.reply_scroll.get_vadjustment(); adj.set_value(adj.get_upper() - adj.get_page_size()); return False
+
+    def on_heard(self, m):
+        text = (m.get("text") or "").strip()
+        self.heard.set_label("\u201c" + text + "\u201d" if text else "")
+        self.heard.set_visible(bool(text))
+        self._set_reply("")          # a new voice turn starts a fresh reply
+        self.expand()
 
     def on_say(self, m):
         sid = m.get("id"); text = m.get("text", "") or ""

@@ -51,6 +51,7 @@ def css():
     .tier {{ color: {DIM}; font-size: 10px; letter-spacing: 2px; font-weight: 700; }}
     .reply {{ color: {FG}; font-size: 17px; line-height: 1.35; padding: 8px 14px 4px 14px; }}
     .reply-scroll {{ background: transparent; }}
+    .heard {{ color: {DIM}; font-size: 15px; font-style: italic; padding: 8px 14px 0 14px; }}
     .ledger {{ padding: 4px 14px 6px 14px; }}
     .chip {{
         background: rgba({A}, 0.10); border: 1px solid rgba({A}, 0.22); border-radius: 9px;

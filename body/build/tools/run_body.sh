@@ -13,6 +13,8 @@
 #   --graphical  force gtk gl display (default when a DISPLAY is present)
 #   --ssh-port N host-forward for guest sshd (default 2222)
 #   --mem G --smp N
+#   --audio-wav F  capture everything the guest plays to host wav F (default: a
+#                  silent dummy backend; the HDA card is present either way)
 set -euo pipefail
 SELF="$(readlink -f "$0")"
 cd "$(dirname "$SELF")"
@@ -22,7 +24,7 @@ REPO="$(cd ../../.. && pwd)"
 WORK="$BUILD/work"
 QLOCAL="$REPO/tools/qemu-local"
 
-MODE_DIRECT=0 HEADLESS=0 GRAPHICAL=-1 SSH_PORT=2222 MEM=4G SMP=8 SERIAL_LOG=""
+MODE_DIRECT=0 HEADLESS=0 GRAPHICAL=-1 SSH_PORT=2222 MEM=4G SMP=8 SERIAL_LOG="" AUDIO_WAV=""
 BODY="" EFI="" IMG=""
 while [ $# -gt 0 ]; do case "$1" in
   --headless)  HEADLESS=1 ;;
@@ -33,6 +35,7 @@ while [ $# -gt 0 ]; do case "$1" in
   --serial-log) SERIAL_LOG="$2"; HEADLESS=1; shift ;;
   --mem)       MEM="$2"; shift ;;
   --smp)       SMP="$2"; shift ;;
+  --audio-wav) AUDIO_WAV="$2"; shift ;;
   -h|--help)   sed -n '2,20p' "$SELF" | sed 's/^# \{0,1\}//'; exit 0 ;;
   -*)          echo "run_body.sh: unknown option '$1'" >&2; exit 2 ;;
   *)           IMG="$1" ;;
@@ -113,9 +116,16 @@ COMMON=(
   -device virtio-net-pci,netdev=n
   -device qemu-xhci -device usb-tablet
   -vga none
-  -audiodev none,id=snd
   -rtc base=utc
 )
+# Sound card: the body's ears and mouth (PipeWire -> snd_hda_intel) need a real
+# HDA codec. `wav` backend writes guest playback to a host file for the harness.
+if [ -n "$AUDIO_WAV" ]; then
+  COMMON+=(-audiodev "wav,id=snd,path=$AUDIO_WAV")
+else
+  COMMON+=(-audiodev none,id=snd)
+fi
+COMMON+=(-device intel-hda -device hda-duplex,audiodev=snd)
 
 if [ "$GRAPHICAL" = "1" ]; then
   echo ">> booting GRAPHICAL (bochs-display DRM, gtk, software render). ssh: 127.0.0.1:${SSH_PORT}"

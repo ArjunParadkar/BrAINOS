@@ -70,6 +70,7 @@ class Face:
         t = m.get("t")
         if t == "state": self.bar.set_state(m.get("mode", "idle"), m.get("tier"))
         elif t == "say": self.bar.on_say(m)
+        elif t == "heard": self.bar.on_heard(m)
         elif t == "act": self.bar.on_act(m)
         elif t == "surface": self.surfaces.handle(m)
         elif t == "teach":

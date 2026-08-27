@@ -12,6 +12,15 @@ pub async fn open(input: &Value, ctx: &HandCtx) -> String {
     // bare binary. The app is spawned DETACHED and never awaited: opening an
     // app must cost the operator milliseconds, not the app's lifetime.
     let norm = |x: &str| x.to_ascii_lowercase().chars().filter(|c| c.is_ascii_alphanumeric()).collect::<String>();
+    // generic requests ("the terminal", "a browser") name a role, not an app;
+    // the role resolves through GenericName= or, failing that, the body's own default
+    let (name, role_default) = match norm(&name).as_str() {
+        "terminal" | "shell" | "console" => ("terminal".to_string(), Some("foot")),
+        "browser" | "web" | "internet" => ("browser".to_string(), Some("chromium")),
+        "files" | "filemanager" | "explorer" => ("file manager".to_string(), None),
+        "editor" | "texteditor" => ("editor".to_string(), None),
+        _ => (name, None),
+    };
     let lower = name.to_ascii_lowercase();
     let want = norm(&name);
     let want_nognome = want.trim_start_matches("gnome").to_string();
@@ -32,6 +41,9 @@ pub async fn open(input: &Value, ctx: &HandCtx) -> String {
                 let nn = norm(n);
                 nn == want || nn == want_nognome || (want.len() >= 4 && nn.contains(&want))
             }).unwrap_or(false));
+            // role match: GenericName=Terminal / Web Browser / File Manager …
+            let name_match = name_match || (role_default.is_some() || want.len() >= 4)
+                && text.lines().any(|l| l.strip_prefix("GenericName=").map(|g| norm(g).contains(&want)).unwrap_or(false));
             if id_match || name_match {
                 if let Some(exec) = text.lines().find_map(|l| l.strip_prefix("Exec=")) {
                     let argv: Vec<String> = exec.split_whitespace()
@@ -44,7 +56,7 @@ pub async fn open(input: &Value, ctx: &HandCtx) -> String {
         }
         if cmd.is_some() { break; }
     }
-    let argv = cmd.unwrap_or_else(|| vec![name.clone()]);
+    let argv = cmd.unwrap_or_else(|| vec![role_default.map(str::to_string).unwrap_or_else(|| name.clone())]);
     let mut c = std::process::Command::new(&argv[0]);
     c.args(&argv[1..])
         .stdin(std::process::Stdio::null())

@@ -23,6 +23,8 @@ pub enum OpMsg {
     Surface { name: String, #[serde(skip_serializing_if = "Option::is_none")] html: Option<String>, #[serde(skip_serializing_if = "Option::is_none")] close: Option<bool> },
     Teach { #[serde(skip_serializing_if = "Option::is_none")] x: Option<i32>, #[serde(skip_serializing_if = "Option::is_none")] y: Option<i32>, #[serde(skip_serializing_if = "Option::is_none")] w: Option<i32>, #[serde(skip_serializing_if = "Option::is_none")] h: Option<i32>, #[serde(skip_serializing_if = "Option::is_none")] caption: Option<String>, #[serde(skip_serializing_if = "Option::is_none")] clear: Option<bool> },
     Task { id: u64, title: String, steps: Vec<TaskStep>, done: bool },
+    /// What the ears made of the last push-to-talk (the human's own line).
+    Heard { text: String },
     NeedKey,
 }
 

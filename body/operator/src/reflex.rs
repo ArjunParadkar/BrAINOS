@@ -137,12 +137,14 @@ fn compiled_rules() -> &'static Vec<(Regex, &'static Rule)> {
 /// Try to match `text` against the reflex table.
 /// Returns `Some(ReflexIntent)` on match, `None` to escalate.
 pub fn match_intent(text: &str) -> Option<ReflexIntent> {
-    let text = text.trim();
+    let text = normalize_utterance(text);
     let rules = compiled_rules();
     for (re, rule) in rules {
-        if let Some(caps) = re.captures(text) {
+        if let Some(caps) = re.captures(&text) {
             let target = if rule.target_group {
-                caps.get(1).map(|m| m.as_str().trim().to_string()).unwrap_or_default()
+                let raw = caps.get(1).map(|m| m.as_str()).unwrap_or_default();
+                // typed text is payload, not a name: keep it verbatim
+                if rule.verb == "input.type" { raw.to_string() } else { normalize_target(raw) }
             } else {
                 rule.target_literal.to_string()
             };
@@ -150,6 +152,37 @@ pub fn match_intent(text: &str) -> Option<ReflexIntent> {
         }
     }
     None
+}
+
+/// Speech arrives punctuated and capitalised ("Open the terminal."); typed text
+/// arrives however the human felt like typing it. Both must hit the same rule.
+pub fn normalize_utterance(text: &str) -> String {
+    let mut t: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    // a fully quoted utterance ("Lock the screen.") loses its quotes
+    let quoted = |c: char| matches!(c, '"' | '\u{201c}' | '\u{201d}');
+    if t.chars().next().map_or(false, quoted) && t.chars().last().map_or(false, quoted) && t.chars().count() > 2 {
+        t = t.trim_start_matches(quoted).trim_end_matches(quoted).to_string();
+    }
+    let strip_end = |x: &str| x.trim_end_matches(|c: char| matches!(c, '.' | '!' | '?' | ',' | ';' | ':')).trim_end().to_string();
+    t = strip_end(&t);
+    // "please" at either end never changes the intent
+    if t.len() > 7 && t[..7].eq_ignore_ascii_case("please ") { t = t[7..].trim_start_matches(',').trim().to_string(); }
+    let lower = t.to_ascii_lowercase();
+    if let Some(stem) = lower.strip_suffix("please") {
+        if stem.is_empty() || stem.ends_with(' ') || stem.ends_with(',') {
+            t = strip_end(&t[..stem.len()]);
+        }
+    }
+    t.trim().to_string()
+}
+
+/// Captured targets lose their article: "the terminal" -> "terminal".
+fn normalize_target(raw: &str) -> String {
+    let t = raw.trim().trim_end_matches(|c: char| matches!(c, '.' | '!' | '?' | ','));
+    let t = ["the ", "a ", "an ", "my ", "up "].iter()
+        .find_map(|a| t.strip_prefix(a))
+        .unwrap_or(t);
+    t.trim().to_string()
 }
 
 /// Whether a power verb needs confirmation (unless "now" is in the utterance).
@@ -177,6 +210,18 @@ mod tests {
 
     fn no_match(text: &str) {
         assert!(match_intent(text).is_none(), "Expected no match for {:?}", text);
+    }
+
+    #[test]
+    fn test_spoken_forms() {
+        // whisper output: capitalised, punctuated, articled
+        check("Open the terminal.", "app.open", "terminal");
+        check("What time is it?", "sys.time", "");
+        check("Close Firefox, please.", "app.close", "Firefox");
+        check("please open Firefox", "app.open", "Firefox");
+        check(r#"type "Hello, World.""#, "input.type", "Hello, World.");
+        check("  turn the volume down a bit!  ", "sys.volume", "down");
+        assert_eq!(normalize_utterance("\u{201c}Lock the screen.\u{201d}"), "Lock the screen");
     }
 
     #[test]

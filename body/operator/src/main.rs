@@ -23,6 +23,7 @@ mod kira_gate;
 mod persona;
 mod reflex;
 mod sse;
+mod voice;
 
 use config::Config;
 use ipc::{FaceMsg, IpcServer, OpMsg};
@@ -99,12 +100,16 @@ async fn main() -> Result<()> {
     let scratch_dir = PathBuf::from(&config.task.scratchpad);
     std::fs::create_dir_all(&scratch_dir).ok();
 
+    let voice = Arc::new(voice::Voice::new(config.clone()));
+    tracing::info!("[voice] ears={} mouth={}", voice.has_ears(), voice.has_mouth());
+
     let hand_ctx = Arc::new(hands::HandCtx {
         config: config.clone(),
         instance: shared.clone(),
         ipc_tx: ipc_tx.clone(),
         brain_dir: brain_dir.clone(),
         scratch_dir: scratch_dir.clone(),
+        voice: voice.clone(),
     });
 
     // SIGTERM: save journal
@@ -139,56 +144,65 @@ async fn main() -> Result<()> {
 
         let Some(msg) = face_rx.recv().await else { break; };
 
+        // (text, spoken): what to run through the tiers this iteration, and whether
+        // it arrived by voice (then the reply goes back out by voice too).
+        let mut turn: Option<(String, bool)> = None;
+
         match msg {
             FaceMsg::Utter { text } => {
                 let text = text.trim().to_string();
                 if text.is_empty() { continue; }
-                tracing::info!("[utter] {:?}", text);
-                say_id += 1;
+                turn = Some((text, false));
+            }
 
-                // reset cancel
-                let _ = cancel_tx.send(false);
-
-                handle_utter(
-                    &text,
-                    say_id,
-                    &config,
-                    &api_key,
-                    &available_verbs,
-                    &shared,
-                    &history,
-                    &fast_tier,
-                    &deliberate_tier,
-                    &hand_ctx,
-                    &ipc_tx,
-                    &cancel_rx,
-                )
-                .await;
-
-                // record episode
-                {
-                    let mut g = shared.lock().unwrap();
-                    let tick = g.tick;
-                    g.state.add(
-                        NodeKind::Episode,
-                        format!("utterance: {}", text.chars().take(80).collect::<String>()),
-                        80,
-                        tick,
-                    );
+            FaceMsg::Ptt { on: true } => {
+                if !voice.has_ears() {
+                    ipc::send(&ipc_tx, &OpMsg::Say {
+                        id: say_id, text: "I have no ears on this body (no recorder or whisper model).".into(),
+                        delta: false, done: true,
+                    });
+                    continue;
+                }
+                voice.stop_speaking().await;
+                match voice.start_recording().await {
+                    Ok(()) => ipc::send_state(&ipc_tx, "listening", "reflex"),
+                    Err(e) => {
+                        tracing::warn!("[voice] {e}");
+                        ipc::send(&ipc_tx, &OpMsg::Say { id: say_id, text: format!("my ears failed: {e}"), delta: false, done: true });
+                    }
                 }
             }
 
-            FaceMsg::Ptt { on } => {
-                if on {
-                    ipc::send_state(&ipc_tx, "listening", "reflex");
-                } else {
+            FaceMsg::Ptt { on: false } => {
+                if !voice.is_recording().await {
                     ipc::send_state(&ipc_tx, "idle", "reflex");
+                    continue;
+                }
+                ipc::send_state(&ipc_tx, "thinking", "reflex");
+                let t0 = std::time::Instant::now();
+                match voice.stop_and_transcribe().await {
+                    voice::Listen::Heard(text) => {
+                        tracing::info!("[voice] heard {:?} in {} ms", text, t0.elapsed().as_millis());
+                        ipc::send(&ipc_tx, &OpMsg::Heard { text: text.clone() });
+                        turn = Some((text, true));
+                    }
+                    voice::Listen::Silence => {
+                        tracing::info!("[voice] silence ({} ms)", t0.elapsed().as_millis());
+                        ipc::send_state(&ipc_tx, "idle", "reflex");
+                    }
+                    voice::Listen::Failed(e) => {
+                        tracing::warn!("[voice] {e}");
+                        ipc::send(&ipc_tx, &OpMsg::Say { id: say_id, text: format!("my ears failed: {e}"), delta: false, done: true });
+                        ipc::send_state(&ipc_tx, "idle", "reflex");
+                    }
                 }
             }
 
             FaceMsg::Cancel => {
                 tracing::info!("[operator] cancel");
                 let _ = cancel_tx.send(true);
+                voice.abort_recording().await;
+                voice.stop_speaking().await;
                 ipc::send_state(&ipc_tx, "idle", "reflex");
             }
 
@@ -213,9 +227,86 @@ async fn main() -> Result<()> {
                 tracing::debug!("[ipc] surface_event {name}/{event}: {data}");
             }
         }
+
+        if let Some((text, spoken)) = turn {
+            tracing::info!("[utter] {:?}{}", text, if spoken { " (voice)" } else { "" });
+            say_id += 1;
+
+            // voice in -> voice out: gather this turn's `say` off the broadcast as it
+            // streams, so the mouth gets the whole reply once the tiers are done.
+            let capture = if spoken && config.voice.speak_replies && voice.has_mouth() {
+                let buf = Arc::new(Mutex::new(String::new()));
+                Some((buf.clone(), tokio::spawn(collect_say(ipc_tx.subscribe(), say_id, buf))))
+            } else { None };
+
+            // reset cancel
+            let _ = cancel_tx.send(false);
+
+            handle_utter(
+                &text,
+                say_id,
+                &config,
+                &api_key,
+                &available_verbs,
+                &shared,
+                &history,
+                &fast_tier,
+                &deliberate_tier,
+                &hand_ctx,
+                &ipc_tx,
+                &cancel_rx,
+            )
+            .await;
+
+            // record episode
+            {
+                let mut g = shared.lock().unwrap();
+                let tick = g.tick;
+                g.state.add(
+                    NodeKind::Episode,
+                    format!("utterance: {}", text.chars().take(80).collect::<String>()),
+                    80,
+                    tick,
+                );
+            }
+        
+
+            if let Some((buf, task)) = capture {
+                // let the final `say` land on the broadcast, then stop collecting
+                tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                task.abort();
+                let reply = buf.lock().unwrap().clone();
+                if !reply.trim().is_empty() && !*cancel_rx.borrow() {
+                    match voice.speak(&reply).await {
+                        Ok(_) => tracing::info!("[voice] speaking {} chars", reply.len()),
+                        Err(e) => tracing::warn!("[voice] mouth failed: {e}"),
+                    }
+                }
+            }
+        }
     }
 
     Ok(())
+}
+
+/// Accumulate the text of every `say` for `say_id` into `buf` until aborted.
+/// Deltas append; whole messages (reflex/fast send one non-delta `say`) are
+/// joined with a space.
+async fn collect_say(mut rx: broadcast::Receiver<String>, say_id: u64, buf: Arc<Mutex<String>>) {
+    loop {
+        match rx.recv().await {
+            Ok(line) => {
+                if let Ok(OpMsg::Say { id, text: t, delta, .. }) = serde_json::from_str::<OpMsg>(&line) {
+                    if id != say_id || t.is_empty() { continue; }
+                    let mut b = buf.lock().unwrap();
+                    if !delta && !b.is_empty() { b.push(' '); }
+                    b.push_str(&t);
+                }
+            }
+            Err(broadcast::error::RecvError::Lagged(_)) => continue,
+            Err(broadcast::error::RecvError::Closed) => break,
+        }
+    }
 }
 
 async fn handle_utter(

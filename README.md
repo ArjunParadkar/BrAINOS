@@ -173,7 +173,7 @@ cd body/operator && cargo build --release      # the operator binary
 ./build.sh --body body/build/work/out/body.ext4 \
            --body-efi body/build/work/out/BODY.EFI \
            --api-key-file ~/.brainos_api_key   # → brainos.img (≈6.3 GB)
-body/build/tools/stick_test.sh                 # seed → incorporate → body, 17 checks
+body/build/tools/stick_test.sh                 # seed → incorporate → body → voice loop → surface, 27 checks
 body/build/tools/run_body.sh --graphical       # watch it with a screen
 ```
 
@@ -302,7 +302,7 @@ valid PE32+/ARM64 EFI application from the identical source.
 | `cd body/operator && cargo test` | the operator: reflex table, KIRA gate on every hand, CDP error paths, BSEC key records, config | — |
 | `body/operator/tests/fake_face.py` | a live operator on a socket: reflex ms, notes, KIRA denial of `rm -rf /`, a real Fable tool loop | API key |
 | `body/build/tools/body_smoke.sh` | the body alone in QEMU: units, llama, ydotoold, hyprland, operator, chromium CDP, whisper, piper | docker build |
-| `body/build/tools/stick_test.sh` | the production stick: seed banner, KIRA incorporate, no fallback, Linux login, p1/p3 wiring, every service, a reflex turn over IPC | docker build |
+| `body/build/tools/stick_test.sh` | the production stick: seed banner, KIRA incorporate, no fallback, Linux login, p1/p3 wiring, every service, a reflex turn over IPC, **a spoken turn** (real audio through the guest's PipeWire graph: piper-synthesised prompt → push-to-talk via the face → whisper → tiers → piper reply → HDA card, captured host-side as `guest-audio.wav`), **a built surface** (deliberate tier `ui.build` → WebKitGTK panel on a Hyprland layer, `grim` screenshot pulled to `work/out/surface.png`) | docker build |
 
 ## What this is not (yet)
 
@@ -318,10 +318,11 @@ valid PE32+/ARM64 EFI application from the identical source.
 - **`code.run` in the seed is a real interpreter, not a language runtime.**
   The Stage 3 body has a full Linux underneath the operator; the seed alone
   still has no Python or JS.
-- **Stage 3 voice is installed, not yet exercised end to end:** whisper-cli
-  and piper are in the body and answer `--help`, but the mic → operator →
-  speaker loop has not been driven in the VM (no audio device in the headless
-  harness).
+- **Stage 3 voice has only been driven through a virtual microphone.** The
+  loop is real inside the body (PipeWire capture → whisper → tiers → piper →
+  the HDA card) and the harness proves it with synthesised speech, but no
+  human has spoken into a physical mic on metal yet. Whisper `base.en` on
+  CPU transcribes a short command in well under a second in the VM.
 - **Known environment flake:** roughly 1 boot in 15 freezes at firmware
   level (pre-BDS, and occasionally mid-run) on this box. Retry once; if it
   persists, `tools/read_bootlog.py` recovers the flight recorder from the

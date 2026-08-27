@@ -20,13 +20,16 @@ health         = "http://127.0.0.1:8080/health"
 model          = "/opt/brainos/models/qwen2.5-1.5b-instruct-q4_k_m.gguf"
 timeout_ms     = 6000
 
-[whisper]
-bin            = "/usr/bin/whisper-cli"
-model          = "/opt/brainos/models/ggml-base.en.bin"
-
-[piper]
-bin            = "/opt/brainos/piper/piper"
-voice          = "/opt/brainos/voices/en_US-lessac-medium.onnx"
+[voice]
+# ears: whisper.cpp; mouth: piper. Both live in the body (never a host daemon).
+whisper_bin        = "/usr/bin/whisper-cli"
+whisper_model      = "/opt/brainos/models/ggml-base.en.bin"
+whisper_threads    = 4
+piper_bin          = "/opt/brainos/piper/piper"
+piper_voice        = "/opt/brainos/voices/en_US-lessac-medium.onnx"
+record_seconds     = 5      # default for the voice.listen hand
+max_record_seconds = 30     # a push-to-talk never released stops here
+speak_replies      = true   # voice in -> voice out
 
 [deliberate]
 # Fable API — main model. Key comes from p3 (ANTHROPIC.KEY), never from disk here.

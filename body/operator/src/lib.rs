@@ -12,3 +12,4 @@ pub mod kira_gate;
 pub mod persona;
 pub mod reflex;
 pub mod sse;
+pub mod voice;

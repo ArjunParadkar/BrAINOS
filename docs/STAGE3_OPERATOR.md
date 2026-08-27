@@ -79,10 +79,17 @@ operator → face:
 - `{"t":"surface","name":"x","html":"..."}` / `{"t":"surface","name":"x","close":true}`
 - `{"t":"teach","x":..,"y":..,"w":..,"h":..,"caption":"..."}` / `{"t":"teach","clear":true}`
 - `{"t":"task","id":..,"title":"...","steps":[{"title","status"}],"done":bool}`
+- `{"t":"heard","text":"..."}`   (what the ears made of the last push-to-talk — the human's own line)
 - `{"t":"need_key"}`   (no API key on p3 — face asks the human)
 
 face → operator:
 - `{"t":"utter","text":"..."}`  `{"t":"ptt","on":true|false}`  `{"t":"cancel"}`
+  - `ptt on` starts `pw-record` on the default source; `ptt off` stops it,
+    whisper transcribes, the text runs the same tiers as a typed utterance, and
+    the reply (gathered off the `say` stream) is spoken with piper → `pw-play`.
+    Silence is reported as idle, not as an utterance; `cancel` kills capture and
+    playback. Spoken text is normalised before the reflex table ("Open the
+    terminal." → `app.open terminal`).
 - `{"t":"surface_event","name":"x","event":"click","data":{...}}`
 - `{"t":"set_key","key":"sk-ant-..."}`
 
@@ -118,4 +125,10 @@ Without a key the entity still runs reflex + fast tiers and says so honestly.
   (via a serial console + ssh-less harness): reflex < 5 ms, fast tier JSON, a
   deliberate tool loop with `ANTHROPIC.KEY`, `ui.build` reaches the face,
   `app.open foot` yields a window, `web.search` returns text.
+- voice: `stick_test.sh` pushes piper-synthesised speech through a PipeWire
+  null-sink "microphone", holds push-to-talk through the face's control socket,
+  and requires `heard` + a spoken reply that reaches the HDA card (host-side wav
+  has real samples). The VM has a real `intel-hda` codec (`run_body.sh`).
+- surface: a deliberate turn's `ui.build` must show up as a `brainos-surface`
+  Hyprland layer rendered by WebKitGTK 6.0 (screenshot pulled to the host).
 - mind 77/77 still green.

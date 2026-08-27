@@ -35,6 +35,8 @@ pub struct HandCtx {
     pub brain_dir: std::path::PathBuf,
     /// scratch dir for task/code
     pub scratch_dir: std::path::PathBuf,
+    /// ears + mouth (shared with the push-to-talk loop so they never fight over the mic)
+    pub voice: Arc<crate::voice::Voice>,
 }
 
 /// Dispatch a verb+input to the appropriate hand.
