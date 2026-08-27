@@ -1,0 +1,12 @@
+# BrAInOS placeholder Hyprland config. The face/session agent ships the real one.
+monitor=,preferred,auto,1
+exec-once = /opt/brainos/bin/brainos-operator
+exec-once = /opt/brainos/bin/brainos-face
+env = XCURSOR_SIZE,24
+general { gaps_in=4; gaps_out=8; border_size=2; }
+decoration { rounding=8; }
+misc { disable_hyprland_logo=true; disable_splash_rendering=true; }
+# A terminal on SUPER+Return so a graphical boot is provably interactive.
+bind = SUPER, Return, exec, foot
+bind = SUPER, Q, killactive
+bind = SUPER SHIFT, E, exit

@@ -497,6 +497,12 @@ fn text_banner(ctx: &Ctx) {
 
 // ---------- entry ----------
 
+/// The production body: a Linux UKI (kernel + initramfs + cmdline) that the
+/// seed core chainloads once identity, the domains and the KIRA self-test
+/// have proven the entity is itself. Lives on the boot medium next to the
+/// core's own \EFI\BOOT\BOOTX64.EFI. Its presence selects the fast boot path.
+const BODY_EFI: &str = "EFI\\BRAIN\\BODY.EFI";
+
 /// Legacy flat file from pre-journal embodiments — read-only fallback.
 const EPISODE_FILE: &str = "BRAIN\\EPISODES.LOG";
 /// The two-slot memory journal (Stage 1.4). Power loss mid-write can only
@@ -620,6 +626,18 @@ pub extern "efiapi" fn efi_main(image: Handle, st: *mut SystemTable) -> Status {
     // valid journal slot first, legacy EPISODES.LOG as fallback
     let mem_payload = journal_load(&ctx, EPISODE_SLOTS, EPISODE_FILE);
     me.state.load(&mem_payload);
+
+    // ---- Stage 3 §1: is there a production body to incorporate? ----
+    // If \EFI\BRAIN\BODY.EFI is on the boot medium, this core is a launcher:
+    // it still runs identity, the five domains and the KIRA self-test (they
+    // are the entity proving it is itself before it grows into its full
+    // body), but it drops every deliberate pause so it reaches StartImage in
+    // well under 1.5 s. Absent, `fast` stays false and the Phase-0
+    // experience is paced exactly as before.
+    let fast = ctx.boot_file_exists(BODY_EFI);
+    if fast {
+        console::set_fast_boot(true);
+    }
 
     // ---- five domains, lowest first — each line reports real state ----
     ctx.color(WHITE);
@@ -851,7 +869,11 @@ pub extern "efiapi" fn efi_main(image: Handle, st: *mut SystemTable) -> Status {
         matches!(warm_verdict, Verdict::Granted(_)) && matches!(wake_verdict, Verdict::Granted(_));
     match (&fb, granted_glow) {
         (Some(fb), true) => {
-            warm_glow(fb, &ctx);
+            // fast boot keeps a single brand-screen frame but skips the
+            // warm-glow animation (dozens of full-screen fills + stalls).
+            if !fast {
+                warm_glow(fb, &ctx);
+            }
             let below = draw_brand(fb);
             let row = (below * con_rows / fb.h + 1).min(con_rows.saturating_sub(8));
             ctx.set_cursor(0, row);
@@ -878,6 +900,22 @@ pub extern "efiapi" fn efi_main(image: Handle, st: *mut SystemTable) -> Status {
     ctx.print(" is awake . ");
     ctx.color(GREEN);
     ctx.println("warm now.");
+
+    // ---- Stage 3 §1: incorporate the production body ----
+    // With a body on the boot medium, the seed now grows into its full form:
+    // KIRA gates the incorporation, memory + flight recorder are flushed to
+    // the key, and the machine is handed to \EFI\BRAIN\BODY.EFI via
+    // LoadImage/StartImage. StartImage does not return for a real Linux body.
+    // If anything fails, we fall through to the Phase-0 experience loop with
+    // no regression — and restore normal pacing for it.
+    if fast {
+        chainload_body(&ctx, &mut me);
+        console::set_fast_boot(false);
+        ctx.color(RED);
+        ctx.println("  [incorporate] the production body did not take the machine; staying as the seed");
+        ctx.color(DIM);
+        ctx.println("");
+    }
 
     // ---- the tether comes alive: Model M, then host limbs (§8) ----
     let mut lr = link::LineReader::new();
@@ -2423,6 +2461,90 @@ fn dream_consolidate(
         }
         None => ctx.println(" the dream slipped away (link timeout)"),
     }
+}
+
+// ---------- Stage 3 §1: incorporate the production body ----------
+
+/// KIRA-gate incorporation, then chainload \EFI\BRAIN\BODY.EFI. Returns only
+/// on failure (a real Linux body never hands control back), so callers treat
+/// a return as "fall through to Phase-0". The whole sequence prints the gate
+/// trace and enough of the handoff for the flight recorder to tell the story
+/// if the body then fails to come up.
+fn chainload_body(ctx: &Ctx, me: &mut Instance) {
+    let (verdict, trace) = me.propose(Action::Incorporate);
+    print_gate(ctx, &trace, &verdict);
+    if !matches!(verdict, Verdict::Granted(_)) {
+        // KIRA refused — no medium, or a policy said no. Honest fall-through.
+        return;
+    }
+
+    // the core and the body are ONE entity sharing the key's journal: flush
+    // memory + the flight recorder BEFORE the handoff, so whatever the body
+    // does next, the seed's last state is already durable on the key.
+    persist_memory_and_log(ctx, me);
+    experience::consolidate(me, String::from("incorporated my production body from the boot medium"));
+
+    ctx.color(WHITE);
+    ctx.println("  [incorporate] reading the production body \\EFI\\BRAIN\\BODY.EFI");
+    let Some((buf, size)) = ctx.load_boot_file_pages(BODY_EFI) else {
+        ctx.color(RED);
+        ctx.println("  [incorporate] could not read BODY.EFI into memory");
+        return;
+    };
+    ctx.color(DIM);
+    ctx.println(&format!(
+        "  [incorporate] {} KiB in page-aligned memory . LoadImage ...",
+        size / 1024
+    ));
+
+    // LoadImage(false, our image, null device path, source buffer, size, &out)
+    let mut new_handle: Handle = null_mut();
+    let st = unsafe {
+        ((*ctx.bs).load_image)(
+            0, // BOOLEAN boot_policy = false
+            ctx.image,
+            null_mut(),
+            buf as *mut core::ffi::c_void,
+            size,
+            &mut new_handle,
+        )
+    };
+    if st != SUCCESS || new_handle.is_null() {
+        ctx.color(RED);
+        ctx.println(&format!("  [incorporate] LoadImage failed: status {st:#x}"));
+        return;
+    }
+
+    // systemd-stub (and any UKI) locates the ESP it was loaded from through
+    // its own LOADED_IMAGE.device_handle. LoadImage from a memory buffer with
+    // a null device path leaves that unset, so copy our own boot device onto
+    // the child — then it can find \EFI\BRAIN and the rest of the medium.
+    unsafe {
+        let mut our_li: *mut core::ffi::c_void = null_mut();
+        let mut new_li: *mut core::ffi::c_void = null_mut();
+        if ((*ctx.bs).handle_protocol)(ctx.image, &LOADED_IMAGE_GUID, &mut our_li) == SUCCESS
+            && ((*ctx.bs).handle_protocol)(new_handle, &LOADED_IMAGE_GUID, &mut new_li) == SUCCESS
+        {
+            let dev = (*(our_li as *mut LoadedImage)).device_handle;
+            (*(new_li as *mut LoadedImage)).device_handle = dev;
+        }
+    }
+
+    ctx.color(GREEN);
+    ctx.println("  [incorporate] StartImage -> handing the machine to the body");
+    // last chance for the story to reach the key before Linux owns the disk
+    ctx.flush_bootlog();
+
+    let mut exit_sz: usize = 0;
+    let mut exit_data: *mut u16 = null_mut();
+    let st = unsafe { ((*ctx.bs).start_image)(new_handle, &mut exit_sz, &mut exit_data) };
+
+    // A real body never returns here. If it did, the body exited or refused
+    // to start — report the status and let the caller fall through.
+    ctx.color(RED);
+    ctx.println(&format!(
+        "  [incorporate] the body returned control (status {st:#x})"
+    ));
 }
 
 /// memory.write, KIRA-gated: serialize the state graph onto the key.

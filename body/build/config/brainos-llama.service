@@ -1,0 +1,19 @@
+[Unit]
+Description=BrAInOS local model (llama-server, Qwen2.5-1.5B-Instruct Q4_K_M)
+Documentation=https://github.com/ArjunParadkar/BrAINOS
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/test -f /opt/brainos/models/qwen2.5-1.5b-instruct-q4_k_m.gguf
+ExecStart=/usr/bin/llama-server -m /opt/brainos/models/qwen2.5-1.5b-instruct-q4_k_m.gguf --port 8080 -c 4096 -ngl 99 --host 127.0.0.1 --mlock
+Restart=on-failure
+RestartSec=2
+Nice=-5
+LimitMEMLOCK=infinity
+# Keep it warm and resident; it is the fast cognition tier.
+OOMScoreAdjust=-600
+
+[Install]
+WantedBy=multi-user.target

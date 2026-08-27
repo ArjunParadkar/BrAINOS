@@ -1,0 +1,6 @@
+# /home/human/.bash_profile — BrAInOS body. agetty autologs `human` in on tty1;
+# the session starts itself. Other ttys stay ordinary shells for service.
+[ -f ~/.bashrc ] && . ~/.bashrc
+if [ -z "${WAYLAND_DISPLAY:-}" ] && [ "$(tty)" = "/dev/tty1" ]; then
+    exec /etc/brainos/session/brainos-session
+fi

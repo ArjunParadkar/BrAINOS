@@ -1,0 +1,40 @@
+# /etc/brainos/operator.toml — operator runtime configuration.
+# Written by the body build; the operator agent owns the schema. Values here are
+# the defaults the body guarantees exist so the binary starts even standalone.
+
+[paths]
+brain          = "/brain"                 # p1 journal (EPI_A/B, NOTE_A/B, key pub)
+home           = "/home/human"
+scratch        = "/home/human/.brainos/scratch"
+models         = "/opt/brainos/models"
+voices         = "/opt/brainos/voices"
+
+[socket]
+# operator <-> face IPC (newline-delimited JSON). Under XDG_RUNTIME_DIR.
+path           = "brainos/operator.sock"
+
+[llama]
+# fast tier — local model server started by brainos-llama.service
+url            = "http://127.0.0.1:8080"
+health         = "http://127.0.0.1:8080/health"
+model          = "/opt/brainos/models/qwen2.5-1.5b-instruct-q4_k_m.gguf"
+timeout_ms     = 6000
+
+[whisper]
+bin            = "/usr/bin/whisper-cli"
+model          = "/opt/brainos/models/ggml-base.en.bin"
+
+[piper]
+bin            = "/opt/brainos/piper/piper"
+voice          = "/opt/brainos/voices/en_US-lessac-medium.onnx"
+
+[deliberate]
+# Fable API — main model. Key comes from p3 (ANTHROPIC.KEY), never from disk here.
+model          = "claude-fable-5"
+fallbacks      = "default"
+base_url       = "https://api.anthropic.com"
+
+[tiers]
+reflex_budget_ms      = 5
+fast_budget_ms        = 400
+deliberate_first_token_ms = 1200

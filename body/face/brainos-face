@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+"""brainos-face — the entity's face (presence bar, surfaces, teach overlay).
+
+Installed at /opt/brainos/face/brainos-face. `brainos-face --focus|--key-down|--key-up|
+--ptt-on|--ptt-off|--cancel` talk to the running instance over a tiny unix socket
+($XDG_RUNTIME_DIR/brainos/face.sock). That path imports nothing heavy so a hotkey
+press→release pair is delivered in a few ms (the hold-to-talk threshold is 250 ms)."""
+import os, socket, sys
+
+REMOTE = ("focus", "key-down", "key-up", "ptt-on", "ptt-off", "cancel")
+
+def _ctl_path():
+    rt = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"
+    return os.path.join(rt, "brainos", "face.sock")
+
+cmds = [a[2:] for a in sys.argv[1:] if a.startswith("--") and a[2:] in REMOTE]
+if cmds:
+    rc = 0
+    for c in cmds:
+        try:
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(0.5)
+            s.connect(_ctl_path()); s.sendall(c.encode()); s.close()
+        except OSError:
+            rc = 1
+    sys.exit(rc)
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from brainos_face.app import main
+sys.exit(main(sys.argv))

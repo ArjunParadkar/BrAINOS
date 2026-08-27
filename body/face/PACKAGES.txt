@@ -1,0 +1,31 @@
+# Arch packages the body image must install for brainos-face + the session.
+# (exact names as on the dev host's pacman on 2026-08-26; webkitgtk-6.0 verified in [extra])
+python
+python-gobject
+python-cairo
+python-pillow
+gtk4
+gtk4-layer-shell
+webkitgtk-6.0
+glib2
+cairo
+pango
+inter-font
+ttf-jetbrains-mono-nerd
+noto-fonts
+# session
+hyprland
+hyprpaper
+hyprlock
+sway
+swaybg
+foot
+chromium
+grim
+slurp
+wl-clipboard
+cliphist
+wtype
+ydotool
+brightnessctl
+wireplumber

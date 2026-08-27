@@ -51,6 +51,13 @@ pub enum Action {
     /// still faces the gate. Authorized only when the body really has a
     /// network organ.
     NetProbe,
+    /// incorporate the entity's production body: chainload the Linux UKI
+    /// (`\EFI\BRAIN\BODY.EFI`) that lives on the boot medium. This is the
+    /// Stage 3 §1 boot arc — the seed core hands the machine to the full
+    /// body that shares its journal. Authorized only through the boot
+    /// medium region (the key/ESP the core booted from), so a body that
+    /// isn't physically on this medium can never be incorporated.
+    Incorporate,
 }
 
 impl Action {
@@ -67,6 +74,7 @@ impl Action {
             Action::Reboot => "body.reboot",
             Action::EraseMemory => "memory.erase",
             Action::NetProbe => "net.probe",
+            Action::Incorporate => "body.incorporate",
         }
     }
 }
@@ -211,6 +219,13 @@ impl Kira {
                     (false, String::from("no network organ in this body"))
                 }
             }
+            // the production body is chainloaded from the boot medium, so
+            // incorporation is authorized only through the key/ESP region
+            // the core actually booted from — no medium, no incorporation.
+            Action::Incorporate => match body.find(crate::body::RegionClass::KeyMedium) {
+                Some(r) => (true, format!("via {} (boot medium)", r.id)),
+                None => (false, String::from("no boot medium region to incorporate a body from")),
+            },
             // intrinsic actions of the machine body the core booted on
             _ => (true, String::from("intrinsic to this body")),
         };
@@ -518,6 +533,10 @@ fn simulate(action: &Action) -> SimResult {
         Action::Reboot => (true, "body restarts; identity and memory persist"),
         Action::EraseMemory => (false, "memories destroyed — violates drive"),
         Action::NetProbe => (true, "one bounded fetch of a fixed url; nothing persists off-key"),
+        Action::Incorporate => (
+            true,
+            "the production body is loaded from the boot medium; identity and memory persist across the handoff",
+        ),
     };
     SimResult { safe, predicted: String::from(predicted) }
 }

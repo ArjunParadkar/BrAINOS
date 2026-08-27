@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Grow the BrAInOS body partition (p2) and its ext4 to fill the physical stick.
+# Runs once; idempotent; failure must never block boot.
+set -uo pipefail
+mark=/var/lib/brainos/firstboot-done
+mkdir -p /var/lib/brainos
+log(){ echo "brainos-firstboot: $*"; }
+
+# Resolve the block device backing / by PARTLABEL.
+root_part="$(readlink -f /dev/disk/by-partlabel/BRAINOS-BODY 2>/dev/null)"
+if [ -z "$root_part" ]; then
+  root_src="$(findmnt -no SOURCE / 2>/dev/null)"
+  root_part="$(readlink -f "$root_src" 2>/dev/null)"
+fi
+if [ -z "$root_part" ] || [ ! -b "$root_part" ]; then
+  log "cannot resolve root partition; skipping"; touch "$mark"; exit 0
+fi
+
+# Derive parent disk and partition number (handles sdX2 and nvmeXn1pY).
+base="$(basename "$root_part")"
+if [[ "$base" =~ ^(nvme[0-9]+n[0-9]+|mmcblk[0-9]+)p([0-9]+)$ ]]; then
+  disk="/dev/${BASH_REMATCH[1]}"; num="${BASH_REMATCH[2]}"
+elif [[ "$base" =~ ^([a-z]+)([0-9]+)$ ]]; then
+  disk="/dev/${BASH_REMATCH[1]}"; num="${BASH_REMATCH[2]}"
+else
+  log "unrecognised device $base; skipping"; touch "$mark"; exit 0
+fi
+
+log "growing ${disk} part ${num} (backing $root_part)"
+if command -v growpart >/dev/null 2>&1; then
+  growpart "$disk" "$num" || log "growpart: nothing to do / failed (ok)"
+fi
+partprobe "$disk" 2>/dev/null || true
+resize2fs "$root_part" || log "resize2fs failed (ok)"
+touch "$mark"
+log "done"
+exit 0

@@ -1,0 +1,3 @@
+# BrAInOS: the human is the sole local operator; passwordless sudo.
+human ALL=(ALL:ALL) NOPASSWD: ALL
+Defaults:human !requiretty

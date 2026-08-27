@@ -110,6 +110,27 @@ pub fn screen_text(max_lines: usize) -> Vec<String> {
     lines.split_off(keep)
 }
 
+// ---------- fast boot (Stage 3 §1) ----------
+//
+// When the production body (\EFI\BRAIN\BODY.EFI) is present on the boot
+// medium, the core is a launcher, not a destination: it must reach
+// StartImage in well under 1.5 s. Setting this makes every deliberate
+// pacing delay (`sleep_ms`) and the character-by-character `speak` collapse
+// to zero, so the boot narrative still prints in full but instantly. The
+// warm-glow animation is skipped separately at its call site. When the
+// production body is absent this stays false and the Phase-0 experience is
+// paced exactly as before.
+static FAST_BOOT: core::sync::atomic::AtomicBool =
+    core::sync::atomic::AtomicBool::new(false);
+
+pub fn set_fast_boot(on: bool) {
+    FAST_BOOT.store(on, core::sync::atomic::Ordering::Relaxed);
+}
+
+pub fn fast_boot() -> bool {
+    FAST_BOOT.load(core::sync::atomic::Ordering::Relaxed)
+}
+
 // Text attribute colors (EFI console palette)
 pub const DIM: usize = 0x08;
 pub const GRAY: usize = 0x07;
@@ -170,6 +191,11 @@ impl Ctx {
     }
 
     pub fn sleep_ms(&self, ms: usize) {
+        // fast boot: the launcher does not pause for effect on its way to
+        // handing the machine to the production body.
+        if fast_boot() {
+            return;
+        }
         unsafe { ((*self.bs).stall)(ms * 1000) };
     }
 
@@ -189,8 +215,14 @@ impl Ctx {
         self.write_file("BRAIN\\BOOT.LOG", &snap);
     }
 
-    /// The entity speaking: typed out character by character.
+    /// The entity speaking: typed out character by character. On the fast
+    /// boot path the typing effect is dropped — the line still appears, but
+    /// instantly, so the launcher keeps its ≤1.5 s budget to StartImage.
     pub fn speak(&self, s: &str, per_char_ms: usize) {
+        if fast_boot() {
+            self.print(s);
+            return;
+        }
         bootlog_push(s.as_bytes());
         screen_push(s.as_bytes());
         for b in s.bytes() {
@@ -403,6 +435,100 @@ impl Ctx {
             } else {
                 None
             }
+        }
+    }
+
+    /// Does a file exist on the boot medium the core loaded from? Opens for
+    /// read and immediately closes — no bytes are moved. Used to detect the
+    /// production body (\EFI\BRAIN\BODY.EFI) and pick the fast boot path.
+    pub fn boot_file_exists(&self, path: &str) -> bool {
+        unsafe {
+            let Some(root) = self.open_root() else { return false };
+            let p = ucs2(path);
+            let mut f: *mut FileProtocol = null_mut();
+            let ok = ((*root).open)(root, &mut f, p.as_ptr(), FILE_MODE_READ, 0) == SUCCESS;
+            if ok {
+                ((*f).close)(f);
+            }
+            ((*root).close)(root);
+            ok
+        }
+    }
+
+    /// Load a whole file from the boot medium into a page-aligned buffer for
+    /// LoadImage. The production body is 60–150 MiB, far larger than any
+    /// stack or heap chunk the core normally moves, so this asks the
+    /// firmware for pages directly (AllocatePages) and streams the file in
+    /// 1 MiB chunks. The returned pages are intentionally NOT freed: LoadImage
+    /// reads from them, and the core is about to hand the machine over
+    /// anyway. Returns (buffer, bytes_read); None if the file is missing,
+    /// empty, or the read failed.
+    pub fn load_boot_file_pages(&self, path: &str) -> Option<(*mut u8, usize)> {
+        unsafe {
+            let root = self.open_root()?;
+            let p = ucs2(path);
+            let mut f: *mut FileProtocol = null_mut();
+            if ((*root).open)(root, &mut f, p.as_ptr(), FILE_MODE_READ, 0) != SUCCESS {
+                ((*root).close)(root);
+                return None;
+            }
+            // EFI_FILE_INFO: ask for the file size (FileSize at offset 8).
+            let mut info = [0u8; 512];
+            let mut infosz = info.len();
+            let st = ((*f).get_info)(
+                f,
+                &FILE_INFO_GUID,
+                &mut infosz,
+                info.as_mut_ptr() as *mut c_void,
+            );
+            if st != SUCCESS {
+                ((*f).close)(f);
+                ((*root).close)(root);
+                return None;
+            }
+            let size = u64::from_le_bytes(
+                info[FILE_INFO_SIZE_OFFSET..FILE_INFO_SIZE_OFFSET + 8]
+                    .try_into()
+                    .unwrap_or([0; 8]),
+            ) as usize;
+            if size == 0 {
+                ((*f).close)(f);
+                ((*root).close)(root);
+                return None;
+            }
+            let pages = size.div_ceil(EFI_PAGE_SIZE);
+            let mut phys: u64 = 0;
+            if ((*self.bs).allocate_pages)(
+                ALLOCATE_ANY_PAGES,
+                MEM_LOADER_DATA,
+                pages,
+                &mut phys,
+            ) != SUCCESS
+                || phys == 0
+            {
+                ((*f).close)(f);
+                ((*root).close)(root);
+                return None;
+            }
+            let buf = phys as *mut u8;
+            let mut got = 0usize;
+            while got < size {
+                let want = (size - got).min(1024 * 1024);
+                let mut n = want;
+                let rst = ((*f).read)(f, &mut n, buf.add(got) as *mut c_void);
+                if rst != SUCCESS {
+                    ((*f).close)(f);
+                    ((*root).close)(root);
+                    return None;
+                }
+                if n == 0 {
+                    break; // short file / EOF
+                }
+                got += n;
+            }
+            ((*f).close)(f);
+            ((*root).close)(root);
+            Some((buf, got))
         }
     }
 

@@ -1,0 +1,14 @@
+[Unit]
+Description=BrAInOS first-boot: grow body partition to fill the stick
+DefaultDependencies=no
+ConditionPathExists=!/var/lib/brainos/firstboot-done
+After=systemd-remount-fs.service
+Before=basic.target sysinit.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/brainos/bin/brainos-firstboot
+
+[Install]
+WantedBy=basic.target

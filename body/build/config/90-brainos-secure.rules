@@ -1,0 +1,5 @@
+# The software secure element (p3, PARTLABEL BRAINOS-SECURE) belongs to the
+# session user's operator: it holds the API key record the operator reads at
+# start and rewrites on set_key. Nobody else needs the raw device.
+ENV{ID_PART_ENTRY_NAME}=="BRAINOS-SECURE", OWNER="human", GROUP="human", MODE="0600"
+ENV{ID_PART_ENTRY_NAME}=="BRAINOS-BOOT", GROUP="human", MODE="0660"

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# BrAInOS session launcher (PLACEHOLDER — replaced by body/session if present).
+# Starts Hyprland with a software-render fallback, then sway if Hypr dies fast.
+set -uo pipefail
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+mkdir -p "$XDG_RUNTIME_DIR" 2>/dev/null || true
+export XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=Hyprland MOZ_ENABLE_WAYLAND=1
+mkdir -p "$HOME/.config/hypr"
+[ -f "$HOME/.config/hypr/hyprland.conf" ] || cp /etc/brainos/session/hyprland.conf "$HOME/.config/hypr/hyprland.conf" 2>/dev/null || true
+
+start_hypr() {
+  local t0=$SECONDS
+  Hyprland >"$HOME/.hypr.log" 2>&1
+  # returns quickly (<5s) => treat as failed start
+  [ $((SECONDS - t0)) -ge 5 ]
+}
+
+# First try Hyprland with GPU, then force software rendering.
+if start_hypr; then exit 0; fi
+export WLR_RENDERER=pixman WLR_NO_HARDWARE_CURSORS=1 LIBGL_ALWAYS_SOFTWARE=1
+if start_hypr; then exit 0; fi
+# Fallback: sway (also software render).
+export WLR_RENDERER=pixman
+exec sway

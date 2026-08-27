@@ -1,4 +1,4 @@
-# BrAInOS — the BrAIn Key (Phase 0 boilerplate)
+# BrAInOS — the BrAIn Key
 
 A working seed of the BrAInOS architecture (`BrAInOS_Architecture v1.3`):
 a **universal boot key** you can plug into any UEFI machine. The firmware
@@ -129,6 +129,60 @@ The self-model follows the body map rather than a hardcoded sentence — no
 eyes opted in means the prompt says it has no eyes, and `vision.look` is
 refused at authz. Both directions are tested.
 
+## Stage 3: the Operator (production stick)
+
+The seed above is Phase 0–2: a bare-metal entity with a tethered mind. Stage 3
+(`docs/STAGE3_OPERATOR.md`) turns the same key into a **sole operator of the
+device**: the UEFI core stays the identity/KIRA seed on p1 and, when it finds
+`\EFI\BRAIN\BODY.EFI` beside itself, runs the 8-stage gate on
+`Action::Incorporate`, flushes memory and the flight recorder, and
+**chainloads a Linux body** (`LoadImage`/`StartImage`, with the device handle
+propagated so the body sees its own stick). If the body does not take the
+machine, the seed falls back to the Phase-0 loop and says so.
+
+The body (`body/`) is an Arch-based UKI + ext4 rootfs built in a privileged
+docker container — no sudo on the host:
+
+```
+body/build/    build_body.sh → work/out/{BODY.EFI, body.ext4}; install_payload.sh
+               drops the operator, face, session and operator.toml into the rootfs;
+               config/ holds the units (llama-server, ydotoold, firstboot grow,
+               udev rule that gives p3 to the session user only)
+body/operator/ the Rust daemon that IS the operator (tokio; uses the mind rlib
+               for KIRA). Three tiers on one socket: reflex (regex table,
+               <10 ms) → fast (local llama-server, Qwen2.5-1.5B, JSON schema)
+               → deliberate (claude-fable-5 streaming tool loop; every tool
+               call goes through KIRA before it runs — `rm -rf /` is refused
+               at policy). Key comes from p3 (BSEC record), never from disk.
+body/face/     GTK4 layer-shell presence bar + orb, WebKitGTK surfaces the
+               entity builds UI into (`window.brainos.emit` bridge), teach
+               overlay, task panel, need_key modal
+body/session/  Hyprland (sway fallback) session: execs operator, face, headless
+               chromium (the web hand, CDP :9222) on tty1 autologin
+tools/make_image.py  wraps a key + body into brainos.img:
+               p1 BRAINOS-BOOT   ESP: core (BOOTX64.EFI), /EFI/BRAIN/BODY.EFI, /BRAIN journal
+               p2 BRAINOS-BODY   ext4 rootfs (grown to the stick on first boot)
+               p3 BRAINOS-SECURE BSEC TLV records: BRAINKEY + optional ANTHROPIC key
+```
+
+Build and prove the whole stick:
+
+```sh
+body/build/build_body.sh                       # docker: rootfs + UKI (≈15 min cold)
+cd body/operator && cargo build --release      # the operator binary
+./build.sh --body body/build/work/out/body.ext4 \
+           --body-efi body/build/work/out/BODY.EFI \
+           --api-key-file ~/.brainos_api_key   # → brainos.img (≈6.3 GB)
+body/build/tools/stick_test.sh                 # seed → incorporate → body, 17 checks
+body/build/tools/run_body.sh --graphical       # watch it with a screen
+```
+
+Verified 2026-08-26 in QEMU/OVMF: firmware → seed → `[incorporate]` →
+Linux sshd in **17.9 s**; p3 owned by `human` and read by the operator
+(`[key] loaded from secure element`); reflex turn through the real socket in
+single-digit ms; a deliberate turn (two API rounds + a real `fs.list`) in
+7.1 s with first words streamed at ~3 s.
+
 ## The tether
 
 ```sh
@@ -245,10 +299,14 @@ valid PE32+/ARM64 EFI application from the identical source.
 | `tools/voice_test.py` | mic → Whisper → mind → Kokoro → speaker jack | GPU |
 | `tools/continuity_escalated_test.py` | A→B→A across two VMs: one entity, one memory, escalation intact | GPU + API key |
 | `tools/escalation_test.py` | cheap-by-default routing, filler cue, graceful degradation when the network is gone | — |
+| `cd body/operator && cargo test` | the operator: reflex table, KIRA gate on every hand, CDP error paths, BSEC key records, config | — |
+| `body/operator/tests/fake_face.py` | a live operator on a socket: reflex ms, notes, KIRA denial of `rm -rf /`, a real Fable tool loop | API key |
+| `body/build/tools/body_smoke.sh` | the body alone in QEMU: units, llama, ydotoold, hyprland, operator, chromium CDP, whisper, piper | docker build |
+| `body/build/tools/stick_test.sh` | the production stick: seed banner, KIRA incorporate, no fallback, Linux login, p1/p3 wiring, every service, a reflex turn over IPC | docker build |
 
 ## What this is not (yet)
 
-- **Not yet on metal.** Everything above is QEMU/OVMF. The runbook is
+- **Not yet on metal.** Everything above (Stage 3 included) is QEMU/OVMF. The runbook is
   `docs/BARE_METAL.md`; the remaining steps are physical (dd to a stick,
   Secure Boot off, one-time boot menu). On metal there is no host daemon,
   so voice, local cognition and eyes are absent by construction and the
@@ -257,9 +315,13 @@ valid PE32+/ARM64 EFI application from the identical source.
 - **The domains are structural, not silicon.** D1–D5 are enforced in one
   binary's types and control flow, not by separate hardware or a formal
   proof. That's the rest of the roadmap (§16.3).
-- **`code.run` is a real interpreter, but not a real-language runtime.**
-  There is no Python or JS inside the VM, and the entity cannot ship
-  software into the outside world.
+- **`code.run` in the seed is a real interpreter, not a language runtime.**
+  The Stage 3 body has a full Linux underneath the operator; the seed alone
+  still has no Python or JS.
+- **Stage 3 voice is installed, not yet exercised end to end:** whisper-cli
+  and piper are in the body and answer `--help`, but the mic → operator →
+  speaker loop has not been driven in the VM (no audio device in the headless
+  harness).
 - **Known environment flake:** roughly 1 boot in 15 freezes at firmware
   level (pre-BDS, and occasionally mid-run) on this box. Retry once; if it
   persists, `tools/read_bootlog.py` recovers the flight recorder from the

@@ -5,14 +5,26 @@ make_key.py — mint a BrAIn Key (BrAInOS Architecture §9).
 Builds a universal-boot USB image, pure Python, no root, no mtools:
 
   GPT
-   ├─ p1  BRAINOS-BOOT    64 MiB FAT16 ESP   /EFI/BOOT/BOOTX64.EFI [+ BOOTAA64.EFI]
-   │                                          /BRAIN/KEY.PUB  /BRAIN/GENESIS.TXT
-   ├─ p2  BRAINOS-CORE    16 MiB FAT16       portable core payloads, one per arch
-   └─ p3  BRAINOS-SECURE   4 MiB raw         brain_key (ed25519, software-emulated
-                                             secure element — phase 0)
+   ├─ p1  BRAINOS-BOOT   ESP FAT16 (--esp-mib, default 256)
+   │                       /EFI/BOOT/BOOTX64.EFI [+ BOOTAA64.EFI]  (the seed core)
+   │                       /EFI/BRAIN/BODY.EFI                     (--body-efi, optional)
+   │                       /BRAIN/KEY.PUB  /BRAIN/SEED.HEX  /BRAIN/GENESIS.TXT  ...
+   ├─ p2  BRAINOS-CORE    16 MiB FAT16   portable core payloads, one per arch
+   └─ p3  BRAINOS-SECURE   4 MiB raw     TLV records (see the p3 format note below):
+                                          BRAINKEY (ed25519 key record) + optional
+                                          ANTHROPIC (--api-key-file, never logged)
 
 The firmware is the sweep: it picks BOOTX64.EFI or BOOTAA64.EFI by its own
 architecture (§9.2). One key, one owner, one entity.
+
+The ESP is auto-sized (sectors-per-cluster chosen to keep FAT16 valid) so p1
+can hold a 60–150 MiB production body next to the core. When /EFI/BRAIN/BODY.EFI
+is present the core takes its fast launcher path and chainloads the body
+(Stage 3 §1); absent, it runs the Phase-0 experience unchanged.
+
+tools/make_image.py wraps a minted key into the full brainos.img (p1 ESP + p2
+ext4 body + p3 secure); tools/secure_read.py prints the p3 records with the
+API key masked.
 
 --arch=x86_64|aarch64|both|auto selects which cores ride along (default auto:
 whatever has been built). A key carrying only one arch is NOT universal — it
@@ -120,6 +132,36 @@ class Fat16:
         self.next_cluster = 2
         # path -> (cluster, bytearray view offset for its entry table)
         self.dirs = {"": None}  # root
+
+    @staticmethod
+    def _clusters_for(total, spc, root_entries=512):
+        """The cluster count a volume of `total` sectors would have at this
+        sectors-per-cluster — the same fixed-point math __init__ runs, hoisted
+        so `sized()` can shop for a valid spc without constructing."""
+        root_sectors = root_entries * 32 // SECTOR
+        fat_sectors = 1
+        for _ in range(8):
+            data = total - 1 - 2 * fat_sectors - root_sectors
+            clusters = data // spc
+            fat_sectors = ((clusters + 2) * 2 + SECTOR - 1) // SECTOR
+        return (total - 1 - 2 * fat_sectors - root_sectors) // spc
+
+    @classmethod
+    def sized(cls, total_sectors, label, hidden=0):
+        """Build a FAT16 volume of `total_sectors`, choosing the smallest
+        sectors-per-cluster (a power of two, 1..64) that keeps the cluster
+        count inside FAT16's [4085, 65524] window. A 64 MiB ESP wants spc=4;
+        a 256 MiB ESP (the default once a body rides along) wants spc=16; the
+        2 GiB FAT16 ceiling is reached at spc=64. This is what lets p1 grow
+        to hold a 60–150 MiB BODY.EFI without switching filesystems."""
+        for spc in (1, 2, 4, 8, 16, 32, 64):
+            clusters = cls._clusters_for(total_sectors, spc)
+            if 4085 <= clusters <= 65524:
+                return cls(total_sectors, spc, label, hidden)
+        raise ValueError(
+            f"no valid FAT16 sectors-per-cluster for {total_sectors} sectors "
+            f"({total_sectors * SECTOR // (1024 * 1024)} MiB); FAT16 tops out near 2 GiB"
+        )
 
     def _alloc_chain(self, nbytes):
         n = max(1, -(-nbytes // (self.spc * SECTOR)))
@@ -247,6 +289,62 @@ def pack_guid(s):
 ESP_TYPE = "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
 DATA_TYPE = "EBD0A0A2-B9E5-4433-87C0-68B6B72699C7"
 SECURE_TYPE = "6B7A19F5-3C2E-4D10-9A4B-53E6F2D80B1C"  # BrAInOS secure area
+# Linux root partition, x86-64 (Discoverable Partitions Spec). The Stage 3
+# production body (p2 of brainos.img) carries this type + PARTLABEL
+# BRAINOS-BODY so the body's own systemd can find and mount its rootfs.
+BODY_TYPE = "4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709"
+
+
+# ----------------------------------------------- p3 secure record format ---
+#
+# BRAINOS-SECURE (p3, 4 MiB raw) is a flat sequence of TLV records, so it can
+# carry the brain key AND the operator's API key without either colliding.
+# The core does NOT read p3 (phase-0 identity rides SEED.HEX on p1); p3 is a
+# software-emulated secure element the body's operator reads once at start.
+#
+#   record := magic[4] "BSEC" | type u16 LE | flags u16 LE | length u32 LE | value[length]
+#   records are packed from offset 0; the first byte that is not 'B' ends the
+#   sequence; the area is zero-padded to its full size.
+#
+#   type 1  BRAINKEY   value = the brain key record as UTF-8 JSON (public)
+#   type 2  ANTHROPIC  value = the raw API key bytes (SECRET — never logged,
+#                      never printed; secure_read.py masks it)
+
+SEC_MAGIC = b"BSEC"
+SEC_T_BRAINKEY = 1
+SEC_T_ANTHROPIC = 2
+SEC_TYPE_NAMES = {SEC_T_BRAINKEY: "BRAINKEY", SEC_T_ANTHROPIC: "ANTHROPIC"}
+SEC_SECRET_TYPES = {SEC_T_ANTHROPIC}  # values that must never be printed
+
+
+def secure_record(rtype, value):
+    return SEC_MAGIC + struct.pack("<HHI", rtype, 0, len(value)) + value
+
+
+def pack_secure(records, size=4 * 1024 * 1024):
+    """Serialize (type, value) records into a fixed-size p3 image."""
+    out = bytearray()
+    for rtype, value in records:
+        out += secure_record(rtype, value)
+    if len(out) > size:
+        raise ValueError("secure records exceed p3 size")
+    return bytes(out) + b"\0" * (size - len(out))
+
+
+def read_secure_records(raw):
+    """Parse a BRAINOS-SECURE area into [(type, value), ...]. Stops at the
+    first non-'BSEC' record (the zero padding). Robust to truncation."""
+    recs = []
+    o = 0
+    n = len(raw)
+    while o + 12 <= n and raw[o : o + 4] == SEC_MAGIC:
+        rtype, _flags, length = struct.unpack_from("<HHI", raw, o + 4)
+        start = o + 12
+        if start + length > n:
+            break
+        recs.append((rtype, raw[start : start + length]))
+        o = start + length
+    return recs
 
 
 def rand_guid():
@@ -315,6 +413,39 @@ def gpt_image(partitions):
     img[bk_entries_lba * SECTOR : bk_entries_lba * SECTOR + len(entries)] = entries
     img[(total - 1) * SECTOR : total * SECTOR] = header(total - 1, 1, bk_entries_lba)
     return bytes(img)
+
+
+def unpack_guid(b):
+    """GPT on-disk mixed-endian bytes -> RFC4122 uppercase string."""
+    d1, d2, d3 = struct.unpack("<IHH", b[:8])
+    return (
+        f"{d1:08X}-{d2:04X}-{d3:04X}-"
+        f"{b[8:10].hex().upper()}-{b[10:16].hex().upper()}"
+    )
+
+
+def read_gpt_partitions(img):
+    """Parse a GPT image (bytes) and return, in table order, every non-empty
+    partition as (type_guid_str, partlabel, payload_bytes). The counterpart
+    to gpt_image(): make_image.py pulls p1/p3 straight out of a minted key so
+    it never has to rebuild the ESP or re-mint identity."""
+    hdr = img[SECTOR : 2 * SECTOR]
+    if hdr[:8] != b"EFI PART":
+        raise ValueError("not a GPT image (bad primary header signature)")
+    entries_lba, num, esize = struct.unpack_from("<QII", hdr, 72)
+    base = entries_lba * SECTOR
+    parts = []
+    zero_type = b"\0" * 16
+    for i in range(num):
+        o = base + i * esize
+        tg = img[o : o + 16]
+        if tg == zero_type:
+            continue
+        first, last = struct.unpack_from("<QQ", img, o + 32)
+        name = img[o + 56 : o + 56 + 72].decode("utf-16le", "ignore").rstrip("\0")
+        payload = img[first * SECTOR : (last + 1) * SECTOR]
+        parts.append((unpack_guid(tg), name, payload))
+    return parts
 
 
 # -------------------------------------------------- memory carry-over -----
@@ -433,6 +564,33 @@ def main():
     )
     if arch_arg not in ("auto", "x86_64", "aarch64", "both"):
         sys.exit(f"--arch must be auto, x86_64, aarch64 or both (got {arch_arg!r})")
+
+    # --- p1 ESP size, the production body, and the operator API key ---
+    esp_mib = int(next((a.split("=", 1)[1] for a in sys.argv[1:]
+                        if a.startswith("--esp-mib=")), "256"))
+    body_efi_path = next((a.split("=", 1)[1] for a in sys.argv[1:]
+                          if a.startswith("--body-efi=")), None)
+    body_efi = None
+    if body_efi_path:
+        if not os.path.exists(body_efi_path):
+            sys.exit(f"--body-efi: {body_efi_path} does not exist")
+        body_efi = open(body_efi_path, "rb").read()
+
+    # the API key: explicit --api-key-file wins; otherwise ~/.brainos_api_key
+    # if it exists; otherwise none (the entity runs reflex+fast and says so).
+    api_key_path = next((a.split("=", 1)[1] for a in sys.argv[1:]
+                         if a.startswith("--api-key-file=")), None)
+    if api_key_path is None:
+        default_key = os.path.expanduser("~/.brainos_api_key")
+        api_key_path = default_key if os.path.exists(default_key) else None
+    api_key = None
+    if api_key_path:
+        if not os.path.exists(api_key_path):
+            sys.exit(f"--api-key-file: {api_key_path} does not exist")
+        # strip surrounding whitespace/newline only; never echo the contents
+        api_key = open(api_key_path, "rb").read().strip()
+        if not api_key:
+            api_key = None
     if arch_arg == "auto":
         want_x64 = os.path.exists(x64)
         want_a64 = os.path.exists(a64)
@@ -532,18 +690,39 @@ def main():
             "\r\n"
             f"plug into a {only} UEFI machine, boot from USB, secure boot off.\r\n"
         )
+    body_note = ""
+    if body_efi_path:
+        body_note = (
+            "\r\n"
+            "STAGE 3 PRODUCTION BODY\r\n"
+            "this key carries /EFI/BRAIN/BODY.EFI, the Linux production body.\r\n"
+            "at boot the seed core proves identity + runs the KIRA self-test,\r\n"
+            "then KIRA-gates Action::Incorporate and chainloads the body in\r\n"
+            "under 1.5s. wrapped by make_image.py the full brainos.img is:\r\n"
+            "  p1 BRAINOS-BOOT   ESP: this core + /EFI/BRAIN/BODY.EFI + /BRAIN key\r\n"
+            "  p2 BRAINOS-BODY   ext4 rootfs (PARTLABEL BRAINOS-BODY)\r\n"
+            "  p3 BRAINOS-SECURE brain key record + optional ANTHROPIC.KEY\r\n"
+        )
     readme = (
-        reach + "the entity wakes, warms the room, and says BRAINOS.\r\n"
+        reach + "the entity wakes, warms the room, and says BRAINOS.\r\n" + body_note
     ).encode()
 
     # --- partition 1: ESP ---
-    esp = Fat16(64 * 1024 * 2, 4, "BRAINOS EFI", hidden=2048)
+    # Sized to --esp-mib (default 256 MiB) so it can hold a 60–150 MiB
+    # production body next to the core; sectors-per-cluster is chosen
+    # automatically to keep the volume a valid FAT16.
+    esp = Fat16.sized(esp_mib * 1024 * 2, "BRAINOS EFI", hidden=2048)
     esp.mkdir("EFI")
     esp.mkdir("EFI/BOOT")
     if core_x64 is not None:
         esp.add_file("EFI/BOOT/BOOTX64.EFI", core_x64)
     if core_a64 is not None:
         esp.add_file("EFI/BOOT/BOOTAA64.EFI", core_a64)
+    # Stage 3 §1: the production body lives at \EFI\BRAIN\BODY.EFI. Its mere
+    # presence flips the core onto its fast launcher path at next boot.
+    if body_efi is not None:
+        esp.mkdir("EFI/BRAIN")
+        esp.add_file("EFI/BRAIN/BODY.EFI", body_efi)
     esp.mkdir("BRAIN")
     esp.add_file("BRAIN/KEY.PUB", (pub.hex() + "\r\n").encode())
     # phase 0: the seed rides the ESP so the core can sign (software-
@@ -576,8 +755,13 @@ def main():
     corefs.add_file("MANIFEST.TXT", manifest.encode())
 
     # --- partition 3: secure area (software-emulated, phase 0) ---
-    secure = json.dumps(key_record, indent=2).encode()
-    secure += b"\n" + b"\0" * (4 * 1024 * 1024 - len(secure) - 1)
+    # A TLV record area (see the format note above p3): the brain key record
+    # always, and the operator's Anthropic key when one was supplied. The key
+    # bytes are written but NEVER printed — tools/secure_read.py masks them.
+    sec_records = [(SEC_T_BRAINKEY, json.dumps(key_record, indent=2).encode())]
+    if api_key is not None:
+        sec_records.append((SEC_T_ANTHROPIC, api_key))
+    secure = pack_secure(sec_records)
 
     img = gpt_image(
         [
@@ -589,6 +773,17 @@ def main():
     with open(out_path, "wb") as f:
         f.write(img)
     print(f"key minted: {out_path} ({len(img)//(1024*1024)} MiB)")
+    print(f"  p1 ESP: {esp_mib} MiB (FAT16, spc={esp.spc})")
+    if body_efi is not None:
+        print(f"  production body: \\EFI\\BRAIN\\BODY.EFI "
+              f"({len(body_efi)//1024} KiB) — core will fast-boot into it")
+    else:
+        print("  no production body on p1 — core boots the Phase-0 experience")
+    # never print the key itself, only that it is (or is not) present
+    if api_key is not None:
+        print(f"  p3 ANTHROPIC.KEY record embedded (masked; {len(api_key)} bytes)")
+    else:
+        print("  p3 ANTHROPIC.KEY: none (entity runs reflex + fast tiers, honestly)")
     # Say plainly what this key can boot. Nobody should have to remember
     # which mode they built in — least of all in front of an audience.
     if universal:

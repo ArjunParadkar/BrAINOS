@@ -1,0 +1,13 @@
+[Unit]
+Description=ydotool daemon (pointer/keyboard injection for the operator)
+
+[Service]
+Type=simple
+RuntimeDirectory=ydotoold
+RuntimeDirectoryMode=0755
+ExecStart=/usr/bin/ydotoold --socket-path=/run/ydotoold/socket --socket-own=1000:1000
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

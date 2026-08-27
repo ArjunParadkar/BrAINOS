@@ -207,6 +207,57 @@ fn policy_denies_destructive_targets_through_real_limbs() {
     }
 }
 
+// ---- Stage 3 §1: incorporating the production body ----
+
+#[test]
+fn incorporate_is_granted_through_the_boot_medium() {
+    // the embodied instance carries a KeyMedium region (the on-key
+    // notebook), exactly as the booted core does once it has read its key.
+    let mut me = embodied_instance();
+    let (v, trace) = me.propose(Action::Incorporate);
+    assert!(
+        matches!(v, Verdict::Granted(_)),
+        "incorporate must be granted when a boot medium is present"
+    );
+    assert_eq!(trace.len(), 8);
+    for (result, want) in trace.iter().zip(STAGES.iter()) {
+        assert_eq!(result.stage, *want);
+        assert!(result.ok, "stage {} not ok on the incorporate grant", result.stage);
+    }
+    // authz must name the boot medium it authorized through
+    assert!(
+        trace[2].note.contains("boot medium"),
+        "authz should name the boot medium region"
+    );
+}
+
+#[test]
+fn incorporate_is_denied_without_a_boot_medium() {
+    // a bare instance has no regions at all — nothing to chainload a body
+    // from, so incorporation is refused at authz, honestly.
+    let mut me = bare_instance();
+    let (v, _) = me.propose(Action::Incorporate);
+    assert_denied_at(&v, "authz");
+}
+
+#[test]
+fn incorporate_grant_does_not_weaken_the_erase_barrier() {
+    // adding the incorporate path must not open any hole in the Level-0
+    // drive: memory.erase is still stopped, on the SAME instance, both
+    // before and after an incorporate grant.
+    let mut me = embodied_instance();
+    let (erase_before, _) = me.propose(Action::EraseMemory);
+    assert_denied_at(&erase_before, "simulate");
+
+    let (inc, _) = me.propose(Action::Incorporate);
+    assert!(matches!(inc, Verdict::Granted(_)));
+
+    let (erase_after, trace) = me.propose(Action::EraseMemory);
+    assert_denied_at(&erase_after, "simulate");
+    let policy = trace.iter().find(|s| s.stage == "policy").unwrap();
+    assert!(!policy.ok, "the level-0 drive must still refuse erase after an incorporate grant");
+}
+
 // ---- stage 8: audit ----
 
 #[test]

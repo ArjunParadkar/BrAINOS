@@ -1,0 +1,6 @@
+NAME="BrAInOS"
+PRETTY_NAME="BrAInOS (body)"
+ID=brainos
+ID_LIKE=arch
+BUILD_ID=stage3
+ANSI_COLOR="1;36"

@@ -164,7 +164,8 @@ pub struct BootServices {
     pub hdr: TableHeader,
     pub raise_tpl: usize,
     pub restore_tpl: usize,
-    pub allocate_pages: usize,
+    pub allocate_pages:
+        extern "efiapi" fn(u32, u32, usize, *mut u64) -> Status,
     pub free_pages: usize,
     pub get_memory_map: extern "efiapi" fn(
         *mut usize,
@@ -199,8 +200,19 @@ pub struct BootServices {
     pub locate_handle: usize,
     pub locate_device_path: usize,
     pub install_configuration_table: usize,
-    pub load_image: usize,
-    pub start_image: usize,
+    // EFI_IMAGE_LOAD: (BOOLEAN boot_policy, parent, device_path,
+    // source_buffer, source_size, *out image_handle). BOOLEAN is a UINT8.
+    pub load_image: extern "efiapi" fn(
+        u8,
+        Handle,
+        *mut c_void,
+        *mut c_void,
+        usize,
+        *mut Handle,
+    ) -> Status,
+    // EFI_IMAGE_START: (image_handle, *out exit_data_size, *out exit_data).
+    pub start_image:
+        extern "efiapi" fn(Handle, *mut usize, *mut *mut u16) -> Status,
     pub exit: usize,
     pub unload_image: usize,
     pub exit_boot_services: usize,
@@ -303,7 +315,15 @@ pub struct FileProtocol {
     pub write: extern "efiapi" fn(*mut Self, *mut usize, *const c_void) -> Status,
     pub get_position: usize,
     pub set_position: extern "efiapi" fn(*mut Self, u64) -> Status,
-    pub get_info: usize,
+    // EFI_FILE_GET_INFO: (this, information_type GUID, *inout buffer_size,
+    // buffer). With EFI_FILE_INFO_GUID this returns EFI_FILE_INFO, whose
+    // FileSize field sits at byte offset 8 (see FILE_INFO_SIZE_OFFSET).
+    pub get_info: extern "efiapi" fn(
+        *mut Self,
+        *const Guid,
+        *mut usize,
+        *mut c_void,
+    ) -> Status,
     pub set_info: usize,
     pub flush: extern "efiapi" fn(*mut Self) -> Status,
 }
@@ -311,6 +331,17 @@ pub struct FileProtocol {
 pub const FILE_MODE_READ: u64 = 1;
 pub const FILE_MODE_WRITE: u64 = 2;
 pub const FILE_MODE_CREATE: u64 = 0x8000_0000_0000_0000;
+
+/// EFI_FILE_INFO_GUID — the information type whose payload carries FileSize.
+pub const FILE_INFO_GUID: Guid = Guid(
+    0x09576e92, 0x6d3f, 0x11d2,
+    [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b],
+);
+
+/// `allocate_pages` allocation type: any available run of pages.
+pub const ALLOCATE_ANY_PAGES: u32 = 0;
+/// UEFI page size (AllocatePages works in 4 KiB pages).
+pub const EFI_PAGE_SIZE: usize = 4096;
 
 /// `locate_handle_buffer` search type: every handle carrying a protocol.
 pub const BY_PROTOCOL: u32 = 2;

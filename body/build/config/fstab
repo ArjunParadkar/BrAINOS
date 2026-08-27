@@ -1,0 +1,4 @@
+# BrAInOS body fstab. Root and /brain resolved by GPT partition label so the
+# same image boots from any USB stick regardless of enumeration order.
+PARTLABEL=BRAINOS-BODY   /        ext4   rw,relatime                        0 1
+PARTLABEL=BRAINOS-BOOT   /brain   vfat   rw,umask=000,nofail,x-systemd.device-timeout=5s  0 2

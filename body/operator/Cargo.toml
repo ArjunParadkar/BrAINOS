@@ -1,0 +1,35 @@
+[package]
+name = "brainos-operator"
+version = "0.1.0"
+edition = "2021"
+default-run = "brainos-operator"
+
+[[bin]]
+name = "brainos-operator"
+path = "src/main.rs"
+
+[dependencies]
+brainos-mind = { path = "../../mind" }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream", "json"] }
+regex = "1"
+toml = "0.8"
+tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
+anyhow = "1"
+futures-util = "0.3"
+bytes = "1"
+base64 = "0.22"
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tokio-util = { version = "0.7", features = ["codec"] }
+once_cell = "1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full", "test-util"] }
+
+[lib]
+name = "brainos_operator_lib"
+path = "src/lib.rs"

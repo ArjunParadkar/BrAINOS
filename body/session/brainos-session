@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# brainos-session — the body's session launcher (run from ~/.bash_profile on tty1).
+# Starts Hyprland with software-render fallbacks (VMs, virtio-gpu). If Hyprland exits
+# within 5 s, falls back to sway with the same binds. Never returns to a bare shell.
+set -u
+export XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=Hyprland XDG_SESSION_DESKTOP=Hyprland
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+export WLR_RENDERER_ALLOW_SOFTWARE=1 AQ_NO_MODIFIERS=1 WLR_NO_HARDWARE_CURSORS=1
+export GDK_BACKEND=wayland QT_QPA_PLATFORM=wayland MOZ_ENABLE_WAYLAND=1
+export PATH="/opt/brainos/bin:/opt/brainos/face:$PATH"
+CONF=/etc/brainos/session
+LOG="$XDG_RUNTIME_DIR/brainos-session.log"
+mkdir -p "$XDG_RUNTIME_DIR/brainos"
+
+# Hyprland's config lives in /etc/brainos/session; mirror it into ~/.config so hyprctl reload works.
+mkdir -p "$HOME/.config/hypr" "$HOME/.config/sway"
+[ -e "$HOME/.config/hypr/hyprland.conf" ] || ln -sf "$CONF/hyprland.conf" "$HOME/.config/hypr/hyprland.conf"
+[ -e "$HOME/.config/sway/config" ] || ln -sf "$CONF/sway.conf" "$HOME/.config/sway/config"
+
+if command -v Hyprland >/dev/null 2>&1; then
+    t0=$(date +%s)
+    Hyprland -c "$CONF/hyprland.conf" >>"$LOG" 2>&1
+    rc=$?
+    if [ $(( $(date +%s) - t0 )) -ge 5 ]; then
+        exit $rc          # a real session ended (logout/power) — agetty respawns us
+    fi
+    echo "[brainos-session] Hyprland died in <5 s (rc=$rc); falling back to sway" >>"$LOG"
+fi
+export XDG_CURRENT_DESKTOP=sway XDG_SESSION_DESKTOP=sway
+exec sway -c "$CONF/sway.conf" >>"$LOG" 2>&1
