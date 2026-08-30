@@ -1,6 +1,11 @@
-//! brainos-operator — Stage 3 production body.
+//! brainos-operator — Stage 3 production body, Stage 4 entity.
 //!
 //! Socket path: $BRAINOS_SOCK > config > $XDG_RUNTIME_DIR/brainos/operator.sock
+//!
+//! One utterance, in order:
+//!   skill replay (compiled plan, no model)  →  reflex (regex, no model)
+//!   →  fast (local model) ∥ deliberate (API, HELD)  →  whichever wins
+//! and a deliberate turn whose every hand succeeded is compiled into a skill.
 
 use anyhow::Result;
 use serde_json::Value;
@@ -21,13 +26,36 @@ mod journal_io;
 mod key_reader;
 mod kira_gate;
 mod persona;
+mod pool;
+mod reach;
 mod reflex;
+mod skills;
 mod sse;
+mod tasks;
 mod voice;
 
 use config::Config;
 use ipc::{FaceMsg, IpcServer, OpMsg};
 use kira_gate::SharedInstance;
+use skills::{SkillStore, Step};
+
+/// Everything a turn needs. Built once; cheap to clone (all Arcs).
+#[derive(Clone)]
+struct Ctx {
+    config: Arc<Config>,
+    api_key: Option<String>,
+    instance: SharedInstance,
+    history: Arc<Mutex<history::History>>,
+    fast: Arc<fast::FastTier>,
+    deliberate: Arc<deliberate::DeliberateTier>,
+    hands: Arc<hands::HandCtx>,
+    ipc_tx: broadcast::Sender<String>,
+    cancel_rx: watch::Receiver<bool>,
+    reach: Arc<reach::ReachHub>,
+    skills: Arc<Mutex<SkillStore>>,
+    pool: Arc<pool::Pool>,
+    brain_dir: PathBuf,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -51,13 +79,18 @@ async fn main() -> Result<()> {
         &config.anthropic.key_device,
         &config.anthropic.key_file,
     );
+    if api_key.is_none() {
+        tracing::warn!("[operator] no API key — reflex + fast tiers only");
+    }
 
     let brain_dir = config.brain_dir();
-    let brain_key = load_brain_key(&brain_dir);
-    tracing::info!("[operator] identity: {}", brain_key.fingerprint());
+    tracing::info!("[operator] brain_dir={}", brain_dir.display());
 
-    let (body_map, available_verbs) = body_registry::build(&brain_dir);
-    tracing::info!("[operator] {} verbs registered", available_verbs.len());
+    let brain_key = load_brain_key(&brain_dir);
+    tracing::info!("[key] fingerprint {}", brain_key.fingerprint());
+
+    let (body_map, local_verbs) = body_registry::build(&brain_dir);
+    tracing::info!("[operator] {} verbs registered", local_verbs.len());
 
     let journal = journal_io::JournalIO::new(&brain_dir);
     let (graph, inherited) = journal.load();
@@ -73,6 +106,9 @@ async fn main() -> Result<()> {
             proprioception: r.proprioception.clone(),
         });
     }
+    // Stage 4 §3: compiled skills, signed by this key — foreign or tampered records are dropped
+    let skill_store = SkillStore::load(&brain_dir, &instance.key);
+    let skills_shared = Arc::new(Mutex::new(skill_store));
     let shared: SharedInstance = Arc::new(Mutex::new(instance));
 
     // socket path: BRAINOS_SOCK > config > XDG default
@@ -83,14 +119,28 @@ async fn main() -> Result<()> {
     let server = IpcServer::bind(&sock_path)?;
     let ipc_tx = server.tx.clone();
     let (face_tx, mut face_rx) = mpsc::channel::<FaceMsg>(256);
-    tokio::spawn(server.run(face_tx));
+    tokio::spawn(server.run(face_tx.clone()));
 
-    let fast_tier = Arc::new(fast::FastTier::new((*config).clone()));
+    // Stage 4 §5: the model pool
+    let pool = Arc::new(pool::Pool::new(config.pool_specs()));
+    {
+        let p = pool.clone();
+        let tx = ipc_tx.clone();
+        tokio::spawn(async move {
+            loop {
+                p.probe_all().await;
+                ipc::send(&tx, &OpMsg::Pool { models: p.status()["models"].clone() });
+                tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+            }
+        });
+    }
+
+    let fast_tier = Arc::new(fast::FastTier::new((*config).clone(), pool.clone()));
     let deliberate_tier = Arc::new(deliberate::DeliberateTier::new((*config).clone()));
     {
         // warm the local model's cached prefix in the background
         let ft = fast_tier.clone();
-        let verbs: Vec<String> = available_verbs.clone();
+        let verbs: Vec<String> = local_verbs.clone();
         tokio::spawn(async move { ft.warmup(&verbs).await; });
     }
     let history = Arc::new(Mutex::new(history::History::new()));
@@ -103,6 +153,29 @@ async fn main() -> Result<()> {
     let voice = Arc::new(voice::Voice::new(config.clone()));
     tracing::info!("[voice] ears={} mouth={}", voice.has_ears(), voice.has_mouth());
 
+    // Stage 4 §2: Reach — other bodies
+    let reach_hub = reach::ReachHub::new();
+    let reach_listen = std::env::var("BRAINOS_REACH").ok().unwrap_or_else(|| config.reach.listen.clone());
+    if !reach_listen.is_empty() {
+        let hub = reach_hub.clone();
+        let inst = shared.clone();
+        let tx = ipc_tx.clone();
+        let addr = reach_listen.clone();
+        tokio::spawn(async move {
+            if let Err(e) = reach::listen(addr, hub, inst, tx).await { tracing::warn!("[reach] listener: {e}"); }
+        });
+        if config.reach.beacon_port > 0 {
+            let port: u16 = reach_listen.rsplit(':').next().and_then(|p| p.parse().ok()).unwrap_or(7777);
+            tokio::spawn(reach::beacon(config.reach.beacon_port, config.reach.seat_name.clone(), port));
+        }
+    } else {
+        tracing::info!("[reach] off (set [reach] listen or BRAINOS_REACH=0.0.0.0:7777)");
+    }
+
+    // Stage 4 §6: standing tasks
+    let tasks = tasks::Tasks::load(&brain_dir, face_tx.clone());
+    tasks.clone().spawn_runner();
+
     let hand_ctx = Arc::new(hands::HandCtx {
         config: config.clone(),
         instance: shared.clone(),
@@ -110,11 +183,17 @@ async fn main() -> Result<()> {
         brain_dir: brain_dir.clone(),
         scratch_dir: scratch_dir.clone(),
         voice: voice.clone(),
+        reach: reach_hub.clone(),
+        skills: skills_shared.clone(),
+        tasks: tasks.clone(),
+        pool: pool.clone(),
+        local_verbs: local_verbs.clone(),
     });
 
-    // SIGTERM: save journal
+    // SIGTERM: save journal + skills
     {
         let shared2 = shared.clone();
+        let skills2 = skills_shared.clone();
         let bd2 = brain_dir.clone();
         tokio::spawn(async move {
             tokio::signal::ctrl_c().await.ok();
@@ -122,10 +201,27 @@ async fn main() -> Result<()> {
             let j = journal_io::JournalIO::new(&bd2);
             let g = shared2.lock().unwrap();
             let _ = j.save(&g.state);
+            let _ = skills2.lock().unwrap().save(&bd2, &g.key);
             drop(g);
             std::process::exit(0);
         });
     }
+
+    let ctx = Ctx {
+        config: config.clone(),
+        api_key,
+        instance: shared.clone(),
+        history,
+        fast: fast_tier,
+        deliberate: deliberate_tier,
+        hands: hand_ctx,
+        ipc_tx: ipc_tx.clone(),
+        cancel_rx,
+        reach: reach_hub,
+        skills: skills_shared,
+        pool,
+        brain_dir: brain_dir.clone(),
+    };
 
     ipc::send_state(&ipc_tx, "idle", "reflex");
     tracing::info!("[operator] ready on {}", sock_path.display());
@@ -138,6 +234,7 @@ async fn main() -> Result<()> {
         if last_save.elapsed().as_secs() > 300 {
             let g = shared.lock().unwrap();
             let _ = journal_io::JournalIO::new(&brain_dir).save(&g.state);
+            let _ = ctx.skills.lock().unwrap().save(&brain_dir, &g.key);
             drop(g);
             last_save = std::time::Instant::now();
         }
@@ -152,6 +249,14 @@ async fn main() -> Result<()> {
             FaceMsg::Utter { text } => {
                 let text = text.trim().to_string();
                 if text.is_empty() { continue; }
+                turn = Some((text, false));
+            }
+
+            FaceMsg::Standing { id, text } => {
+                let text = text.trim().to_string();
+                if text.is_empty() { continue; }
+                tracing::info!("[tasks] #{id} → {text:?}");
+                ipc::send(&ipc_tx, &OpMsg::Heard { text: format!("[standing task #{id}] {text}") });
                 turn = Some((text, false));
             }
 
@@ -242,21 +347,7 @@ async fn main() -> Result<()> {
             // reset cancel
             let _ = cancel_tx.send(false);
 
-            handle_utter(
-                &text,
-                say_id,
-                &config,
-                &api_key,
-                &available_verbs,
-                &shared,
-                &history,
-                &fast_tier,
-                &deliberate_tier,
-                &hand_ctx,
-                &ipc_tx,
-                &cancel_rx,
-            )
-            .await;
+            handle_utter(&text, say_id, &ctx).await;
 
             // record episode
             {
@@ -269,14 +360,13 @@ async fn main() -> Result<()> {
                     tick,
                 );
             }
-        
 
             if let Some((buf, task)) = capture {
                 // let the final `say` land on the broadcast, then stop collecting
                 tokio::time::sleep(std::time::Duration::from_millis(50)).await;
                 task.abort();
                 let reply = buf.lock().unwrap().clone();
-                if !reply.trim().is_empty() && !*cancel_rx.borrow() {
+                if !reply.trim().is_empty() && !*ctx.cancel_rx.borrow() {
                     match voice.speak(&reply).await {
                         Ok(_) => tracing::info!("[voice] speaking {} chars", reply.len()),
                         Err(e) => tracing::warn!("[voice] mouth failed: {e}"),
@@ -309,87 +399,215 @@ async fn collect_say(mut rx: broadcast::Receiver<String>, say_id: u64, buf: Arc<
     }
 }
 
-async fn handle_utter(
-    text: &str,
-    say_id: u64,
-    config: &Arc<Config>,
-    api_key: &Option<String>,
-    available_verbs: &[String],
-    instance: &SharedInstance,
-    history: &Arc<Mutex<history::History>>,
-    fast_tier: &Arc<fast::FastTier>,
-    deliberate_tier: &Arc<deliberate::DeliberateTier>,
-    hand_ctx: &Arc<hands::HandCtx>,
-    ipc_tx: &broadcast::Sender<String>,
-    cancel_rx: &watch::Receiver<bool>,
-) {
+/// The verbs the whole entity has right now: the seat's plus every Reach body's.
+fn current_verbs(instance: &SharedInstance) -> Vec<String> {
+    let g = instance.lock().unwrap();
+    let mut v: Vec<String> = Vec::new();
+    for r in g.body.regions() {
+        for c in &r.capabilities { if !v.contains(c) { v.push(c.clone()); } }
+    }
+    v
+}
+
+fn say(ctx: &Ctx, say_id: u64, text: impl Into<String>) {
+    ipc::send(&ctx.ipc_tx, &OpMsg::Say { id: say_id, text: text.into(), delta: false, done: true });
+}
+
+fn act(ctx: &Ctx, verb: &str, target: &str, status: &str, digest: &str, tier: &str, body: &str) {
+    ipc::send(&ctx.ipc_tx, &OpMsg::Act {
+        verb: verb.into(), target: target.into(), status: status.into(),
+        digest: digest.chars().take(100).collect(),
+        tier: Some(tier.into()),
+        body: if body == reach::SEAT { None } else { Some(body.into()) },
+    });
+}
+
+fn looks_failed(result: &str) -> bool {
+    let r = result.trim_start().to_ascii_lowercase();
+    r.starts_with("error") || r.starts_with("exec error") || r.starts_with("timeout") || r.starts_with("unknown verb") || r.starts_with("denied")
+}
+
+fn with_body(mut input: Value, body: &str) -> Value {
+    if body != reach::SEAT {
+        if let Some(m) = input.as_object_mut() { m.insert("body".into(), Value::String(body.into())); }
+        else { input = serde_json::json!({"target": input, "body": body}); }
+    }
+    input
+}
+
+fn save_skills(ctx: &Ctx) {
+    let g = ctx.instance.lock().unwrap();
+    if let Err(e) = ctx.skills.lock().unwrap().save(&ctx.brain_dir, &g.key) { tracing::warn!("[skills] save: {e}"); }
+}
+
+/// Gate + run one hand. Returns (result, ok).
+async fn run_hand(ctx: &Ctx, verb: &str, input: &Value, tier: &str) -> (String, bool) {
+    let body = hands::body_of(input);
+    let target = deliberate::kira_target(verb, input);
+    match kira_gate::gate(&ctx.instance, verb, &target) {
+        Ok(_) => {
+            let result = hands::dispatch(verb, input, &ctx.hands).await;
+            let ok = !looks_failed(&result);
+            act(ctx, verb, &target, if ok { "ok" } else { "err" }, &result, tier, &body);
+            (result, ok)
+        }
+        Err(denial) => {
+            let msg = format!("denied by KIRA: {denial}");
+            act(ctx, verb, &target, "deny", &msg, tier, &body);
+            (msg, false)
+        }
+    }
+}
+
+/// Stage 4 §3.4 — replay a compiled skill. Every step is gated again.
+async fn replay_skill(ctx: &Ctx, text: &str, m: skills::Match, say_id: u64, t0: std::time::Instant) {
+    let (steps, key) = {
+        let st = ctx.skills.lock().unwrap();
+        let s = st.get(m.index()).unwrap();
+        (s.steps.clone(), s.key.clone())
+    };
+    ipc::send_state(&ctx.ipc_tx, "acting", "skill");
+    let n = steps.len();
+    let mut last = String::new();
+    for (i, step) in steps.iter().enumerate() {
+        if *ctx.cancel_rx.borrow() { break; }
+        let input = with_body(step.input.clone(), &step.body);
+        let (result, ok) = run_hand(ctx, &step.verb, &input, "skill").await;
+        if !ok {
+            let dropped = { let mut st = ctx.skills.lock().unwrap(); st.penalize(m.index()) };
+            save_skills(ctx);
+            let ms = t0.elapsed().as_secs_f64() * 1000.0;
+            tracing::warn!("[tier=skill {ms:.1}ms] step {}/{n} {} failed: {}", i + 1, step.verb, result.chars().take(80).collect::<String>());
+            say(ctx, say_id, format!(
+                "that stopped working at step {} of {} ({}): {}{}",
+                i + 1, n, step.verb, result.chars().take(120).collect::<String>(),
+                if dropped { " — i've dropped that skill and will think it through next time." } else { "" }
+            ));
+            ipc::send_state(&ctx.ipc_tx, "idle", "skill");
+            return;
+        }
+        last = result;
+    }
+    { let mut st = ctx.skills.lock().unwrap(); st.reinforce(m.index()); }
+    save_skills(ctx);
+    let ms = t0.elapsed().as_secs_f64() * 1000.0;
+    let how = match m { skills::Match::Exact(_) => "exact".to_string(), skills::Match::Near(_, j) => format!("near {j:.2}") };
+    tracing::info!("[tier=skill {ms:.1}ms] {text:?} ~ {key:?} ({how}), {n} step(s) ok");
+    let reply = if n == 1 {
+        format_reply(&steps[0].verb, &deliberate::kira_target(&steps[0].verb, &steps[0].input), &last)
+    } else {
+        format!("done — {n} steps. {}", last.chars().take(160).collect::<String>())
+    };
+    say(ctx, say_id, reply);
+    ipc::send_state(&ctx.ipc_tx, "idle", "skill");
+}
+
+async fn handle_utter(raw_text: &str, say_id: u64, ctx: &Ctx) {
     let t0 = std::time::Instant::now();
+    let ipc_tx = &ctx.ipc_tx;
+
+    // ── Tier 0: SKILL REPLAY (compiled plan, no model) ─────────────────────
+    ipc::send_state(ipc_tx, "thinking", "reflex");
+    let hit = { ctx.skills.lock().unwrap().find(raw_text) };
+    if let Some(m) = hit {
+        replay_skill(ctx, raw_text, m, say_id, t0).await;
+        return;
+    }
+
+    // Stage 4 §2.4: "on the pi, ..." routes the whole turn to a body
+    let names = ctx.reach.names();
+    let (text, route) = reach::split_body(raw_text, &names);
+    let text = text.as_str();
+    let route_body = route.clone().unwrap_or_else(|| reach::SEAT.to_string());
 
     // ── Tier 1: REFLEX ──────────────────────────────────────────────────────
-    ipc::send_state(ipc_tx, "thinking", "reflex");
-
     if let Some(intent) = reflex::match_intent(text) {
         if reflex::needs_confirm(&intent, text) {
             let what = match intent.target.as_str() { "sleep" => "sleep", "shutdown" => "shut down", _ => "reboot" };
-            ipc::send(ipc_tx, &OpMsg::Say {
-                id: say_id,
-                text: format!("confirm: {what}? say '{what} now' to confirm."),
-                delta: false, done: true,
-            });
+            say(ctx, say_id, format!("confirm: {what}? say '{what} now' to confirm."));
             ipc::send_state(ipc_tx, "idle", "reflex");
             return;
         }
-
         let verb = intent.verb.clone();
         let target = intent.target.clone();
-
-        match kira_gate::gate(instance, &verb, &target) {
-            Ok(_) => {
-                ipc::send_state(ipc_tx, "acting", "reflex");
-                let input = verb_to_input(&verb, &target);
-                let result = hands::dispatch(&verb, &input, hand_ctx).await;
-                let ms = t0.elapsed().as_secs_f64() * 1000.0;
-                tracing::info!("[tier=reflex {ms:.1}ms] {text} -> {verb} {target} ok");
-                ipc::send(ipc_tx, &OpMsg::Act {
-                    verb: verb.clone(), target: target.clone(),
-                    status: "ok".into(),
-                    digest: result.chars().take(100).collect(),
-                });
-                let reply = format_reply(&verb, &target, &result);
-                ipc::send(ipc_tx, &OpMsg::Say { id: say_id, text: reply, delta: false, done: true });
-            }
-            Err(denial) => {
-                let ms = t0.elapsed().as_secs_f64() * 1000.0;
-                tracing::warn!("[tier=reflex {ms:.1}ms] KIRA denied: {denial}");
-                ipc::send(ipc_tx, &OpMsg::Act {
-                    verb: verb.clone(), target: target.clone(),
-                    status: "deny".into(), digest: denial.to_string(),
-                });
-                ipc::send(ipc_tx, &OpMsg::Say {
-                    id: say_id, text: format!("i can't do that: {denial}"),
-                    delta: false, done: true,
-                });
-            }
+        let input = with_body(verb_to_input(&verb, &target), &route_body);
+        ipc::send_state(ipc_tx, "acting", "reflex");
+        let (result, ok) = run_hand(ctx, &verb, &input, "reflex").await;
+        let ms = t0.elapsed().as_secs_f64() * 1000.0;
+        if ok {
+            tracing::info!("[tier=reflex {ms:.1}ms] {text} -> {verb} {target} @{route_body} ok");
+            say(ctx, say_id, format_reply(&verb, &target, &result));
+        } else {
+            tracing::warn!("[tier=reflex {ms:.1}ms] {verb} failed: {result}");
+            say(ctx, say_id, if result.starts_with("denied") { format!("i can't do that: {result}") } else { result.chars().take(200).collect() });
         }
         ipc::send_state(ipc_tx, "idle", "reflex");
         return;
     }
 
-    // ── Tier 2: FAST ────────────────────────────────────────────────────────
-    let want_deliberate = api_key.is_some() && persona::should_escalate(text);
+    let available_verbs = current_verbs(&ctx.instance);
+    let bodies = names.clone();
+    let want_deliberate = ctx.api_key.is_some() && persona::should_escalate(text);
+    let speculate = ctx.config.tiers.speculate && ctx.api_key.is_some() && !want_deliberate;
+
+    // routing hint for the deliberate tier
+    let extra_system = match &route {
+        Some(b) if b != reach::SEAT => format!("\nThe human addressed the body '{b}' for this request: pass body=\"{b}\" on your tool calls.\n"),
+        _ => String::new(),
+    };
+
+    // ── Tier 2: FAST (∥ HELD DELIBERATE when speculating) ──────────────────
+    // A deliberate future that is started now but shows nothing and runs no
+    // hand until released. If the fast tier wins, it is simply dropped.
+    let (rel_tx, rel_rx) = watch::channel(false);
+    let memories = { ctx.instance.lock().unwrap().state.durable_digest(8, 4) };
+    let prior = ctx.history.lock().unwrap().as_json();
+    let ctx_d = ctx.clone();
+    let text_d = text.to_string();
+    let verbs_d = available_verbs.clone();
+    let bodies_d = bodies.clone();
+    let extra_d = extra_system.clone();
+    let key_d = ctx.api_key.clone().unwrap_or_default();
+    let delib = async move {
+        let mut tool_exec = |name: &str, input: &Value| -> std::pin::Pin<Box<dyn std::future::Future<Output = (String, bool)> + Send>> {
+            let name = name.to_string();
+            let input = input.clone();
+            let c = ctx_d.clone();
+            Box::pin(async move {
+                let (r, ok) = run_hand(&c, &name, &input, "deliberate").await;
+                (r, !ok)
+            })
+        };
+        let release = if speculate { Some(rel_rx) } else { None };
+        ctx_d.deliberate.run_loop(
+            &text_d, &key_d, &verbs_d, &bodies_d, &memories, &extra_d, prior,
+            &ctx_d.ipc_tx, say_id, &ctx_d.pool, &mut tool_exec, &ctx_d.cancel_rx, release,
+        ).await
+    };
+    tokio::pin!(delib);
+    let mut delib_result: Option<anyhow::Result<(String, Vec<(String, Value, bool)>)>> = None;
 
     if !want_deliberate {
         ipc::send_state(ipc_tx, "thinking", "fast");
-        let hist_json = history.lock().unwrap().as_json();
-        // Speed contract: if the local model takes longer than a beat, say so
-        // immediately rather than leaving the human staring at a silent bar.
-        let ask = fast_tier.ask(text, available_verbs, &hist_json);
+        let hist_json = ctx.history.lock().unwrap().as_json();
+        let ask = ctx.fast.ask(text, &available_verbs, &hist_json);
         tokio::pin!(ask);
-        let fast_result = tokio::select! {
-            r = &mut ask => r,
-            _ = tokio::time::sleep(std::time::Duration::from_millis(600)) => {
-                ipc::send(ipc_tx, &OpMsg::Say { id: say_id, text: "one sec.".into(), delta: false, done: true });
-                ask.await
+        let budget = tokio::time::sleep(std::time::Duration::from_millis(ctx.config.tiers.fast_budget_ms.max(100)));
+        tokio::pin!(budget);
+        let fast_result = loop {
+            tokio::select! {
+                r = &mut ask => break r,
+                r = &mut delib, if speculate && delib_result.is_none() => { delib_result = Some(r); }
+                _ = &mut budget => {
+                    if speculate {
+                        // the fast tier missed its budget: the held stream takes over
+                        tracing::info!("[tier=fast] over budget ({} ms) → releasing deliberate", ctx.config.tiers.fast_budget_ms);
+                        break None;
+                    } else {
+                        say(ctx, say_id, "one sec.");
+                        break ask.await;
+                    }
+                }
             }
         };
         match fast_result {
@@ -398,145 +616,95 @@ async fn handle_utter(
             Some(resp) if resp.intent != "escalate"
                 && !(resp.intent == "act" && resp.verb.as_deref().map(|v| v.is_empty() || !available_verbs.iter().any(|a| a == v)).unwrap_or(true)) => {
                 let ms = t0.elapsed().as_millis();
-                tracing::info!("[tier=fast {ms}ms] intent={} verb={:?}", resp.intent, resp.verb);
-                ipc::send(ipc_tx, &OpMsg::Say {
-                    id: say_id, text: resp.reply.clone(), delta: false, done: true,
-                });
+                tracing::info!("[tier=fast {ms}ms] intent={} verb={:?}{}", resp.intent, resp.verb, if speculate { " (deliberate dropped)" } else { "" });
+                say(ctx, say_id, resp.reply.clone());
                 if resp.intent == "act" {
                     if let (Some(verb), Some(target)) = (&resp.verb, &resp.target) {
-                        if kira_gate::gate(instance, verb, target).is_ok() {
-                            let input = verb_to_input(verb, target);
-                            let result = hands::dispatch(verb, &input, hand_ctx).await;
-                            ipc::send(ipc_tx, &OpMsg::Act {
-                                verb: verb.clone(), target: target.clone(),
-                                status: "ok".into(),
-                                digest: result.chars().take(100).collect(),
-                            });
+                        let input = with_body(verb_to_input(verb, target), &route_body);
+                        let (_r, ok) = run_hand(ctx, verb, &input, "fast").await;
+                        if ok {
+                            let step = Step { verb: verb.clone(), input: verb_to_input(verb, target), body: route_body.clone() };
+                            let tick = ctx.instance.lock().unwrap().tick;
+                            let new = ctx.skills.lock().unwrap().learn(raw_text, vec![step], tick, "fast");
+                            if new { tracing::info!("[skills] compiled from fast: {raw_text:?}"); save_skills(ctx); }
                         }
                     }
                 }
                 {
-                    let mut h = history.lock().unwrap();
+                    let mut h = ctx.history.lock().unwrap();
                     h.push(history::Turn::user(text));
                     h.push(history::Turn::assistant(&resp.reply));
                 }
                 ipc::send_state(ipc_tx, "idle", "fast");
-                return;
+                return; // `delib` is dropped here → the speculative request is cancelled
             }
             _ => tracing::info!("[tier=fast] timeout/escalate → deliberate"),
         }
     }
 
     // ── Tier 3: DELIBERATE ──────────────────────────────────────────────────
-    let key = match api_key {
-        Some(k) => k.clone(),
-        None => {
-            ipc::send(ipc_tx, &OpMsg::Say {
-                id: say_id,
-                text: "i need an API key for that — the reflex and fast tiers are still here.".into(),
-                delta: false, done: true,
-            });
-            ipc::send_state(ipc_tx, "idle", "reflex");
-            return;
-        }
-    };
-
+    if ctx.api_key.is_none() {
+        say(ctx, say_id, "i need an API key for that — the reflex and fast tiers are still here.");
+        ipc::send_state(ipc_tx, "idle", "reflex");
+        return;
+    }
     ipc::send_state(ipc_tx, "thinking", "deliberate");
 
-    // filler cue
-    {
+    if speculate {
+        let _ = rel_tx.send(true); // flush what was held, let the hands run
+    } else {
+        // filler cue — only when nothing is already in flight
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
         let mut h = DefaultHasher::new();
         text.hash(&mut h);
         let cue = persona::FILLER_CUES[(h.finish() as usize) % persona::FILLER_CUES.len()];
-        ipc::send(ipc_tx, &OpMsg::Say { id: say_id, text: cue.into(), delta: false, done: true });
+        say(ctx, say_id, cue);
     }
 
-    let memories = {
-        let g = instance.lock().unwrap();
-        g.state.durable_digest(8, 4)
-    };
-
-    // Build a tool executor that lives long enough.
-    // We use a simple closure that captures Arc clones.
-    let instance2 = instance.clone();
-    let hctx2 = hand_ctx.clone();
-    let itx2 = ipc_tx.clone();
-    let sid2 = say_id;
-
-    let mut tool_exec = |name: &str, input: &Value| -> std::pin::Pin<Box<dyn std::future::Future<Output = (String, bool)> + Send>> {
-        let name = name.to_string();
-        let input = input.clone();
-        let inst = instance2.clone();
-        let ctx = hctx2.clone();
-        let tx = itx2.clone();
-        let target_str = deliberate::kira_target(&name, &input);
-
-        Box::pin(async move {
-            match kira_gate::gate(&inst, &name, &target_str) {
-                Ok(_) => {
-                    let result = hands::dispatch(&name, &input, &ctx).await;
-                    ipc::send(&tx, &OpMsg::Act {
-                        verb: name.clone(), target: target_str,
-                        status: "ok".into(),
-                        digest: result.chars().take(100).collect(),
-                    });
-                    (result, false)
-                }
-                Err(denial) => {
-                    let msg = format!("denied by KIRA: {denial}");
-                    ipc::send(&tx, &OpMsg::Act {
-                        verb: name.clone(), target: target_str,
-                        status: "deny".into(), digest: msg.clone(),
-                    });
-                    (msg, true)
-                }
+    let result = match delib_result { Some(r) => r, None => delib.await };
+    match result {
+        Ok((reply, ran)) => {
+            let ms = t0.elapsed().as_millis();
+            tracing::info!("[tier=deliberate {ms}ms] {} chars, {} hand(s){}", reply.len(), ran.len(), if speculate { " (speculative)" } else { "" });
+            {
+                let mut h = ctx.history.lock().unwrap();
+                h.push(history::Turn::user(text));
+                h.push(history::Turn::assistant(&reply));
             }
-        })
-    };
-
-    {
-        let mut hist = history.lock().unwrap();
-        match deliberate_tier
-            .run_loop(
-                text,
-                &key,
-                available_verbs,
-                &memories,
-                &mut *hist,
-                ipc_tx,
-                say_id,
-                &mut tool_exec,
-                cancel_rx,
-            )
-            .await
-        {
-            Ok(reply) => {
-                let ms = t0.elapsed().as_millis();
-                tracing::info!("[tier=deliberate {ms}ms] {} chars", reply.len());
-                let mut g = instance.lock().unwrap();
+            let tick = {
+                let mut g = ctx.instance.lock().unwrap();
                 let tick = g.tick;
                 g.state.learn_skill("deliberate", text, tick);
+                tick
+            };
+            // Stage 4 §3.1: every hand succeeded → compile the plan
+            if !ran.is_empty() && ran.iter().all(|(_, _, err)| !err) {
+                let steps: Vec<Step> = ran.iter().map(|(verb, input, _)| {
+                    let body = hands::body_of(input);
+                    let mut inp = input.clone();
+                    if let Some(m) = inp.as_object_mut() { m.remove("body"); }
+                    Step { verb: verb.clone(), input: inp, body }
+                }).collect();
+                if SkillStore::compilable(&steps) {
+                    let new = ctx.skills.lock().unwrap().learn(raw_text, steps, tick, "deliberate");
+                    tracing::info!("[skills] {} {:?} ({} step(s))", if new { "compiled" } else { "refreshed" }, raw_text, ran.len());
+                    save_skills(ctx);
+                }
             }
-            Err(e) if e.to_string() != "cancelled" => {
-                tracing::warn!("[tier=deliberate] error: {e}");
-                ipc::send(ipc_tx, &OpMsg::Say {
-                    id: say_id,
-                    text: format!("something went wrong: {e}"),
-                    delta: false, done: true,
-                });
-            }
-            _ => {}
         }
+        Err(e) if e.to_string() != "cancelled" => {
+            tracing::warn!("[tier=deliberate] error: {e}");
+            say(ctx, say_id, format!("something went wrong: {e}"));
+        }
+        _ => {}
     }
-
     ipc::send_state(ipc_tx, "idle", "deliberate");
 }
 
 fn verb_to_input(verb: &str, target: &str) -> serde_json::Value {
     match verb {
-        "app.open" | "app.close" | "window.focus" => serde_json::json!({"name": target}),
+        "app.open" | "app.close" | "window.focus" | "body.forget" => serde_json::json!({"name": target}),
         "sys.volume" | "sys.brightness" | "sys.wifi" | "sys.bluetooth" | "sys.power"
             => serde_json::json!({"action": target}),
         "web.search" | "fs.search" => serde_json::json!({"query": target}),
@@ -547,6 +715,12 @@ fn verb_to_input(verb: &str, target: &str) -> serde_json::Value {
         "notes.write" => serde_json::json!({"content": target}),
         "notes.read" => serde_json::json!({"topic": target}),
         "screen.look" => serde_json::json!({"_screenshot_only": target == "screenshot"}),
+        "skill.forget" => serde_json::json!({"utterance": target}),
+        "task.stop" => serde_json::json!({"id": target.parse::<u64>().unwrap_or(0)}),
+        "shell.run" => serde_json::json!({"cmd": target}),
+        "fs.list" | "fs.read" | "fs.stat" | "fs.mkdir" => serde_json::json!({"path": target}),
+        "sys.time" | "sys.date" | "sys.battery" | "sys.lock" | "skill.list" | "task.list" | "body.list" | "pool.status"
+            | "app.list" | "window.list" | "window.fullscreen" | "window.close" => serde_json::json!({}),
         _ => serde_json::json!(target),
     }
 }
@@ -564,10 +738,12 @@ fn format_reply(verb: &str, target: &str, result: &str) -> String {
             format!("battery is {pct}")
         }
         "notes.write" => "noted.".into(),
-        "notes.read" => result.chars().take(200).collect(),
+        "notes.read" | "skill.list" | "task.list" | "body.list" | "pool.status" | "skill.forget" | "task.stop" | "body.forget"
+            => result.chars().take(400).collect(),
         "screen.look" => "screenshot taken.".into(),
         "sys.lock" => "screen locked.".into(),
-        _ => if result.is_empty() { "done.".into() } else { result.chars().take(80).collect() },
+        "shell.run" | "code.run" => if result.trim().is_empty() { "done.".into() } else { result.trim().chars().take(200).collect() },
+        _ => { let _ = target; if result.is_empty() { "done.".into() } else { result.chars().take(80).collect() } },
     }
 }
 

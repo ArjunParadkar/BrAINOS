@@ -117,6 +117,16 @@ static RULES: &[Rule] = &[
     Rule { pattern: r"(?i)^what(?:'s|\s+is)\s+in\s+(?:my\s+)?notes$", verb: "notes.read", target_group: false, target_literal: "" },
     Rule { pattern: r"(?i)^read\s+(?:my\s+)?notes(?:\s+about\s+(.+))?$", verb: "notes.read", target_group: true, target_literal: "" },
 
+    // ---- Stage 4: the entity about itself ----
+    Rule { pattern: r"(?i)^forget\s+(?:that|it|this|the\s+last\s+one)$", verb: "skill.forget", target_group: false, target_literal: "that" },
+    Rule { pattern: r"(?i)^forget\s+how\s+to\s+(.+)$", verb: "skill.forget", target_group: true, target_literal: "" },
+    Rule { pattern: r"(?i)^(?:what\s+do\s+you\s+know\s+how\s+to\s+do|what\s+are\s+your\s+skills|list\s+(?:your\s+)?skills|what\s+can\s+you\s+do\s+from\s+memory)$", verb: "skill.list", target_group: false, target_literal: "" },
+    Rule { pattern: r"(?i)^(?:what\s+are\s+you\s+watching|list\s+(?:standing\s+)?tasks|what\s+are\s+your\s+(?:standing\s+)?(?:tasks|orders)|show\s+(?:standing\s+)?tasks)$", verb: "task.list", target_group: false, target_literal: "" },
+    Rule { pattern: r"(?i)^stop\s+(?:task|watcher)\s+#?(\d+)$", verb: "task.stop", target_group: true, target_literal: "" },
+    Rule { pattern: r"(?i)^(?:(?:which|what)\s+(?:bodies|devices)\s+(?:are\s+you\s+in|do\s+you\s+have)|where\s+are\s+you|list\s+(?:your\s+)?bodies)$", verb: "body.list", target_group: false, target_literal: "" },
+    Rule { pattern: r"(?i)^(?:which|what)\s+(?:brains|models)\s+do\s+you\s+have(?:\s+right\s+now)?$", verb: "pool.status", target_group: false, target_literal: "" },
+    Rule { pattern: r"(?i)^(?:release|forget|drop)\s+(?:the\s+)?body\s+(.+)$", verb: "body.forget", target_group: true, target_literal: "" },
+
     // ---- time / date / battery ----
     Rule { pattern: r"(?i)^what(?:'s|\s+is)?\s+the\s+(?:current\s+)?time\??$", verb: "sys.time", target_group: false, target_literal: "" },
     Rule { pattern: r"(?i)^what\s+time\s+is\s+it\??$", verb: "sys.time", target_group: false, target_literal: "" },
@@ -365,6 +375,18 @@ mod tests {
         check("what's the date", "sys.date", "");
         check("what's the battery", "sys.battery", "");
         check("how much battery", "sys.battery", "");
+    }
+
+    #[test]
+    fn test_entity_rules() {
+        check("forget that", "skill.forget", "that");
+        check("Forget how to list the files in /tmp.", "skill.forget", "list the files in /tmp");
+        check("what do you know how to do", "skill.list", "");
+        check("what are you watching", "task.list", "");
+        check("stop task #3", "task.stop", "3");
+        check("where are you", "body.list", "");
+        check("which brains do you have right now", "pool.status", "");
+        check("release the body pi", "body.forget", "pi");
     }
 
     #[test]

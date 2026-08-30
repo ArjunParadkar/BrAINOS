@@ -13,7 +13,6 @@ use std::time::Duration;
 use tokio::sync::broadcast;
 
 use crate::config::Config;
-use crate::history::{History, Turn};
 use crate::ipc::{send, OpMsg};
 use crate::persona::build_system;
 use crate::sse::{parse_event, parse_raw_events, ContentBlock, Delta, SseEvent};
@@ -39,11 +38,26 @@ pub enum TurnResult {
 }
 
 pub fn tool_definitions(available_verbs: &[String]) -> Vec<Value> {
+    tool_definitions_for(available_verbs, &[])
+}
+
+/// Tool list for the model. `bodies` are the Reach bodies present right now;
+/// when there are any, every tool gains an optional `body` argument.
+pub fn tool_definitions_for(available_verbs: &[String], bodies: &[String]) -> Vec<Value> {
     all_tool_specs()
         .into_iter()
         .filter(|t| {
             let name = t["name"].as_str().unwrap_or("");
             available_verbs.iter().any(|v| v == name)
+        })
+        .map(|mut t| {
+            if !bodies.is_empty() {
+                let desc = format!("Which body to act through: \"seat\" (this machine, default) or one of: {}.", bodies.join(", "));
+                if let Some(props) = t["input_schema"]["properties"].as_object_mut() {
+                    props.insert("body".into(), json!({"type":"string","description":desc}));
+                }
+            }
+            t
         })
         .map(|mut t| {
             // Anthropic tool names must match ^[a-zA-Z0-9_-]{1,128}$; dots are not allowed.
@@ -92,6 +106,16 @@ fn all_tool_specs() -> Vec<Value> {
         json!({"name":"code.run","description":"Run code (python3/bash/node).","input_schema":{"type":"object","properties":{"lang":{"type":"string"},"src":{"type":"string"}},"required":["lang","src"]}}),
         json!({"name":"voice.listen","description":"Record and transcribe speech.","input_schema":{"type":"object","properties":{"seconds":{"type":"integer"}}}}),
         json!({"name":"voice.speak","description":"Speak text via piper TTS.","input_schema":{"type":"object","properties":{"text":{"type":"string"}},"required":["text"]}}),
+        // Stage 4: the entity's own proprioception and standing orders
+        json!({"name":"body.list","description":"List the bodies you are in right now (this seat plus any Reach devices) and their hands.","input_schema":{"type":"object","properties":{}}}),
+        json!({"name":"body.forget","description":"Release a Reach body; its hands leave your body map.","input_schema":{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}}),
+        json!({"name":"skill.list","description":"List the plans you have compiled into muscle memory.","input_schema":{"type":"object","properties":{}}}),
+        json!({"name":"skill.forget","description":"Drop a compiled skill: the last one used, or by its utterance.","input_schema":{"type":"object","properties":{"utterance":{"type":"string"}}}}),
+        json!({"name":"task.every","description":"Standing order: say `utterance` to yourself every N seconds (min 10). Use for 'every morning', 'every 20 minutes', 'keep checking'.","input_schema":{"type":"object","properties":{"seconds":{"type":"integer"},"utterance":{"type":"string"}},"required":["seconds","utterance"]}}),
+        json!({"name":"task.when","description":"Watcher: run shell `cmd` every 15 s; when its output contains `contains`, do `utterance` once. Use for 'when the build finishes', 'tell me when X'.","input_schema":{"type":"object","properties":{"cmd":{"type":"string"},"contains":{"type":"string"},"utterance":{"type":"string"}},"required":["cmd","contains","utterance"]}}),
+        json!({"name":"task.list","description":"List standing tasks and watchers.","input_schema":{"type":"object","properties":{}}}),
+        json!({"name":"task.stop","description":"Stop a standing task by id.","input_schema":{"type":"object","properties":{"id":{"type":"integer"}},"required":["id"]}}),
+        json!({"name":"pool.status","description":"Which models (brains) you have right now and whether they are up.","input_schema":{"type":"object","properties":{}}}),
     ]
 }
 
@@ -120,7 +144,13 @@ impl DeliberateTier {
         api_key: &str,
         ipc_tx: &broadcast::Sender<String>,
         say_id: u64,
+        model: &str,
+        release: &mut Option<tokio::sync::watch::Receiver<bool>>,
     ) -> Result<TurnResult> {
+        // Stage 4 §4: while `release` is Some(false) this turn is SPECULATIVE —
+        // text is buffered instead of shown, so a fast-tier answer can still
+        // win without the human ever seeing two voices.
+        let mut held: String = String::new();
         let mut headers = HeaderMap::new();
         headers.insert("x-api-key", HeaderValue::from_str(api_key)?);
         headers.insert("anthropic-version", HeaderValue::from_static("2023-06-01"));
@@ -128,7 +158,7 @@ impl DeliberateTier {
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
         let body = json!({
-            "model": self.config.anthropic.model,
+            "model": if model.is_empty() { self.config.anthropic.model.as_str() } else { model },
             "max_tokens": self.config.anthropic.max_tokens,
             "fallbacks": "default",
             "stream": true,
@@ -189,6 +219,10 @@ impl DeliberateTier {
                             match delta {
                                 Delta::TextDelta { text: t } => {
                                     if let Some(acc) = text_blocks.get_mut(&index) { acc.push_str(&t); }
+                                    if let Some(rx) = release.as_ref() {
+                                        if !*rx.borrow() { held.push_str(&t); continue; }
+                                        if !held.is_empty() { send(ipc_tx, &OpMsg::Say { id: say_id, text: std::mem::take(&mut held), delta: true, done: false }); }
+                                    }
                                     send(ipc_tx, &OpMsg::Say { id: say_id, text: t, delta: true, done: false });
                                 }
                                 Delta::InputJsonDelta { partial_json } => {
@@ -214,6 +248,14 @@ impl DeliberateTier {
             }
         }
 
+        // a held turn waits here for the verdict; released text flushes in order
+        if let Some(rx) = release.as_mut() {
+            if !*rx.borrow() {
+                let _ = rx.wait_for(|v| *v).await;
+            }
+            if !held.is_empty() { send(ipc_tx, &OpMsg::Say { id: say_id, text: std::mem::take(&mut held), delta: true, done: false }); }
+            *release = None; // later iterations of this turn are live
+        }
         // emit done
         send(ipc_tx, &OpMsg::Say { id: say_id, text: String::new(), delta: false, done: true });
 
@@ -243,30 +285,61 @@ impl DeliberateTier {
         }
     }
 
+    /// One deliberate turn over a snapshot of the conversation. Returns the
+    /// reply text and the list of hands that ran (verb, input, is_error), in
+    /// order — the raw material for skill compilation.
     pub async fn run_loop(
         &self,
         user_text: &str,
         api_key: &str,
         available_verbs: &[String],
+        bodies: &[String],
         memories: &[String],
-        history: &mut History,
+        extra_system: &str,
+        prior: Vec<Value>,
         ipc_tx: &broadcast::Sender<String>,
         say_id: u64,
-        // tool executor: returns result string for (name, input)
+        pool: &crate::pool::Pool,
         tool_exec: &mut dyn FnMut(&str, &Value) -> std::pin::Pin<Box<dyn std::future::Future<Output = (String, bool)> + Send>>,
         cancel_rx: &tokio::sync::watch::Receiver<bool>,
-    ) -> Result<String> {
-        let system = build_system(available_verbs, memories);
-        let tools = tool_definitions(available_verbs);
+        mut release: Option<tokio::sync::watch::Receiver<bool>>,
+    ) -> Result<(String, Vec<(String, Value, bool)>)> {
+        let mut system = build_system(available_verbs, memories);
+        if !bodies.is_empty() {
+            system.push_str(&format!("\nYou are present in more than one body right now. Besides this seat you can act through: {}. Pass body=\"<name>\" on any tool to use that device's hand; omit it for this machine. Use body.list if unsure.\n", bodies.join(", ")));
+        }
+        if !extra_system.is_empty() { system.push_str(extra_system); }
+        let tools = tool_definitions_for(available_verbs, bodies);
 
-        history.push(Turn::user(user_text));
-        let mut messages = history.as_json();
+        let mut messages = prior;
+        messages.push(json!({"role":"user","content":user_text}));
         let mut full_text = String::new();
+        let mut ran: Vec<(String, Value, bool)> = Vec::new();
 
         for _iteration in 0..10 {
             if *cancel_rx.borrow() { bail!("cancelled"); }
 
-            match self.stream_turn(&system, &messages, &tools, api_key, ipc_tx, say_id).await? {
+            // Stage 4 §5: first healthy deliberate model; fail over on a request error.
+            let mut turn: Option<TurnResult> = None;
+            let mut last_err: Option<anyhow::Error> = None;
+            let cands = pool.candidates("deliberate");
+            if cands.is_empty() { bail!("no deliberate model in the pool"); }
+            for (idx, spec) in cands {
+                let t0 = std::time::Instant::now();
+                match self.stream_turn(&system, &messages, &tools, api_key, ipc_tx, say_id, &spec.model, &mut release).await {
+                    Ok(t) => { pool.mark_ok(idx, t0.elapsed().as_millis()); turn = Some(t); break; }
+                    Err(e) => {
+                        let msg = e.to_string();
+                        if msg == "cancelled" { return Err(e); }
+                        tracing::warn!("[deliberate] {} failed: {msg} — trying next model", spec.model);
+                        pool.mark_failed(idx);
+                        last_err = Some(e);
+                    }
+                }
+            }
+            let Some(turn) = turn else { return Err(last_err.unwrap_or_else(|| anyhow::anyhow!("all deliberate models failed"))); };
+
+            match turn {
                 TurnResult::Done { text } => {
                     full_text = text;
                     break;
@@ -280,6 +353,7 @@ impl DeliberateTier {
                         if *cancel_rx.borrow() { bail!("cancelled"); }
                         let fut = tool_exec(&call.name, &call.input);
                         let (result, is_error) = fut.await;
+                        ran.push((call.name.clone(), call.input.clone(), is_error));
                         results.push(json!({
                             "type": "tool_result",
                             "tool_use_id": call.id,
@@ -292,8 +366,7 @@ impl DeliberateTier {
             }
         }
 
-        history.push(Turn::assistant(&full_text));
-        Ok(full_text)
+        Ok((full_text, ran))
     }
 }
 

@@ -12,6 +12,7 @@
 #   --headless   -display none, serial on stdio (console=ttyS0 already in UKI)
 #   --graphical  force gtk gl display (default when a DISPLAY is present)
 #   --ssh-port N host-forward for guest sshd (default 2222)
+#   --reach-port N host-forward for the operator's Reach listener (default 7777)
 #   --mem G --smp N
 #   --audio-wav F  capture everything the guest plays to host wav F (default: a
 #                  silent dummy backend; the HDA card is present either way)
@@ -24,7 +25,7 @@ REPO="$(cd ../../.. && pwd)"
 WORK="$BUILD/work"
 QLOCAL="$REPO/tools/qemu-local"
 
-MODE_DIRECT=0 HEADLESS=0 GRAPHICAL=-1 SSH_PORT=2222 MEM=4G SMP=8 SERIAL_LOG="" AUDIO_WAV=""
+MODE_DIRECT=0 HEADLESS=0 GRAPHICAL=-1 SSH_PORT=2222 REACH_PORT=7777 MEM=4G SMP=8 SERIAL_LOG="" AUDIO_WAV=""
 BODY="" EFI="" IMG=""
 while [ $# -gt 0 ]; do case "$1" in
   --headless)  HEADLESS=1 ;;
@@ -32,6 +33,7 @@ while [ $# -gt 0 ]; do case "$1" in
   --body)      MODE_DIRECT=1; BODY="$2"; shift ;;
   --efi)       MODE_DIRECT=1; EFI="$2"; shift ;;
   --ssh-port)  SSH_PORT="$2"; shift ;;
+  --reach-port) REACH_PORT="$2"; shift ;;
   --serial-log) SERIAL_LOG="$2"; HEADLESS=1; shift ;;
   --mem)       MEM="$2"; shift ;;
   --smp)       SMP="$2"; shift ;;
@@ -112,7 +114,7 @@ COMMON=(
   -drive if=pflash,format=raw,file="$VARS"
   -drive file="$IMG",format=raw,if=none,id=disk0,cache=writeback,"$SNAP"
   -device virtio-blk-pci,drive=disk0
-  -netdev user,id=n,hostfwd=tcp:127.0.0.1:${SSH_PORT}-:22
+  -netdev user,id=n,hostfwd=tcp:127.0.0.1:${SSH_PORT}-:22,hostfwd=tcp:127.0.0.1:${REACH_PORT}-:7777
   -device virtio-net-pci,netdev=n
   -device qemu-xhci -device usb-tablet
   -vga none

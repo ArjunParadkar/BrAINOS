@@ -131,4 +131,14 @@ impl BodyMap {
     pub fn knows(&self, id: &str) -> bool {
         self.regions.iter().any(|r| r.id == id)
     }
+
+    /// A region leaves the body (a tethered device disconnected, a limb was
+    /// released). Its verbs vanish with it, so KIRA's authz stage refuses
+    /// them from the next proposal on — the entity cannot keep claiming a
+    /// hand it no longer has. Returns true if something was removed.
+    pub fn release(&mut self, id: &str) -> bool {
+        let before = self.regions.len();
+        self.regions.retain(|r| r.id != id);
+        self.regions.len() != before
+    }
 }

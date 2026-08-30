@@ -183,6 +183,47 @@ Linux sshd in **17.9 s**; p3 owned by `human` and read by the operator
 single-digit ms; a deliberate turn (two API rounds + a real `fs.list`) in
 7.1 s with first words streamed at ~3 s.
 
+## Stage 4: the Entity (one mind, every body, no wait)
+
+Stage 3 made the key the sole operator of one bootable machine. Stage 4
+(`docs/STAGE4_ENTITY.md`) makes it an **entity**: one identity and one memory
+present in every device it can reach at once, that gets faster the more it is
+used, and thinks with a pool of models rather than one.
+
+```
+reach/brainos-reach.py   ONE stdlib-only Python file for any other device (phone,
+                         Pi, Mac, Windows, a second laptop). It OFFERS the device's
+                         hands over TCP; the seat proves it holds the BrAIn Key by
+                         signing a fresh nonce (pure-Python RFC 8032 verify, no pip).
+                         The device never remembers — results are bounded digests
+                         that become memory on the key. "on the pi, restart cups".
+body/operator/src/
+  reach.rs      the seat side: each body becomes region reach/<name> in the ONE
+                body map with exactly the verbs it offered; KIRA authz sees it;
+                disconnect releases it. `body` argument on every tool; "where are you".
+  skills.rs     procedural compilation: a deliberate turn whose hands all succeeded
+                is compiled to a signed skill (SKL_A/B on the key, ed25519 by the
+                BrAIn Key — a planted skill is not the entity's and never loads).
+                The same utterance replays in the skill tier with no model in the
+                path, every step KIRA-gated again. "forget that" drops it.
+  pool.rs       the model pool: [[pool.models]] with roles fast/deliberate/vision,
+                health-probed, fail-over in order. "which brains do you have".
+  tasks.rs      standing orders: task.every / task.when (a shell predicate), run
+                through the same tiers and gate, persisted, re-armed at boot.
+  main.rs       one utterance: skill replay → reflex → fast ∥ HELD deliberate.
+                The deliberate request starts in parallel with the local model,
+                buffered and hands withheld; if the fast tier answers, it is
+                dropped, else it is released — first token already in flight.
+```
+
+Verified 2026-08-30 on the dev host (`body/operator/tests/entity_test.py`,
+24/24, real Fable API, real Reach body on localhost): reflex 1.0 ms; Reach
+handshake 170 ms; a deliberate turn using a hand on the remote body (11.5 s)
+compiled and replayed as a skill in **1.4 ms** (7928x); the skill survived an
+operator restart through the signed store; a wrong-key body was refused and
+tamper-logged; a `task.when` watcher fired; the body's departure was reflected
+at once and nothing reached it afterwards.
+
 ## The tether
 
 ```sh
@@ -302,7 +343,9 @@ valid PE32+/ARM64 EFI application from the identical source.
 | `cd body/operator && cargo test` | the operator: reflex table, KIRA gate on every hand, CDP error paths, BSEC key records, config | — |
 | `body/operator/tests/fake_face.py` | a live operator on a socket: reflex ms, notes, KIRA denial of `rm -rf /`, a real Fable tool loop | API key |
 | `body/build/tools/body_smoke.sh` | the body alone in QEMU: units, llama, ydotoold, hyprland, operator, chromium CDP, whisper, piper | docker build |
-| `body/build/tools/stick_test.sh` | the production stick: seed banner, KIRA incorporate, no fallback, Linux login, p1/p3 wiring, every service, a reflex turn over IPC, **a spoken turn** (real audio through the guest's PipeWire graph: piper-synthesised prompt → push-to-talk via the face → whisper → tiers → piper reply → HDA card, captured host-side as `guest-audio.wav`), **a built surface** (deliberate tier `ui.build` → WebKitGTK panel on a Hyprland layer, `grim` screenshot pulled to `work/out/surface.png`) | docker build |
+| `body/operator/tests/entity_test.py` | Stage 4 live: a real operator + a real `brainos-reach.py` body; handshake accepted with the key and **refused with a wrong key** (tamper log), a reflex routed to the body, a deliberate turn compiled to a skill and replayed in ms, the skill rehydrated after restart, "forget that", a firing watcher, body departure, speculative first token | API key |
+| `python3 reach/brainos-reach.py selftest` | the device-side ed25519 verifier against the RFC 8032 vector | — |
+| `body/build/tools/stick_test.sh` | the production stick: seed banner, KIRA incorporate, no fallback, Linux login, p1/p3 wiring, every service, a reflex turn over IPC, **a spoken turn** (real audio through the guest's PipeWire graph: piper-synthesised prompt → push-to-talk via the face → whisper → tiers → piper reply → HDA card, captured host-side as `guest-audio.wav`), **a built surface** (deliberate tier `ui.build` → WebKitGTK panel on a Hyprland layer, `grim` screenshot pulled to `work/out/surface.png`), **a Reach body** (Stage 4: a host-side `brainos-reach.py` joins the guest's seat over the forwarded port, verifies the key on p1, takes a routed reflex, and keeps no memory) — 31 checks, green 2026-08-30 | docker build |
 
 ## What this is not (yet)
 
@@ -323,6 +366,12 @@ valid PE32+/ARM64 EFI application from the identical source.
   the HDA card) and the harness proves it with synthesised speech, but no
   human has spoken into a physical mic on metal yet. Whisper `base.en` on
   CPU transcribes a short command in well under a second in the VM.
+- **Reach trusts the signature, not the wire.** No TLS: on a hostile LAN
+  commands could be observed (never forged). Use a tunnel.
+- **Skills are exact-plan replays, not generalisations** — slot tokens
+  (numbers, paths, URLs) must match exactly, by design.
+- **Standing tasks run only while a seat is awake**; there is no datacenter
+  scheduler yet.
 - **Known environment flake:** roughly 1 boot in 15 freezes at firmware
   level (pre-BDS, and occasionally mid-run) on this box. Retry once; if it
   persists, `tools/read_bootlog.py` recovers the flight recorder from the

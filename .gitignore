@@ -29,3 +29,4 @@ __pycache__/
 body/build/work/
 *.ext4
 BODY.EFI
+iso_build/

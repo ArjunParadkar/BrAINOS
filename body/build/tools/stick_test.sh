@@ -19,7 +19,8 @@ SSHOPT=(-i "$KEYUSE" -p "$PORT" -o StrictHostKeyChecking=no -o UserKnownHostsFil
 sshc(){ ssh "${SSHOPT[@]}" human@127.0.0.1 "$@"; }
 
 echo ">> booting production stick $IMG (headless, snapshot)"
-"$TOOLS/run_body.sh" --serial-log "$SERIAL" --ssh-port "$PORT" --audio-wav "$GUESTWAV" "$IMG" >"$WORK/out/runbody-stick.log" 2>&1 &
+RPORT=$((PORT+5000))   # host side of the guest's Reach listener (Stage 4)
+"$TOOLS/run_body.sh" --serial-log "$SERIAL" --ssh-port "$PORT" --reach-port "$RPORT" --audio-wav "$GUESTWAV" "$IMG" >"$WORK/out/runbody-stick.log" 2>&1 &
 RUNPID=$!
 cleanup(){ kill "$RUNPID" 2>/dev/null || true; pkill -f "qemu-system-x86_64.*brainos.img" 2>/dev/null || true; rm -f "$KEYUSE"; }
 trap cleanup EXIT
@@ -141,6 +142,36 @@ REMOTE
 )"
 echo "$report"
 rf="$(echo "$report" | sed -n 's/.*SUMMARY p=\([0-9]*\) f=\([0-9]*\).*/\2/p')"
+
+# ── Stage 4 Reach: a body on the HOST joins the entity running in the guest ───
+# The guest operator signs a fresh nonce with the key on p1; the host-side
+# brainos-reach.py (stdlib only) verifies it against the pinned KEY.PUB, then a
+# reflex turn addressed to that body ("on lab, ...") runs on the host.
+echo ">> Stage 4 Reach (host body -> guest seat on 127.0.0.1:$RPORT):"
+GPUB="$(sshc 'cat /brain/BRAIN/KEY.PUB' 2>/dev/null | tr -d '\r\n ')"
+RD="$WORK/out/reach-lab"; rm -rf "$RD"; mkdir -p "$RD/home"
+ck "reach-guest-keypub"   bash -c "g='$GPUB'; test \${#g} -eq 64 && echo \${g:0:8}..\${g: -4}"
+BRAINOS_REACH_DIR="$RD" python3 "$REPO/reach/brainos-reach.py" pair "$GPUB" >/dev/null 2>&1 || true
+BRAINOS_REACH_DIR="$RD" python3 "$REPO/reach/brainos-reach.py" serve --seat "127.0.0.1:$RPORT" --name lab --home "$RD/home" >"$RD/log" 2>&1 &
+RPID=$!
+ck "reach-body-joined"    bash -c "for i in \$(seq 1 30); do grep -q 'is now a body' '$RD/log' && break; sleep 1; done; grep -m1 'is now a body' '$RD/log'"
+ck "reach-routed-reflex"  sshc 'python3 - <<'"'"'PY'"'"'
+import json,os,socket,time
+s=socket.socket(socket.AF_UNIX); s.connect(os.path.join(os.environ["XDG_RUNTIME_DIR"],"brainos","operator.sock")); s.settimeout(1)
+s.sendall((json.dumps({"t":"utter","text":"on lab, what time is it"})+"\n").encode())
+t0=time.time(); buf=b""
+while time.time()-t0<20:
+    try: buf+=s.recv(65536)
+    except socket.timeout: continue
+    lines=buf.split(b"\n"); buf=lines.pop()
+    for l in lines:
+        if not l.strip(): continue
+        m=json.loads(l)
+        if m.get("t")=="act" and m.get("body")=="lab" and m.get("status")=="ok": print("act %s on lab tier=%s -> %s" % (m["verb"], m.get("tier"), m.get("digest"))); raise SystemExit(0)
+raise SystemExit(1)
+PY'
+ck "reach-no-memory-on-body" bash -c "test ! -s '$RD/tamper.log' && ls '$RD' | tr '\n' ' '"
+kill $RPID 2>/dev/null || true
 scp "${SSHOPT[@]/#-p/-P}" -q human@127.0.0.1:/tmp/surface.png "$WORK/out/surface.png" 2>/dev/null && echo ">> surface screenshot -> $WORK/out/surface.png"
 echo ">> guest audio captured host-side:"
 python3 - "$GUESTWAV" <<'PYW' || true

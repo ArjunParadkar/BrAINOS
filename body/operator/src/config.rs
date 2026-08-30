@@ -16,6 +16,38 @@ pub struct Config {
     pub voice: VoiceCfg,
     pub fs: FsCfg,
     pub task: TaskCfg,
+    pub reach: ReachCfg,
+    pub pool: PoolCfg,
+    pub tiers: TiersCfg,
+}
+
+/// Stage 4 §2 — Reach listener for remote bodies.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
+pub struct ReachCfg {
+    /// TCP listen address for Reach bodies. Empty = off.
+    pub listen: String,
+    /// answer `BRAINOS?` UDP probes on this port (0 = off)
+    pub beacon_port: u16,
+    /// how this seat names itself to devices
+    pub seat_name: String,
+}
+
+/// Stage 4 §5 — the model pool.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[serde(default)]
+pub struct PoolCfg {
+    pub models: Vec<crate::pool::ModelSpec>,
+}
+
+/// Stage 4 §4 — tier behaviour.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
+pub struct TiersCfg {
+    /// start the deliberate request in parallel with the fast tier
+    pub speculate: bool,
+    /// fast-tier budget before the held deliberate stream is released
+    pub fast_budget_ms: u64,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -96,8 +128,22 @@ impl Default for Config {
             voice: Default::default(),
             fs: Default::default(),
             task: Default::default(),
+            reach: Default::default(),
+            pool: Default::default(),
+            tiers: Default::default(),
         }
     }
+}
+
+impl Default for ReachCfg {
+    fn default() -> Self {
+        // on the body the build writes listen = "0.0.0.0:7777"; the dev host stays off
+        ReachCfg { listen: String::new(), beacon_port: 7778, seat_name: "seat".into() }
+    }
+}
+
+impl Default for TiersCfg {
+    fn default() -> Self { TiersCfg { speculate: true, fast_budget_ms: 600 } }
 }
 
 impl Default for OperatorCfg {
@@ -189,6 +235,20 @@ impl Config {
         let cfg: Config = toml::from_str(&text)
             .with_context(|| format!("parsing config {}", path.display()))?;
         Ok(cfg)
+    }
+
+    /// The model pool: explicit `[[pool.models]]`, else derived from the
+    /// legacy `[llama]` + `[anthropic]` sections so old configs keep working.
+    pub fn pool_specs(&self) -> Vec<crate::pool::ModelSpec> {
+        if !self.pool.models.is_empty() { return self.pool.models.clone(); }
+        let mut v = Vec::new();
+        match self.llama.backend.as_str() {
+            "ollama" => v.push(crate::pool::ModelSpec { role: "fast".into(), kind: "ollama".into(), url: self.llama.ollama_url.clone(), model: self.llama.ollama_model.clone() }),
+            _ => v.push(crate::pool::ModelSpec { role: "fast".into(), kind: "llama".into(), url: self.llama.url.clone(), model: String::new() }),
+        }
+        v.push(crate::pool::ModelSpec { role: "deliberate".into(), kind: "anthropic".into(), url: String::new(), model: self.anthropic.model.clone() });
+        v.push(crate::pool::ModelSpec { role: "vision".into(), kind: "anthropic".into(), url: String::new(), model: self.anthropic.model.clone() });
+        v
     }
 
     /// Resolved socket path: config override → $XDG_RUNTIME_DIR/brainos/operator.sock

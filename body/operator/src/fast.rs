@@ -38,15 +38,16 @@ const OUTPUT_SCHEMA: &str = r#"{
 pub struct FastTier {
     client: reqwest::Client,
     config: Config,
+    pool: std::sync::Arc<crate::pool::Pool>,
 }
 
 impl FastTier {
-    pub fn new(config: Config) -> FastTier {
+    pub fn new(config: Config, pool: std::sync::Arc<crate::pool::Pool>) -> FastTier {
         let client = reqwest::Client::builder()
             .timeout(Duration::from_millis(config.llama.timeout_ms))
             .build()
             .expect("build reqwest client");
-        FastTier { client, config }
+        FastTier { client, config, pool }
     }
 
     /// Pre-evaluate the cached system prefix so the first real turn is fast.
@@ -71,10 +72,33 @@ impl FastTier {
         history: &[serde_json::Value],
     ) -> Option<FastResponse> {
         let system = build_fast_system(available_verbs);
-        match self.config.llama.backend.as_str() {
-            "ollama" => self.ask_ollama(text, &system, history).await,
-            _ => self.ask_llama(text, &system, history).await,
+        // Stage 4 §5: walk the pool's fast candidates in order; a model that
+        // fails is marked so the next turn starts from the healthy one.
+        for (idx, spec) in self.pool.candidates("fast") {
+            let t0 = std::time::Instant::now();
+            let r = match spec.kind.as_str() {
+                "ollama" => self.ask_ollama_at(text, &system, &spec.url, &spec.model).await,
+                _ => self.ask_llama_at(text, &system, history, &spec.url).await,
+            };
+            match r {
+                Some(resp) => { self.pool.mark_ok(idx, t0.elapsed().as_millis()); return Some(resp); }
+                None => { self.pool.mark_failed(idx); }
+            }
         }
+        None
+    }
+
+    async fn ask_llama_at(&self, text: &str, system: &str, history: &[serde_json::Value], base: &str) -> Option<FastResponse> {
+        let mut cfg = self.config.clone();
+        cfg.llama.url = base.to_string();
+        FastTier { client: self.client.clone(), config: cfg, pool: self.pool.clone() }.ask_llama(text, system, history).await
+    }
+
+    async fn ask_ollama_at(&self, text: &str, system: &str, base: &str, model: &str) -> Option<FastResponse> {
+        let mut cfg = self.config.clone();
+        cfg.llama.ollama_url = base.to_string();
+        if !model.is_empty() { cfg.llama.ollama_model = model.to_string(); }
+        FastTier { client: self.client.clone(), config: cfg, pool: self.pool.clone() }.ask_ollama(text, system, &[]).await
     }
 
     async fn ask_llama(

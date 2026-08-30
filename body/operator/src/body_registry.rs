@@ -104,8 +104,15 @@ const GROUPS: &[Group] = &[
     Group {
         id: "body/task",
         class: RegionClass::HostTool,
-        verbs: &["task.plan", "task.status", "task.cancel"],
-        prop: "plans and tracks multi-step deliberate tasks",
+        verbs: &["task.plan", "task.status", "task.cancel", "task.every", "task.when", "task.list", "task.stop"],
+        prop: "plans multi-step tasks and keeps standing orders (watchers, schedules)",
+        requires: &["/bin/sh"],
+    },
+    Group {
+        id: "body/entity",
+        class: RegionClass::KeyMedium,
+        verbs: &["body.list", "body.forget", "skill.list", "skill.forget", "pool.status"],
+        prop: "proprioception of the whole entity: its bodies, its learned skills, its brains",
         requires: &["/bin/sh"],
     },
     Group {

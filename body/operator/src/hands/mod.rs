@@ -7,6 +7,7 @@
 
 pub mod app;
 pub mod code_hand;
+pub mod entity_hand;
 pub mod fs_hand;
 pub mod input_hand;
 pub mod notes;
@@ -37,11 +38,35 @@ pub struct HandCtx {
     pub scratch_dir: std::path::PathBuf,
     /// ears + mouth (shared with the push-to-talk loop so they never fight over the mic)
     pub voice: Arc<crate::voice::Voice>,
+    /// Stage 4: the other bodies, the skill store, standing tasks, the model pool
+    pub reach: Arc<crate::reach::ReachHub>,
+    pub skills: Arc<std::sync::Mutex<crate::skills::SkillStore>>,
+    pub tasks: Arc<crate::tasks::Tasks>,
+    pub pool: Arc<crate::pool::Pool>,
+    /// verbs the seat itself provides (for proprioception)
+    pub local_verbs: Vec<String>,
+}
+
+/// Which body an input addresses. Missing/"seat"/"local"/"here" = the seat.
+pub fn body_of(input: &Value) -> String {
+    match input.get("body").and_then(|b| b.as_str()).map(str::trim) {
+        None | Some("") | Some("seat") | Some("local") | Some("here") => crate::reach::SEAT.to_string(),
+        Some(b) => b.to_string(),
+    }
 }
 
 /// Dispatch a verb+input to the appropriate hand.
 /// Returns a result string (sent back as tool_result).
 pub async fn dispatch(verb: &str, input: &Value, ctx: &HandCtx) -> String {
+    // Stage 4: a verb aimed at another body travels over Reach. The input is
+    // forwarded without the routing field; the digest comes back bounded.
+    let body = body_of(input);
+    if body != crate::reach::SEAT {
+        let mut fwd = input.clone();
+        if let Some(m) = fwd.as_object_mut() { m.remove("body"); }
+        let (digest, is_err) = ctx.reach.call(&body, verb, &fwd).await;
+        return if is_err { format!("error on {body}: {digest}") } else { digest };
+    }
     match verb {
         // shell
         "shell.run" => shell::run(input, ctx).await,
@@ -108,6 +133,16 @@ pub async fn dispatch(verb: &str, input: &Value, ctx: &HandCtx) -> String {
         "task.plan" => task_hand::plan(input, ctx).await,
         "task.status" => task_hand::status(ctx).await,
         "task.cancel" => task_hand::cancel(ctx).await,
+        "task.every" => entity_hand::task_every(input, ctx).await,
+        "task.when" => entity_hand::task_when(input, ctx).await,
+        "task.list" => entity_hand::task_list(ctx).await,
+        "task.stop" => entity_hand::task_stop(input, ctx).await,
+        // entity (Stage 4)
+        "body.list" => entity_hand::body_list(ctx).await,
+        "body.forget" => entity_hand::body_forget(input, ctx).await,
+        "skill.list" => entity_hand::skill_list(ctx).await,
+        "skill.forget" => entity_hand::skill_forget(input, ctx).await,
+        "pool.status" => entity_hand::pool_status(ctx).await,
         // code
         "code.run" => code_hand::run(input, ctx).await,
         // voice

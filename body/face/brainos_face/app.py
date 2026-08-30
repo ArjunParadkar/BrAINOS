@@ -78,6 +78,8 @@ class Face:
             else: self.teach.show(m)
         elif t == "task": self.bar.on_task(m)
         elif t == "need_key": self.bar.on_need_key()
+        elif t == "body": self.bar.on_body(m)        # Stage 4: a Reach body joined/left
+        elif t == "pool": self.bar.on_pool(m)        # Stage 4: model pool health
         return False
 
 def _remote(name):

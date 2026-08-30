@@ -214,6 +214,24 @@ class Bar:
         self.task.set_visible(True); self.expand()
         if self._task_done: self._schedule_collapse()
 
+    def on_body(self, m):
+        """Stage 4: another device became (or stopped being) a body of this entity."""
+        name = m.get("name", "?"); joined = bool(m.get("joined"))
+        chip = Gtk.Box(spacing=5); chip.add_css_class("chip"); chip.add_css_class("ok" if joined else "err")
+        v = Gtk.Label(label="body"); v.add_css_class("verb"); chip.append(v)
+        chip.append(Gtk.Label(label=f"{name} {'joined' if joined else 'left'}"))
+        chip.append(Gtk.Label(label="+" if joined else "-"))
+        if joined: chip.set_tooltip_text(f"{m.get('os','?')} · {len(m.get('hands', []))} hands · {m.get('rtt_ms', 0)} ms")
+        self.ledger.append(chip)
+        while len(list(self.ledger)) > 5: self.ledger.remove(self.ledger.get_first_child())
+        self.ledger.set_visible(True); self.expand(); self._schedule_collapse()
+
+    def on_pool(self, m):
+        """Stage 4: which brains are up — surfaced as the tier label's tooltip."""
+        models = m.get("models") or []
+        txt = " · ".join(f"{x.get('role')}: {x.get('model') or x.get('kind')} ({'ok' if x.get('ok') else 'down'})" for x in models)
+        self.tier_lbl.set_tooltip_text(txt or None)
+
     def on_need_key(self):
         self.keybox.set_visible(True); self.expand(); self.focus_key()
     def focus_key(self):

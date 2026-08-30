@@ -19,7 +19,13 @@ use tokio::sync::broadcast;
 pub enum OpMsg {
     State { mode: String, tier: String },
     Say { id: u64, text: String, delta: bool, done: bool },
-    Act { verb: String, target: String, status: String, digest: String },
+    Act { verb: String, target: String, status: String, digest: String,
+          #[serde(skip_serializing_if = "Option::is_none")] tier: Option<String>,
+          #[serde(skip_serializing_if = "Option::is_none")] body: Option<String> },
+    /// Stage 4: a Reach body joined or left the entity.
+    Body { name: String, hands: Vec<String>, os: String, joined: bool, rtt_ms: u64 },
+    /// Stage 4: the model pool's health.
+    Pool { models: Value },
     Surface { name: String, #[serde(skip_serializing_if = "Option::is_none")] html: Option<String>, #[serde(skip_serializing_if = "Option::is_none")] close: Option<bool> },
     Teach { #[serde(skip_serializing_if = "Option::is_none")] x: Option<i32>, #[serde(skip_serializing_if = "Option::is_none")] y: Option<i32>, #[serde(skip_serializing_if = "Option::is_none")] w: Option<i32>, #[serde(skip_serializing_if = "Option::is_none")] h: Option<i32>, #[serde(skip_serializing_if = "Option::is_none")] caption: Option<String>, #[serde(skip_serializing_if = "Option::is_none")] clear: Option<bool> },
     Task { id: u64, title: String, steps: Vec<TaskStep>, done: bool },
@@ -44,6 +50,8 @@ pub enum FaceMsg {
     Cancel,
     SurfaceEvent { name: String, event: String, data: Value },
     SetKey { key: String },
+    /// Stage 4: a standing task fires its utterance (internal; a face may send it too).
+    Standing { id: u64, text: String },
 }
 
 // ---- server ----------------------------------------------------------------
