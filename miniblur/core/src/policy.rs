@@ -50,7 +50,7 @@ pub struct BodyState {
 
 impl Default for BodyState {
     fn default() -> BodyState {
-        BodyState { mode: Mode::Idle, vbat: 7.4, link_age_ms: 0, sitting: true }
+        BodyState { mode: Mode::Idle, vbat: f32::NAN, link_age_ms: 0, sitting: true }
     }
 }
 

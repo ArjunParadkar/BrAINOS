@@ -3,6 +3,7 @@ pub mod body_registry;
 pub mod config;
 pub mod deliberate;
 pub mod fast;
+pub mod export;
 pub mod hands;
 pub mod hexapod;
 pub mod history;

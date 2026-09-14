@@ -1,0 +1,34 @@
+[package]
+name = "miniblur-a"
+version = "0.1.0"
+edition = "2021"
+description = "Mini-Blur board A (ESP32-S3): Domain 2 — servo PWM, gait loop, envelope, stop-on-lost-link; speaks the Reach wire protocol"
+
+[[bin]]
+name = "miniblur-a"
+path = "src/main.rs"
+test = false
+bench = false
+
+[dependencies]
+miniblur-core = { path = "../../miniblur/core" }
+esp-hal = { version = "1.2.1", features = ["esp32s3", "unstable"] }
+esp-bootloader-esp-idf = { version = "0.6.0", features = ["esp32s3"] }
+esp-alloc = { version = "0.11.0", features = ["esp32s3"] }
+esp-backtrace = { version = "0.20.0", features = ["esp32s3", "panic-handler", "println"] }
+esp-println = { version = "0.18.0", default-features = false, features = ["esp32s3", "jtag-serial"] }
+# the BrAIn Key's signature is the only authority; pure Rust, no_std
+ed25519-dalek = { version = "2", default-features = false }
+nb = "1"
+
+[profile.dev]
+opt-level = "s"
+
+[profile.release]
+codegen-units = 1
+debug = 2
+debug-assertions = false
+incremental = false
+lto = "fat"
+opt-level = "s"
+overflow-checks = false

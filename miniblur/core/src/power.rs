@@ -65,8 +65,11 @@ impl PowerLimits {
         amps <= self.rail_amps
     }
 
+    /// NaN means "not measured" (a board with no divider wired): the
+    /// policy cannot refuse on a sense it does not have, and telemetry
+    /// says so rather than inventing a number.
     pub fn battery_ok(&self, vbat: f32) -> bool {
-        vbat >= self.vbat_floor
+        vbat.is_nan() || vbat >= self.vbat_floor
     }
 }
 

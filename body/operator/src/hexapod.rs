@@ -92,10 +92,10 @@ impl BodyPolicy for HexapodPolicy {
     fn describe(&self) -> String {
         let s = self.live();
         format!(
-            "{}; {}; {:.2} V; mode {}; heard {} ms ago",
+            "{}; {}; {}; mode {}; heard {} ms ago",
             self.model.describe(),
             if self.calibration_from_memory { "calibration from memory" } else { "uncalibrated (defaults)" },
-            s.vbat,
+            if s.vbat.is_nan() { String::from("battery not measured") } else { format!("{:.2} V", s.vbat) },
             s.mode.name(),
             s.link_age_ms
         )

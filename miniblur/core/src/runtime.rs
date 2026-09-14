@@ -137,11 +137,12 @@ impl<B: ServoBus> Body<B> {
     }
 
     pub fn telemetry(&self) -> String {
+        let vbat = if self.state.vbat.is_nan() { String::from("vbat n/a") } else { format!("{:.2} V", self.state.vbat) };
         format!(
-            "mode {}; {}; {:.2} V; {:.2} A; link {} ms; steps {}; lift {:.0}/{:.0}/{:.0}/{:.0}/{:.0}/{:.0}",
+            "mode {}; {}; {}; {:.2} A; link {} ms; steps {}; lift {:.0}/{:.0}/{:.0}/{:.0}/{:.0}/{:.0}",
             self.state.mode.name(),
             if self.state.sitting { "sitting" } else { "standing" },
-            self.state.vbat,
+            vbat,
             self.amps,
             self.state.link_age_ms,
             self.steps_walked,

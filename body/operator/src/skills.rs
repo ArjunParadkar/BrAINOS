@@ -239,6 +239,34 @@ impl SkillStore {
         (store, rejected)
     }
 
+    /// Import only (entity export v1.0, `adopt`): read signed lines WITHOUT
+    /// verifying them, so skills signed by a previous key can be re-signed
+    /// under the key that adopts them. Never used at boot — a skill that
+    /// does not verify under the entity's own key does not load.
+    pub fn from_lines_unverified(text: &str) -> (SkillStore, usize) {
+        let mut store = SkillStore::new();
+        let mut rejected = 0usize;
+        for line in text.lines() {
+            let line = line.trim();
+            if line.is_empty() { continue; }
+            let Ok(rec) = serde_json::from_str::<SignedRecord>(line) else { rejected += 1; continue; };
+            if !Self::compilable(&rec.skill.steps) { rejected += 1; continue; }
+            store.skills.push(rec.skill);
+        }
+        (store, rejected)
+    }
+
+    /// The newest signed-lines payload on disk, verbatim (for export).
+    pub fn raw_lines(dir: &Path) -> String {
+        let (pa, pb) = Self::slot_paths(dir);
+        let raw_a = std::fs::read(&pa).unwrap_or_default();
+        let raw_b = std::fs::read(&pb).unwrap_or_default();
+        match journal::newest(&raw_a, &raw_b) {
+            Some((_, payload)) => String::from_utf8_lossy(payload).into_owned(),
+            None => String::new(),
+        }
+    }
+
     pub fn save(&self, dir: &Path, key: &BrainKey) -> anyhow::Result<()> {
         std::fs::create_dir_all(dir)?;
         let (pa, pb) = Self::slot_paths(dir);
