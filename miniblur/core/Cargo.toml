@@ -1,0 +1,15 @@
+[package]
+name = "miniblur-core"
+version = "0.1.0"
+edition = "2021"
+description = "Mini-Blur hexapod as numbers: geometry, gait, invariants, wire codec (no_std)"
+
+[lib]
+doctest = false
+
+[dependencies]
+# f32 trig in no_std; pure Rust
+libm = "0.2"
+
+[features]
+default = []

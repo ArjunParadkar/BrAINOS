@@ -1,0 +1,15 @@
+# Mini-Blur — the Phase 0 body (Execution Plan §4).
+#
+#   core/  miniblur-core   no_std, one pure-Rust dep (libm). The hexapod as
+#                          numbers: geometry, servo table, tripod gait,
+#                          tip-over + current invariants, lost-link watchdog,
+#                          wire codec. Links into the ESP32-S3 firmware
+#                          (Domain 2) AND into the seat's KIRA policy, so the
+#                          same envelope is checked on both sides of the link.
+#   sim/   miniblur-sim    std. A hexapod that speaks the Reach wire protocol
+#                          to the seat, backed by miniblur-core. The test rig:
+#                          every gait change is regression-tested here before
+#                          it touches the robot.
+[workspace]
+members = ["core", "sim"]
+resolver = "2"
