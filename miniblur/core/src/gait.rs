@@ -7,7 +7,7 @@
 //! cycles into poses the firmware plays at its loop rate and the seat
 //! forward-models for the stability check. Both sides see the same poses.
 
-use crate::{LegId, Pose, Tripod, LEGS};
+use crate::{LegId, Pose, Tripod};
 use alloc::string::String;
 use libm::{cosf, sinf};
 
@@ -169,6 +169,7 @@ impl Plan {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::LEGS;
 
     #[test]
     fn at_every_phase_exactly_one_tripod_is_on_the_ground() {

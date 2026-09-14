@@ -76,16 +76,23 @@ impl Instance {
     /// action without a limb is formally refused, never roleplayed.
     /// Returns the verdict plus the stage trace for display.
     pub fn propose(&mut self, action: Action) -> (Verdict, Vec<StageResult>) {
+        self.propose_via(action, None)
+    }
+
+    /// Propose an action through one named body region (Stage 4: "on the
+    /// hexapod, walk"). See `Kira::gate_via`.
+    pub fn propose_via(&mut self, action: Action, via: Option<&str>) -> (Verdict, Vec<StageResult>) {
         let sig = self
             .key
             .sign(&kira::request_message(action.tag(), self.tick));
-        self.kira.gate(
+        self.kira.gate_via(
             &action,
             &sig,
             &self.key,
             &mut self.state,
             &self.body,
             self.tick,
+            via,
         )
     }
 }

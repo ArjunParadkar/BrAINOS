@@ -4,6 +4,7 @@ pub mod config;
 pub mod deliberate;
 pub mod fast;
 pub mod hands;
+pub mod hexapod;
 pub mod history;
 pub mod ipc;
 pub mod journal_io;

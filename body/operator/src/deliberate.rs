@@ -116,6 +116,16 @@ fn all_tool_specs() -> Vec<Value> {
         json!({"name":"task.list","description":"List standing tasks and watchers.","input_schema":{"type":"object","properties":{}}}),
         json!({"name":"task.stop","description":"Stop a standing task by id.","input_schema":{"type":"object","properties":{"id":{"type":"integer"}},"required":["id"]}}),
         json!({"name":"pool.status","description":"Which models (brains) you have right now and whether they are up.","input_schema":{"type":"object","properties":{}}}),
+        // Phase 0 — a walking body (Mini-Blur). Only offered when such a body is reached; every call is KIRA-gated
+        // against the body's own envelope (angle, tip-over, rail, link, battery) before it is sent.
+        json!({"name":"gait.stand","description":"Stand up on all six legs (a walking body).","input_schema":{"type":"object","properties":{"body":{"type":"string"}}}}),
+        json!({"name":"gait.sit","description":"Sit down and unload the servos (a walking body).","input_schema":{"type":"object","properties":{"body":{"type":"string"}}}}),
+        json!({"name":"gait.stop","description":"Stop any motion at once and stand (a walking body). Always allowed.","input_schema":{"type":"object","properties":{"body":{"type":"string"}}}}),
+        json!({"name":"gait.walk","description":"Walk a number of steps in a direction. dir: fwd|back|left|right (left/right turn in place). steps 1-20. speed 0.1-1.0 (default 0.5). The body refuses steps its envelope, balance, power or link cannot carry.","input_schema":{"type":"object","properties":{"dir":{"type":"string"},"steps":{"type":"integer"},"speed":{"type":"number"},"body":{"type":"string"}},"required":["dir","steps"]}}),
+        json!({"name":"body.telemetry","description":"Battery, rail current, mode, link age and pose of a walking body.","input_schema":{"type":"object","properties":{"body":{"type":"string"}}}}),
+        json!({"name":"body.schema","description":"The typed capability schema a walking body published (joints, envelope, limits).","input_schema":{"type":"object","properties":{"body":{"type":"string"}}}}),
+        json!({"name":"body.calibrate","description":"Calibration of a walking body: mode 'begin' allows raw servo moves and refuses gaits; mode 'end' returns to standing; or a channel record {ch, center, min, max, dir} which is remembered in your own memory, never on the body.","input_schema":{"type":"object","properties":{"mode":{"type":"string"},"ch":{"type":"integer"},"center":{"type":"number"},"min":{"type":"number"},"max":{"type":"number"},"dir":{"type":"integer"},"body":{"type":"string"}}}}),
+        json!({"name":"servo.set","description":"Move one servo channel to an absolute angle (calibration mode only; refused while a gait runs).","input_schema":{"type":"object","properties":{"ch":{"type":"integer"},"deg":{"type":"number"},"body":{"type":"string"}},"required":["ch","deg"]}}),
     ]
 }
 
@@ -372,6 +382,13 @@ impl DeliberateTier {
 
 /// Extract the primary target string from a tool call input (for IPC act message).
 pub fn kira_target(name: &str, input: &Value) -> String {
+    // walking-body verbs use the string form the body re-checks on its side
+    if name == "gait.walk" || name == "servo.set" {
+        return miniblur_core::runtime::target_of(name, &input.to_string());
+    }
+    if name.starts_with("gait.") || name.starts_with("body.") {
+        return String::new();
+    }
     match name {
         "shell.run" | "code.run" => input.get("cmd").or(input.get("src")),
         "fs.list" | "fs.read" | "fs.write" | "fs.mkdir" | "fs.delete" | "fs.stat" => input.get("path"),

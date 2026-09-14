@@ -29,6 +29,19 @@ struct Rule {
 }
 
 static RULES: &[Rule] = &[
+    // ---- a walking body (Phase 0) — "on miniblur, walk forward 3 steps" ----
+    Rule { pattern: r"(?i)^(?:please\s+)?(?:stand(?:\s+up)?|get\s+up|rise)[.!]?$", verb: "gait.stand", target_group: false, target_literal: "" },
+    Rule { pattern: r"(?i)^(?:please\s+)?(?:sit(?:\s+down)?|lie\s+down|rest)[.!]?$", verb: "gait.sit", target_group: false, target_literal: "" },
+    Rule { pattern: r"(?i)^(?:please\s+)?(?:stop|halt|freeze|stay)(?:\s+(?:moving|walking|now))?[.!]?$", verb: "gait.stop", target_group: false, target_literal: "" },
+    Rule { pattern: r"(?i)^(?:please\s+)?(?:walk|go|move|step|take)\s+((?:forward|forwards|ahead|back|backward|backwards|reverse|left|right)(?:\s+\d+(?:\s+steps?)?)?)[.!]?$", verb: "gait.walk", target_group: true, target_literal: "" },
+    Rule { pattern: r"(?i)^(?:please\s+)?(?:walk|go|move|step|take)\s+(\d+\s+steps?\s+(?:forward|forwards|ahead|back|backward|backwards|left|right))[.!]?$", verb: "gait.walk", target_group: true, target_literal: "" },
+    Rule { pattern: r"(?i)^(?:please\s+)?turn\s+(left|right)(?:\s+\d+(?:\s+steps?)?)?[.!]?$", verb: "gait.walk", target_group: true, target_literal: "" },
+    Rule { pattern: r"(?i)^(?:how\s+are\s+you\s+doing|telemetry|status|how\s+is\s+the\s+battery|battery\s+status)[?.!]?$", verb: "body.telemetry", target_group: false, target_literal: "" },
+    Rule { pattern: r"(?i)^(?:begin|start)\s+calibrat(?:ion|ing)[.!]?$", verb: "body.calibrate", target_group: false, target_literal: "begin" },
+    Rule { pattern: r"(?i)^(?:end|finish|stop)\s+calibrat(?:ion|ing)[.!]?$", verb: "body.calibrate", target_group: false, target_literal: "end" },
+    Rule { pattern: r"(?i)^record\s+servo\s+(\d+\s+.+)$", verb: "body.calibrate", target_group: true, target_literal: "" },
+    Rule { pattern: r"(?i)^(?:set\s+)?servo\s+(\d+)\s+(?:to\s+)?(\d+(?:\.\d+)?)(?:\s*(?:deg|degrees|°))?[.!]?$", verb: "servo.set", target_group: true, target_literal: "" },
+
     // ---- open/launch/start app ----
     Rule { pattern: r"(?i)^(?:open|launch|start|run)\s+(.+)$", verb: "app.open", target_group: true, target_literal: "" },
 
@@ -153,6 +166,11 @@ pub fn match_intent(text: &str) -> Option<ReflexIntent> {
         if let Some(caps) = re.captures(&text) {
             let target = if rule.target_group {
                 let raw = caps.get(1).map(|m| m.as_str()).unwrap_or_default();
+                if rule.verb == "servo.set" {
+                    // "<ch> <deg>": two captures
+                    let deg = caps.get(2).map(|m| m.as_str()).unwrap_or("0");
+                    return Some(ReflexIntent::new(rule.verb, &format!("{raw} {deg}")));
+                }
                 // typed text is payload, not a name: keep it verbatim
                 if rule.verb == "input.type" { raw.to_string() } else { normalize_target(raw) }
             } else {

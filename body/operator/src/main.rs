@@ -20,6 +20,7 @@ mod config;
 mod deliberate;
 mod fast;
 mod hands;
+mod hexapod;
 mod history;
 mod ipc;
 mod journal_io;
@@ -196,7 +197,11 @@ async fn main() -> Result<()> {
         let skills2 = skills_shared.clone();
         let bd2 = brain_dir.clone();
         tokio::spawn(async move {
-            tokio::signal::ctrl_c().await.ok();
+            let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()).expect("SIGTERM handler");
+            tokio::select! {
+                _ = tokio::signal::ctrl_c() => {}
+                _ = term.recv() => {}
+            }
             tracing::info!("[operator] shutting down — saving journal");
             let j = journal_io::JournalIO::new(&bd2);
             let g = shared2.lock().unwrap();
@@ -444,7 +449,7 @@ fn save_skills(ctx: &Ctx) {
 async fn run_hand(ctx: &Ctx, verb: &str, input: &Value, tier: &str) -> (String, bool) {
     let body = hands::body_of(input);
     let target = deliberate::kira_target(verb, input);
-    match kira_gate::gate(&ctx.instance, verb, &target) {
+    match kira_gate::gate_via(&ctx.instance, &body, verb, &target) {
         Ok(_) => {
             let result = hands::dispatch(verb, input, &ctx.hands).await;
             let ok = !looks_failed(&result);
@@ -718,9 +723,45 @@ fn verb_to_input(verb: &str, target: &str) -> serde_json::Value {
         "skill.forget" => serde_json::json!({"utterance": target}),
         "task.stop" => serde_json::json!({"id": target.parse::<u64>().unwrap_or(0)}),
         "shell.run" => serde_json::json!({"cmd": target}),
+        // walking body: "forward 3 steps" / "left" → {dir, steps, speed}
+        "gait.walk" => {
+            let words: Vec<&str> = target.split_whitespace().collect();
+            let dir = match words.first().copied().unwrap_or("forward") {
+                "back" | "backward" | "backwards" | "reverse" => "back",
+                "left" => "left",
+                "right" => "right",
+                _ => "fwd",
+            };
+            let steps = words.iter().find_map(|w| w.parse::<u32>().ok()).unwrap_or(1);
+            serde_json::json!({"dir": dir, "steps": steps, "speed": 0.5})
+        }
+        "body.calibrate" => {
+            // "begin" | "end" | "6 center 92.5 min 30 max 150 dir 1"
+            let t = target.trim();
+            if t == "begin" || t == "end" || t == "start" || t == "finish" {
+                serde_json::json!({"mode": if t == "start" { "begin" } else if t == "finish" { "end" } else { t }})
+            } else {
+                let w: Vec<&str> = t.split_whitespace().collect();
+                let mut o = serde_json::Map::new();
+                if let Some(ch) = w.first().and_then(|c| c.parse::<u64>().ok()) { o.insert("ch".into(), ch.into()); }
+                let mut i = 1;
+                while i + 1 < w.len() {
+                    if let Ok(v) = w[i + 1].parse::<f64>() {
+                        if matches!(w[i], "center" | "min" | "max" | "dir") { o.insert(w[i].into(), v.into()); }
+                    }
+                    i += 2;
+                }
+                serde_json::Value::Object(o)
+            }
+        }
+        "servo.set" => {
+            let w: Vec<&str> = target.split_whitespace().collect();
+            serde_json::json!({"ch": w.first().and_then(|c| c.parse::<u64>().ok()).unwrap_or(255), "deg": w.get(1).and_then(|d| d.parse::<f64>().ok()).unwrap_or(-1.0)})
+        }
         "fs.list" | "fs.read" | "fs.stat" | "fs.mkdir" => serde_json::json!({"path": target}),
         "sys.time" | "sys.date" | "sys.battery" | "sys.lock" | "skill.list" | "task.list" | "body.list" | "pool.status"
-            | "app.list" | "window.list" | "window.fullscreen" | "window.close" => serde_json::json!({}),
+            | "app.list" | "window.list" | "window.fullscreen" | "window.close"
+            | "gait.stand" | "gait.sit" | "gait.stop" | "body.telemetry" | "body.schema" => serde_json::json!({}),
         _ => serde_json::json!(target),
     }
 }
@@ -738,6 +779,9 @@ fn format_reply(verb: &str, target: &str, result: &str) -> String {
             format!("battery is {pct}")
         }
         "notes.write" => "noted.".into(),
+        "gait.stand" | "gait.sit" | "gait.stop" | "gait.walk" | "body.telemetry" | "body.calibrate" | "servo.set"
+            => result.chars().take(200).collect(),
+        "body.schema" => "here is the body's schema.".into(),
         "notes.read" | "skill.list" | "task.list" | "body.list" | "pool.status" | "skill.forget" | "task.stop" | "body.forget"
             => result.chars().take(400).collect(),
         "screen.look" => "screenshot taken.".into(),

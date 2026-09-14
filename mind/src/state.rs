@@ -166,6 +166,12 @@ impl StateGraph {
         self.next_id.saturating_sub(1)
     }
 
+    /// Every node, oldest first — for readers that scan by prefix (a body's
+    /// remembered calibration, an export).
+    pub fn nodes(&self) -> &[StateNode] {
+        &self.nodes
+    }
+
     pub fn node_count(&self) -> usize {
         self.nodes.len()
     }

@@ -23,7 +23,9 @@ pub enum OpMsg {
           #[serde(skip_serializing_if = "Option::is_none")] tier: Option<String>,
           #[serde(skip_serializing_if = "Option::is_none")] body: Option<String> },
     /// Stage 4: a Reach body joined or left the entity.
-    Body { name: String, hands: Vec<String>, os: String, joined: bool, rtt_ms: u64 },
+    Body { name: String, hands: Vec<String>, os: String, joined: bool, rtt_ms: u64,
+           /// "legs" for a walking body with a bound policy, "device" otherwise
+           #[serde(default = "default_body_class")] class: String },
     /// Stage 4: the model pool's health.
     Pool { models: Value },
     Surface { name: String, #[serde(skip_serializing_if = "Option::is_none")] html: Option<String>, #[serde(skip_serializing_if = "Option::is_none")] close: Option<bool> },
@@ -33,6 +35,8 @@ pub enum OpMsg {
     Heard { text: String },
     NeedKey,
 }
+
+fn default_body_class() -> String { "device".into() }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TaskStep {

@@ -162,6 +162,9 @@ pub trait BodyPolicy: Send {
     fn observe(&mut self, _report: &str) {}
     /// one line for `body.list` and the audit trail
     fn describe(&self) -> String;
+    /// the concrete policy, for the body's own code at the seat (a hexapod
+    /// policy exposes its model; KIRA itself never downcasts)
+    fn as_any(&self) -> &dyn core::any::Any;
 }
 
 pub struct Kira {
@@ -253,6 +256,25 @@ impl Kira {
         body: &BodyMap,
         tick: u64,
     ) -> (Verdict, Vec<StageResult>) {
+        self.gate_via(action, request_sig, key, state, body, tick, None)
+    }
+
+    /// The pipeline, with the limb use authorized through ONE named region.
+    /// When several bodies advertise the same verb (two hexapods, a seat
+    /// shell and a Reach shell), the caller says which body it is acting
+    /// through, and authz — and the body policy that stages 4–6 consult —
+    /// is that region's or nothing. `None` keeps the first-match rule for
+    /// the seat's own limbs.
+    pub fn gate_via(
+        &self,
+        action: &Action,
+        request_sig: &[u8; 64],
+        key: &BrainKey,
+        state: &mut StateGraph,
+        body: &BodyMap,
+        tick: u64,
+        via: Option<&str>,
+    ) -> (Verdict, Vec<StageResult>) {
         let mut trace = Vec::new();
         let tag = action.tag();
         let mut fail: Option<(&'static str, String)> = None;
@@ -284,12 +306,22 @@ impl Kira {
                 Some(r) => (true, format!("via {}", r.id)),
                 None => (false, String::from("no limb advertises voice.speak")),
             },
-            Action::UseLimb { verb, .. } => match body.find_capability(verb) {
-                Some(r) => {
-                    authz_region = Some(r.id.clone());
-                    (true, format!("via {}", r.id))
-                }
-                None => (false, format!("no limb advertises '{verb}'")),
+            Action::UseLimb { verb, .. } => match via {
+                Some(id) => match body.regions().iter().find(|r| r.id == id) {
+                    Some(r) if r.capabilities.iter().any(|c| c == verb) => {
+                        authz_region = Some(r.id.clone());
+                        (true, format!("via {}", r.id))
+                    }
+                    Some(_) => (false, format!("body '{id}' does not advertise '{verb}'")),
+                    None => (false, format!("no body '{id}' in the body map")),
+                },
+                None => match body.find_capability(verb) {
+                    Some(r) => {
+                        authz_region = Some(r.id.clone());
+                        (true, format!("via {}", r.id))
+                    }
+                    None => (false, format!("no limb advertises '{verb}'")),
+                },
             },
             Action::NetProbe => {
                 if body.has(crate::body::RegionClass::Network) {

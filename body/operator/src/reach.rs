@@ -20,6 +20,9 @@
 
 use anyhow::{bail, Result};
 use brainos_mind::body::{Region, RegionClass};
+use brainos_mind::kira::BodyPolicy;
+use brainos_mind::state::NodeKind;
+use crate::hexapod::{self, HexapodPolicy};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -41,7 +44,19 @@ pub const OFFERABLE: &[&str] = &[
     "app.open", "app.list",
     "screen.look",
     "input.type", "input.key",
+    // Phase 0: a Mini-Blur (Execution Plan §4.4). These verbs are only ever
+    // authorized through a region with a bound HexapodPolicy.
+    "gait.stand", "gait.sit", "gait.walk", "gait.stop",
+    "servo.set", "body.telemetry", "body.calibrate", "body.schema",
 ];
+
+/// The hexapod model behind a Legs region's policy (None for other bodies).
+fn hexapod_model(g: &brainos_mind::instance::Instance, region_id: &str) -> Option<miniblur_core::schema::Model> {
+    g.kira.body_policy(region_id).and_then(|p| p.as_any().downcast_ref::<HexapodPolicy>()).map(|h| h.model)
+}
+
+/// A body is "legs" when its hello carried a hexapod schema.
+fn is_legs(schema: &Option<miniblur_core::schema::Model>) -> bool { schema.is_some() }
 
 pub const SEAT: &str = "seat";
 const CALL_TIMEOUT: Duration = Duration::from_secs(90);
@@ -197,6 +212,20 @@ async fn serve(
     let hands: Vec<String> = offered.into_iter().filter(|h| OFFERABLE.contains(&h.as_str())).collect();
     if hands.is_empty() { bail!("body {name} offered no usable hands"); }
 
+    // §8 step 3 — a walking body publishes a typed schema. A body that
+    // offers gait verbs without one is refused: no schema, no envelope, no
+    // policy, no motion.
+    let schema: Option<miniblur_core::schema::Model> = match hello.get("schema") {
+        Some(s) if s.is_object() => match miniblur_core::schema::Model::from_schema_json(&s.to_string()) {
+            Ok(m) => Some(m),
+            Err(e) => bail!("body {name}: unusable schema: {e}"),
+        },
+        _ => None,
+    };
+    if schema.is_none() && hands.iter().any(|h| h.starts_with("gait.") || h == "servo.set") {
+        bail!("body {name} offers gait verbs without a schema; refused");
+    }
+
     // 2. attest — the only authority is the BrAIn Key
     let (sig, pubk) = {
         let g = instance.lock().unwrap();
@@ -223,26 +252,64 @@ async fn serve(
         let _ = wr.write_all(b"{\"t\":\"bye\",\"reason\":\"a body with that name is already here\"}\n").await;
         bail!("duplicate body name {name}");
     }
+    // §8 step 4 (incorporate) and step 5 (calibrate from memory)
+    let legs = is_legs(&schema);
+    let mut push_cal: Vec<Value> = Vec::new();
     {
         let mut g = instance.lock().unwrap();
         let id = format!("reach/{name}");
         if !g.body.knows(&id) {
-            g.body.incorporate(Region {
-                id,
-                class: RegionClass::HostTool,
-                capabilities: hands.clone(),
-                proprioception: format!("{os} device '{name}' reached over the network ({} hands, {rtt} ms)", hands.len()),
-            });
+            let (class, prop) = match &schema {
+                Some(m) => {
+                    let mut model = *m;
+                    let from_memory = hexapod::apply_remembered(&mut model, &g.state, &name);
+                    if from_memory { push_cal = hexapod::push_records(&model); }
+                    let policy = HexapodPolicy::new(model, from_memory);
+                    let prop = format!("'{name}' — {}", BodyPolicy::describe(&policy));
+                    g.kira.bind_body_policy(&id, Box::new(policy));
+                    if !from_memory {
+                        // first meeting: remember the layout so a later calibration attaches to it
+                        let tick = g.tick;
+                        hexapod::remember(&mut g.state, &name, &model, tick);
+                    }
+                    (RegionClass::Legs, prop)
+                }
+                None => (RegionClass::HostTool, format!("{os} device '{name}' reached over the network ({} hands, {rtt} ms)", hands.len())),
+            };
+            g.body.incorporate(Region { id, class, capabilities: hands.clone(), proprioception: prop });
         }
     }
-    ipc::send(&ipc_tx, &OpMsg::Body { name: name.clone(), hands: hands.clone(), os: os.clone(), joined: true, rtt_ms: rtt as u64 });
-    tracing::info!("[reach] incorporated '{name}' ({os}, {} hands, {rtt} ms)", hands.len());
+    ipc::send(&ipc_tx, &OpMsg::Body { name: name.clone(), hands: hands.clone(), os: os.clone(), joined: true, rtt_ms: rtt as u64, class: if legs { "legs".into() } else { "device".into() } });
+    tracing::info!("[reach] incorporated '{name}' ({os}, {} hands, {rtt} ms{})", hands.len(), if legs { ", legs" } else { "" });
+
+    // step 5: the body never remembers — hand it its calibration, through the gate
+    if !push_cal.is_empty() {
+        let hub2 = hub.clone();
+        let inst2 = instance.clone();
+        let name2 = name.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_millis(50)).await;
+            let mut n = 0;
+            for rec in push_cal {
+                if crate::kira_gate::gate_via(&inst2, &name2, "body.calibrate", "").is_ok() {
+                    let (d, err) = hub2.call(&name2, "body.calibrate", &rec).await;
+                    if !err { n += 1 } else { tracing::warn!("[reach] '{name2}' refused a calibration record: {d}"); }
+                }
+            }
+            tracing::info!("[reach] pushed {n} remembered calibration record(s) to '{name2}'");
+        });
+    }
 
     // 5. serve until either side goes away
     let mut pending: HashMap<u64, oneshot::Sender<(String, bool)>> = HashMap::new();
+    let mut pending_verbs: HashMap<u64, String> = HashMap::new();
     let mut next_id: u64 = 1;
     let mut ping_at = Instant::now();
     let mut last_ping_sent: Option<Instant> = None;
+    // legs need a live link: the seat pings every 200 ms so its own copy of
+    // the lost-link clock is honest (the body's watchdog is 500 ms)
+    let ping_every = if legs { Duration::from_millis(200) } else { Duration::from_secs(20) };
+    let region_id = format!("reach/{name}");
     let outcome: Result<()> = loop {
         tokio::select! {
             cmd = cmd_rx.recv() => {
@@ -254,6 +321,7 @@ async fn serve(
                     break Err(anyhow::anyhow!("write failed"));
                 }
                 pending.insert(id, cmd.reply);
+                if legs { pending_verbs.insert(id, cmd.verb.clone()); }
             }
             line = lines.next_line() => {
                 let Ok(Some(line)) = line else { break Err(anyhow::anyhow!("connection closed by {name}")) };
@@ -264,16 +332,36 @@ async fn serve(
                         let ok = v["ok"].as_bool().unwrap_or(false);
                         let mut digest = v["digest"].as_str().unwrap_or("").to_string();
                         if digest.len() > MAX_DIGEST { digest.truncate(MAX_DIGEST); digest.push_str("…[truncated]"); }
+                        if legs {
+                            // the body's report updates the seat's copy of its state; a
+                            // calibration record becomes memory here, never on the body
+                            let verb = pending_verbs.remove(&id).unwrap_or_default();
+                            let mut g = instance.lock().unwrap();
+                            if let Some(p) = g.kira.body_policy_mut(&region_id) { p.observe(&digest); }
+                            if ok && verb == "body.calibrate" && digest.starts_with("ch") {
+                                let tick = g.tick;
+                                // observe() already applied the record to the policy's model;
+                                // write the whole table to memory so the newest record wins
+                                if let Some(model) = hexapod_model(&g, &region_id) {
+                                    hexapod::remember(&mut g.state, &name, &model, tick);
+                                }
+                                g.state.add(NodeKind::Episode, format!("calibrated '{name}': {digest}"), 90, tick);
+                            }
+                        }
                         if let Some(r) = pending.remove(&id) { let _ = r.send((digest, !ok)); }
                     }
-                    "ping" => { let _ = wr.write_all(b"{\"t\":\"pong\"}\n").await; }
+                    "ping" => {
+                        let _ = wr.write_all(b"{\"t\":\"pong\"}\n").await;
+                        if legs { if let Some(p) = instance.lock().unwrap().kira.body_policy_mut(&region_id) { p.observe("heard"); } }
+                    }
                     "pong" => {
                         if let Some(t) = last_ping_sent.take() { hub.set_rtt(&name, t.elapsed().as_millis()); }
+                        if legs { if let Some(p) = instance.lock().unwrap().kira.body_policy_mut(&region_id) { p.observe("heard"); } }
                     }
                     _ => {}
                 }
             }
-            _ = tokio::time::sleep_until(tokio::time::Instant::from_std(ping_at + Duration::from_secs(20))) => {
+            _ = tokio::time::sleep_until(tokio::time::Instant::from_std(ping_at + ping_every)) => {
                 ping_at = Instant::now();
                 last_ping_sent = Some(ping_at);
                 if wr.write_all(b"{\"t\":\"ping\"}\n").await.is_err() { break Err(anyhow::anyhow!("ping write failed")); }
@@ -286,9 +374,11 @@ async fn serve(
     for (_, r) in pending.drain() { let _ = r.send((format!("body '{name}' went away"), true)); }
     {
         let mut g = instance.lock().unwrap();
-        g.body.release(&format!("reach/{name}"));
+        g.body.release(&region_id);
+        // its policy leaves with it; the verbs are already gone from authz
+        g.kira.unbind_body_policy(&region_id);
     }
-    ipc::send(&ipc_tx, &OpMsg::Body { name: name.clone(), hands: vec![], os, joined: false, rtt_ms: 0 });
+    ipc::send(&ipc_tx, &OpMsg::Body { name: name.clone(), hands: vec![], os, joined: false, rtt_ms: 0, class: if legs { "legs".into() } else { "device".into() } });
     tracing::info!("[reach] released '{name}'");
     outcome
 }

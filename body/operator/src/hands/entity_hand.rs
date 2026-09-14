@@ -8,10 +8,17 @@ use crate::tasks;
 
 pub async fn body_list(ctx: &HandCtx) -> String {
     let bodies = ctx.reach.list();
+    let bound: Vec<(String, String)> = {
+        let g = ctx.instance.lock().unwrap();
+        g.kira.bound_regions().into_iter().map(|(id, d)| (id.to_string(), d)).collect()
+    };
     let mut lines = vec![format!("seat: this machine ({} hands)", ctx.local_verbs.len())];
     for b in bodies {
         lines.push(format!("{}: {} device, {} hands [{}], {} ms, here for {}s",
             b.name, b.os, b.hands.len(), b.hands.join(" "), b.rtt_ms, b.since.elapsed().as_secs()));
+        if let Some((_, d)) = bound.iter().find(|(id, _)| *id == format!("reach/{}", b.name)) {
+            lines.push(format!("  bound by: {d}"));
+        }
     }
     lines.join("\n")
 }

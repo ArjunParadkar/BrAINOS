@@ -52,6 +52,9 @@ impl BodyPolicy for ToyLegs {
     fn describe(&self) -> String {
         String::from("toy legs: 1..=20 steps, tips over past 5, needs a live link")
     }
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 }
 
 fn legged_instance() -> brainos_mind::instance::Instance {
@@ -158,6 +161,42 @@ fn generic_floors_run_before_the_body_policy() {
     let (v, trace) = me.propose(Action::UseLimb { verb: String::from("shell.run"), target: String::from("rm -rf /") });
     assert!(denied_at(&v, "policy"));
     assert!(trace[5].note.contains("destructive"), "{}", trace[5].note);
+}
+
+#[test]
+fn two_bodies_with_the_same_verb_are_gated_by_the_named_one() {
+    let mut me = legged_instance();
+    // a second, stricter body offering the same verb
+    struct NeverWalk;
+    impl BodyPolicy for NeverWalk {
+        fn validate(&self, _: &str, _: &str) -> Result<(), String> { Ok(()) }
+        fn simulate(&self, _: &str, _: &str) -> Result<String, String> { Err(String::from("this body tips on any step")) }
+        fn policy(&self, _: &str, _: &str) -> Result<(), String> { Ok(()) }
+        fn describe(&self) -> String { String::from("never walks") }
+        fn as_any(&self) -> &dyn std::any::Any { self }
+    }
+    me.body.incorporate(Region {
+        id: String::from("reach/tippy"),
+        class: RegionClass::Legs,
+        capabilities: vec![String::from("step.walk")],
+        proprioception: String::from("tippy"),
+    });
+    me.kira.bind_body_policy("reach/tippy", Box::new(NeverWalk));
+    let action = || Action::UseLimb { verb: String::from("step.walk"), target: String::from("2") };
+    // first-match (no body named) reaches the first region: toy, which grants 2 steps
+    assert!(matches!(me.propose(action()).0, Verdict::Granted(_)));
+    // named: tippy's own policy refuses at simulate
+    let (v, trace) = me.propose_via(action(), Some("reach/tippy"));
+    assert!(denied_at(&v, "simulate"), "{:?}", trace.iter().map(|s| (s.stage, s.ok, s.note.clone())).collect::<Vec<_>>());
+    // named: toy still grants
+    assert!(matches!(me.propose_via(action(), Some("reach/toy")).0, Verdict::Granted(_)));
+    // a body that does not advertise the verb → authz names the body
+    let (v, trace) = me.propose_via(Action::UseLimb { verb: String::from("step.stop"), target: String::new() }, Some("reach/tippy"));
+    assert!(denied_at(&v, "authz"));
+    assert!(trace[2].note.contains("reach/tippy"), "{}", trace[2].note);
+    // an unknown body → authz
+    let (v, _) = me.propose_via(action(), Some("reach/ghost"));
+    assert!(denied_at(&v, "authz"));
 }
 
 #[test]

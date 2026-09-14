@@ -24,6 +24,19 @@ pub fn gate(
     verb: &str,
     target: &str,
 ) -> Result<String> {
+    gate_via(inst, crate::reach::SEAT, verb, target)
+}
+
+/// Gate a limb use through the region of a NAMED body ("on the hexapod,
+/// walk"). The seat's own limbs keep the first-match rule; a Reach body's
+/// verb is authorized through `reach/<name>` and nothing else, so two
+/// bodies offering the same verb are each judged by their own policy.
+pub fn gate_via(
+    inst: &SharedInstance,
+    body: &str,
+    verb: &str,
+    target: &str,
+) -> Result<String> {
     let mut guard = inst.lock().unwrap();
 
     // operator-level policy (on top of KIRA): refuse key exfiltration
@@ -36,10 +49,11 @@ pub fn gate(
         target: target.to_string(),
     };
 
-    let tick = guard.tick;
+    let _tick = guard.tick;
     guard.tick += 1;
 
-    let (verdict, trace) = guard.propose(action);
+    let region = if body.is_empty() || body == crate::reach::SEAT { None } else { Some(format!("reach/{body}")) };
+    let (verdict, trace) = guard.propose_via(action, region.as_deref());
 
     let trace_str: String = trace
         .iter()
