@@ -87,7 +87,15 @@ pub struct Capability {
     pub granted_tick: u64,
     pub ttl_ticks: u64,
     pub token: [u8; 64],
+    /// The seal (Stage 6 §9.1): this field is private, so no code outside
+    /// this module can write a `Capability { .. }` literal. The only place
+    /// one is ever built is stage 7 of `Kira::gate`, after stages 1–6
+    /// passed. "Granted has no public constructor" is a compile-time fact.
+    _sealed: Sealed,
 }
+
+/// Private marker; unnameable outside `kira`.
+pub struct Sealed(());
 
 impl Capability {
     pub fn valid_at(&self, tick: u64) -> bool {
@@ -132,11 +140,37 @@ pub struct Policy {
     pub immutable: bool,
 }
 
+/// A body's own invariants (Technical Execution Report §3.3, Execution Plan
+/// §4.5). KIRA is ONE pipeline; the invariants are the body's. A policy bound
+/// to a region supplies stage 4 (validate), 5 (simulate) and 6 (policy) for
+/// every `UseLimb` that authorizes through that region. A hexapod's simulate
+/// is a tip-over check; an aircraft's is the flight envelope. The generic
+/// floors in this file still run first — a body policy can only tighten.
+///
+/// `Send` because the instance lives behind a mutex in the operator and the
+/// policy travels with it. Domain 2 on the body re-checks the same numbers
+/// (`miniblur-core` links into both), so a compromised seat cannot push a
+/// body past what its own reflex layer allows.
+pub trait BodyPolicy: Send {
+    /// stage 4: is this request well-formed and inside the body's envelope?
+    fn validate(&self, verb: &str, target: &str) -> Result<(), String>;
+    /// stage 5: forward-model the consequence. Ok(prediction) or Err(broken invariant).
+    fn simulate(&self, verb: &str, target: &str) -> Result<String, String>;
+    /// stage 6: hard invariants of the body *right now* (link alive, battery, mode).
+    fn policy(&self, verb: &str, target: &str) -> Result<(), String>;
+    /// telemetry / afferents from the body update the policy's view of it.
+    fn observe(&mut self, _report: &str) {}
+    /// one line for `body.list` and the audit trail
+    fn describe(&self) -> String;
+}
+
 pub struct Kira {
     policies: Vec<Policy>,
     danger: Vec<&'static str>,
     /// per-tag ttl in ticks for minted capabilities
     pub default_ttl: u64,
+    /// per-region body policies, bound at §8 step 4 (incorporation)
+    body_policies: Vec<(String, alloc::boxed::Box<dyn BodyPolicy>)>,
 }
 
 impl Kira {
@@ -162,11 +196,50 @@ impl Kira {
                 "wipefs", "shred ", "diskpart", "rd /s",
             ],
             default_ttl: 30,
+            body_policies: Vec::new(),
         }
     }
 
     pub fn add_policy(&mut self, p: Policy) {
         self.policies.push(p);
+    }
+
+    /// §8 step 4: bind a body's own policy to the region it was incorporated
+    /// as. Re-binding the same region replaces the old policy (a body that
+    /// reconnects with a new schema gets a fresh policy).
+    pub fn bind_body_policy(&mut self, region_id: &str, p: alloc::boxed::Box<dyn BodyPolicy>) {
+        self.body_policies.retain(|(id, _)| id != region_id);
+        self.body_policies.push((String::from(region_id), p));
+    }
+
+    /// The region left the body: its policy leaves with it. Returns true if
+    /// something was unbound.
+    pub fn unbind_body_policy(&mut self, region_id: &str) -> bool {
+        let before = self.body_policies.len();
+        self.body_policies.retain(|(id, _)| id != region_id);
+        self.body_policies.len() != before
+    }
+
+    pub fn body_policy(&self, region_id: &str) -> Option<&dyn BodyPolicy> {
+        self.body_policies
+            .iter()
+            .find(|(id, _)| id == region_id)
+            .map(|(_, p)| p.as_ref())
+    }
+
+    pub fn body_policy_mut(&mut self, region_id: &str) -> Option<&mut (dyn BodyPolicy + 'static)> {
+        self.body_policies
+            .iter_mut()
+            .find(|(id, _)| id == region_id)
+            .map(|(_, p)| p.as_mut())
+    }
+
+    /// Every bound body policy, for proprioception ("what are my bodies bound by").
+    pub fn bound_regions(&self) -> Vec<(&str, String)> {
+        self.body_policies
+            .iter()
+            .map(|(id, p)| (id.as_str(), p.describe()))
+            .collect()
     }
 
     /// The pipeline. Fail at ANY stage -> denied, logged, no capability.
@@ -203,13 +276,19 @@ impl Kira {
         // This is the honest-refusal stage: an action can only be
         // authorized through a region that really exists in the body map.
         // Cognition claiming an ability it lacks dies here, formally.
+        // the region that authorizes a limb use also names the body policy
+        // (if any) that stages 4–6 must consult.
+        let mut authz_region: Option<String> = None;
         let (authz_ok, authz_note) = match action {
             Action::SpeakAloud { .. } => match body.find_capability("voice.speak") {
                 Some(r) => (true, format!("via {}", r.id)),
                 None => (false, String::from("no limb advertises voice.speak")),
             },
             Action::UseLimb { verb, .. } => match body.find_capability(verb) {
-                Some(r) => (true, format!("via {}", r.id)),
+                Some(r) => {
+                    authz_region = Some(r.id.clone());
+                    (true, format!("via {}", r.id))
+                }
                 None => (false, format!("no limb advertises '{verb}'")),
             },
             Action::NetProbe => {
@@ -278,20 +357,41 @@ impl Kira {
             Action::ConsultModelM { prompt } => !prompt.is_empty() && prompt.len() <= 240,
             _ => true,
         };
-        trace.push(StageResult {
-            stage: "validate",
-            ok: valid,
-            note: String::from(if valid { "within bounds" } else { "out of bounds" }),
-        });
+        // the body's own envelope (per-body policy) — only tightens
+        let bound: Option<&dyn BodyPolicy> = match (&authz_region, action) {
+            (Some(id), Action::UseLimb { .. }) => self.body_policy(id),
+            _ => None,
+        };
+        let (valid, valid_note) = match (valid, bound, action) {
+            (true, Some(p), Action::UseLimb { verb, target }) => match p.validate(verb, target) {
+                Ok(()) => (true, String::from("within bounds; inside the body's envelope")),
+                Err(e) => (false, e),
+            },
+            (true, _, _) => (true, String::from("within bounds")),
+            (false, _, _) => (false, String::from("out of bounds")),
+        };
+        trace.push(StageResult { stage: "validate", ok: valid, note: valid_note.clone() });
         if !valid && fail.is_none() {
-            fail = Some(("validate", String::from("request out of bounds")));
+            fail = Some(("validate", valid_note));
         }
 
         // 5 SIMULATE — predict the consequence; any invariant broken?
-        let sim = simulate(action);
+        let mut sim = simulate(action);
+        if sim.safe {
+            if let (Some(p), Action::UseLimb { verb, target }) = (bound, action) {
+                match p.simulate(verb, target) {
+                    Ok(pred) => sim.predicted = pred,
+                    Err(e) => {
+                        sim.safe = false;
+                        sim.predicted = e;
+                    }
+                }
+            }
+        }
+        let sim_note = sim.predicted.clone();
         trace.push(StageResult { stage: "simulate", ok: sim.safe, note: sim.predicted });
         if !sim.safe && fail.is_none() {
-            fail = Some(("simulate", String::from("simulated consequence breaks an invariant")));
+            fail = Some(("simulate", sim_note));
         }
 
         // 6 POLICY — apply the ruleset (human-set + learned + drives),
@@ -317,14 +417,26 @@ impl Kira {
         } else {
             false
         };
-        let policy_ok = denial.is_none() && danger_hit.is_none() && !marker_hit;
+        // the body's hard invariants right now (link, battery, mode) — the
+        // generic floors above have already had their say; this only tightens.
+        let body_hit: Option<String> = match (bound, action) {
+            (Some(p), Action::UseLimb { verb, target })
+                if denial.is_none() && danger_hit.is_none() && !marker_hit =>
+            {
+                p.policy(verb, target).err()
+            }
+            _ => None,
+        };
+        let policy_ok =
+            denial.is_none() && danger_hit.is_none() && !marker_hit && body_hit.is_none();
         trace.push(StageResult {
             stage: "policy",
             ok: policy_ok,
-            note: match (denial, danger_hit, marker_hit) {
-                (Some(p), _, _) => String::from(p.reason),
-                (_, Some(d), _) => format!("destructive pattern '{d}' refused"),
-                (_, _, true) => String::from("the volume marker is load-bearing; refused"),
+            note: match (denial, danger_hit, marker_hit, &body_hit) {
+                (Some(p), _, _, _) => String::from(p.reason),
+                (_, Some(d), _, _) => format!("destructive pattern '{d}' refused"),
+                (_, _, true, _) => String::from("the volume marker is load-bearing; refused"),
+                (_, _, _, Some(b)) => b.clone(),
                 _ => String::from("no rule objects"),
             },
         });
@@ -335,6 +447,8 @@ impl Kira {
                 fail = Some(("policy", format!("destructive pattern '{d}' refused")));
             } else if marker_hit {
                 fail = Some(("policy", String::from("the volume marker is load-bearing; refused")));
+            } else if let Some(b) = body_hit {
+                fail = Some(("policy", b));
             }
         }
 
@@ -352,6 +466,7 @@ impl Kira {
                     granted_tick: tick,
                     ttl_ticks: self.default_ttl,
                     token,
+                    _sealed: Sealed(()),
                 })
             }
             Some((stage, reason)) => {

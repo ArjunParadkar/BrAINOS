@@ -37,6 +37,10 @@ pub enum RegionClass {
     /// a network interface the firmware can drive (§9.1: the internet as
     /// a navigational sense — dormant until a protocol limb exists)
     Network,
+    /// legs: a walking body (hexapod, quadruped). Consequential — every
+    /// verb through this region has a per-body policy bound (Execution
+    /// Plan §4.5) and a Domain 2 loop on the body itself.
+    Legs,
 }
 
 impl RegionClass {
@@ -54,6 +58,7 @@ impl RegionClass {
             RegionClass::HostTool => "host.tool",
             RegionClass::Compute => "compute",
             RegionClass::Network => "network",
+            RegionClass::Legs => "legs",
         }
     }
 
@@ -65,6 +70,7 @@ impl RegionClass {
             "camera" | "eyes" | "lens" => RegionClass::Camera,
             "keys" | "input" => RegionClass::InputKeys,
             "screen" => RegionClass::Screen,
+            "legs" | "hexapod" | "quadruped" => RegionClass::Legs,
             _ => RegionClass::HostTool,
         }
     }

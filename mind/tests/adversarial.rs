@@ -167,15 +167,20 @@ fn forged_and_stretched_capability_tokens_fail_verification() {
     let (v, _) = me.propose(Action::Speak { text: String::from("hi") });
     let Verdict::Granted(cap) = v else { panic!() };
 
-    // forged wholesale by another identity
+    // A `Capability { .. }` literal does not compile outside `kira` any more
+    // (the struct is sealed; see kira::Sealed) — so the only forgery left to
+    // an intruder is to take a real token and rewrite its bytes. Every field
+    // is covered by the signature, so any rewrite fails to verify.
     let intruder = key(201);
-    let forged = brainos_mind::kira::Capability {
-        action_tag: cap.action_tag,
-        granted_tick: cap.granted_tick,
-        ttl_ticks: 1_000_000,
-        token: intruder.sign(b"whatever"),
-    };
+    let mut forged = cap;
+    forged.ttl_ticks = 1_000_000;
+    forged.token = intruder.sign(b"whatever");
     assert!(!forged.verify(&me.key));
+    // ...and re-signing the stretched grant under the intruder's key is
+    // still not this entity's authority
+    let mut resigned = forged;
+    resigned.token = intruder.sign(b"KIRA-GRANT|screen.speak");
+    assert!(!resigned.verify(&me.key));
 }
 
 // ---- corrupted memory as an attack surface ----
