@@ -32,7 +32,7 @@ Nothing in this document is claimed at a level above its tag.
 DOMAIN 5  STATE     mind/src/state.rs, journal.rs        the state graph; the only memory
 DOMAIN 4  MODEL     body/operator/{pool,fast,deliberate,skills}.rs    a pool, thinking as one
 DOMAIN 3  KIRA      mind/src/kira.rs (+ body policies)   the only path to action
-DOMAIN 2  AUTONOMIC firmware/  (NOT BUILT)               reflex loops on the body's MCU
+DOMAIN 2  AUTONOMIC firmware/miniblur-a (BUILT), miniblur/core   reflex loops on the body's MCU
 DOMAIN 1  SILICON   core/ (UEFI), key/, p3 BSEC          boot + the BrAIn Key
 ```
 
@@ -48,14 +48,14 @@ The repo grew under one numbering (Stage 3 "Operator", Stage 4 "Entity") and the
 
 | Architecture Stage (canonical) | Deliverable | Repo build milestone(s) that belong to it | Status today |
 |---|---|---|---|
-| **1 Production hardening** | `no_std` mind; two-slot CRC journal; adversarial suite | "Stage 1" (mind rlib, journal, adversarial/crash/degradation suites) | **VERIFIED** mind 80/80 (`cd mind && cargo test`, 2026-09-14) |
+| **1 Production hardening** | `no_std` mind; two-slot CRC journal; adversarial suite | "Stage 1" (mind rlib, journal, adversarial/crash/degradation suites) | **VERIFIED** mind 89/89 (`cd mind && cargo test`, 2026-09-14) |
 | **2 Full embodiment (one machine)** | world layer on a laptop | "Stage 2" (fs, programs, net, interpreter, camera, presentation) + **M3 "Operator"** (chainloaded Linux body, three tiers, face) | **VERIFIED** world 63/63, stick_test 31/31 (2026-08-30 records); metal boot **MANUAL** |
 | **3 Compounding mind** | skill graph; semantic memory; consolidation; tool discovery | **M4 "Entity"** `skills.rs` (procedural compilation, signed skill store) is the first working piece | **VERIFIED** entity_test 24/24 (2026-08-30). Consolidation/"dreaming", semantic retrieval beyond keyword, old-vs-new benchmark: **NOT BUILT** |
-| **Phase 0 (Stage 4 seed)** | Mini-Blur walks; entity claims it via §8; two bodies, one memory, live; demo recorded by 31 Oct 2026 | **NOT BUILT** — this document's §4 | firmware **NOT BUILT**; toolchain installing; hexapod policy/sim **NOT BUILT** |
+| **Phase 0 (Stage 4 seed)** | Mini-Blur walks; entity claims it via §8; two bodies, one memory, live; demo recorded by 31 Oct 2026 | this document's §4 | entity side **VERIFIED in sim** (hexapod_test 24/24, 2026-09-14); firmware **BUILT**; metal, gait on servos, demo video **MANUAL** |
 | **4 Multi-body simultaneity** | same Key on ≥3 bodies, shared graph | **M4 "Entity"** `reach.rs` + `brainos-reach.py` (any device offers hands over TCP, ed25519 attest, ONE body map) | **VERIFIED** for 2 bodies (seat + Reach body, entity_test T1/T2/T6). One loop over the whole entity (Arch §2.1) and split action (§2.2): **NOT BUILT** |
 | **— Adapters** | ROS 2 and MHS bridges into §8 | — | **NOT BUILT** (2027) |
 | **5 Brain placement** | tiers 1–3 placeable; remote brain | `pool.rs` roles fast/deliberate/vision with fail-over | **VERIFIED** pool fail-over (entity_test T7). Placement as a first-class body (datacenter slice via §8): **NOT BUILT** |
-| **6 Provable safety** | formal verification of the eight stages; sealed `Granted`; hardware isolation | KIRA's stages exist and are tested; `Capability` is **not yet sealed** (public fields) | **BUILT**, not proven. See §9 |
+| **6 Provable safety** | formal verification of the eight stages; sealed `Granted`; hardware isolation | KIRA's stages exist and are tested; `Capability` **sealed 2026-09-14** (no public constructor) | tested, not proven. See §9 |
 | **7 Scale infrastructure** | fleet ops, marketplace, hosted entities | — | **NOT BUILT** (2029–30) |
 | **8 Physical embodiment** | owned bodies: small AI hardware → companions (Blur lineage) → humanoid | Blur designed on paper (23 actuators) | **NOT BUILT** (2030–32) |
 
@@ -71,13 +71,17 @@ The repo grew under one numbering (Stage 3 "Operator", Stage 4 "Entity") and the
    core/            Rust no_std UEFI binary. Boot entry on x86_64 + aarch64. Reads the key,
                     runs the Phase-0 seed loop, chainloads BODY.EFI (M3) via KIRA Incorporate.
    key/, p3 BSEC    the BrAIn Key record (ed25519 seed) — never on the rootfs
-   firmware/        [NOT BUILT] ESP32-S3 Domain 2 for Mini-Blur: servo PWM, gait loop, limits,
-                    stop-on-lost-link, I²S audio, camera board. Speaks the Reach wire protocol.
+   firmware/miniblur-a  [BUILT] ESP32-S3 Domain 2 for Mini-Blur: MCPWM servo PWM, gait loop from
+                    miniblur-core, own envelope checks, stop-on-lost-link, Reach protocol over
+                    USB-serial (bridge: miniblur/tools/serial-reach-bridge.py). Wi-Fi, I²S audio,
+                    camera board: NOT BUILT.
+   miniblur/core    [VERIFIED 49/49] the body as numbers; links into the firmware AND the seat
+   miniblur/sim     [VERIFIED] the simulated body — the test rig
 
    DOMAIN 3 ───────────────────────────────────────────────────────────────────────────────────
    mind/src/kira.rs the 8-stage gate; Capability = ed25519 token over (tag,tick,ttl);
                     danger floor; world-marker floor; Level-0 drive (memory.erase).
-                    [TO BUILD] BodyPolicy hook: per-region validate/simulate/policy (§4.5)
+                    BodyPolicy hook: per-region validate/simulate/policy (§4.5), gate_via NAMED body — VERIFIED
 
    DOMAIN 4 ───────────────────────────────────────────────────────────────────────────────────
    body/operator/   the seat. tokio daemon. One utterance → skill replay → reflex → fast ∥ held
@@ -100,8 +104,8 @@ The repo grew under one numbering (Stage 3 "Operator", Stage 4 "Entity") and the
    BODIES ─────────────────────────────────────────────────────────────────────────────────────
    ThinkPad / Omen     x86 UEFI body (core → BODY.EFI → operator + face + session)   VERIFIED (QEMU)
    reach/brainos-reach.py  any Python device: phone, Pi, Mac, Windows              VERIFIED (2 bodies)
-   Mini-Blur           [NOT BUILT] hexapod, ESP32-S3 ×2, 10× MG90S, 2S LiPo         Phase 0
-   sim/miniblur-sim    [NOT BUILT] the same wire protocol, simulated servos/pose     Phase 0 test rig
+   Mini-Blur           [firmware BUILT, metal MANUAL] hexapod, ESP32-S3 ×2, 10× MG90S     Phase 0
+   miniblur/sim        [VERIFIED] the same wire protocol, simulated servos/pose          Phase 0 test rig
    ROS 2 robot / MHS device   [NOT BUILT] adapters into §8 steps 1–3                 Phase 1
    Blur                [designed] 23-actuator cheetah quadruped                       Phase 3 lineage
 ```
@@ -384,7 +388,7 @@ No private key material is ever exported; the key is the owner's secure element.
 
 | target | command | produces |
 |---|---|---|
-| mind (host tests) | `cd mind && cargo test` | 80 tests |
+| mind (host tests) | `cd mind && cargo test` | 89 tests |
 | core x86_64 (+aarch64) | `./build.sh` / `./build.sh --arm` | `brainos-key.img`; arch list printed |
 | production stick | `./build.sh --body … --body-efi … --api-key-file …` | `brainos.img` (p1 ESP, p2 body, p3 secure) |
 | operator | `cd body/operator && cargo build --release && cargo test` | the seat daemon |
