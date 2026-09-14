@@ -1,6 +1,6 @@
 # BrAInOS — Technical Execution Plan
 
-**Version 1.0 · 14 September 2026 · Founders and technical team**
+**Version 1.1 · 14 September 2026 · Founders and technical team**
 **Canonical references:** `docs/BrAInOS_Architecture_v1.3.pdf` (the architecture), *BrAInOS Technical Execution Report v1.0.1* (stage map, risk register, financials), *Team Briefing v1.0.1*, *BrAIn Corp Master Document v0.1.1*.
 
 This is the engineering document. It names every component we are building, what state it is in on disk today, how the pieces connect into one entity, and every stage from the code that exists to the end goal. It is versioned like the codebase; when the code and this document disagree, one of them has a bug.
@@ -141,15 +141,21 @@ The body never remembers. The model never holds the key. Nothing acts without a 
 | `tools/metal_prep_test.py` | 21/21 | 2026-08-04 | boot path; F4 bare-metal self-test with 3 refusals at named stages |
 | `body/build/tools/stick_test.sh` | 31/31 | 2026-08-30 | seed → Incorporate → Linux body → voice loop → surface → Reach body joins from the host |
 | `body/operator/tests/entity_test.py` | 24/24 | 2026-08-30 | Reach handshake + wrong-key refusal, routed reflex, deliberate→skill→1.4 ms replay (7928×), skill survives restart, forget, watcher fires, body departure reflected, speculative first token |
-| `body/operator` cargo test | see `scratchpad/operator_tests.log` | 2026-09-14 | operator unit tests (kira_gate, reach names, skills, reflex) |
+| `body/operator` cargo test | **72** (59 lib + 13 bin) | 2026-09-14 | operator unit tests incl. hexapod policy/calibration memory and export round-trips |
+| `mind/tests/body_policy.rs` | **9/9** | 2026-09-14 | per-body policy: refusals at validate / simulate / policy, unbinding, named-body gating |
+| `miniblur/core` cargo test | **49/49** | 2026-09-14 | geometry, servo table, tripod gait, tip-over, rail budget, watchdog, JSON scanner, wire codec, runtime |
+| `miniblur-sim bench` | all gaits inside the envelope | 2026-09-14 | every direction at two speeds; tippy body refused at simulate; 40 steps refused at validate |
+| `body/operator/tests/hexapod_test.py` | **24/24** | 2026-09-14 | Phase 0 entity side end to end against the simulated body: §8 join + wrong-key refusal, reflex on the body, refusals at named stages on a motor, calibration survives restart of seat AND body, **D1–D3 two bodies one memory** (deliberate 9.9 s → skill replay 1 ms), body leaves |
+| `body/operator/tests/entity_test.py` (regression) | 24/24 | 2026-09-14 | Stage 4 unchanged by the KIRA/Reach changes |
+| `firmware/miniblur-a` | **BUILT** (199 KB text, entry `Reset`) | 2026-09-14 | compiles for `xtensa-esp32s3-none-elf` via `./build.sh --esp32`; never flashed — MANUAL |
 | crash / degradation / escalation | passing | 2026-07-31 | entity recovers to last sealed state; honest degradation without net / model |
 
 **What has never been tested: anything with a motor.** Phase 0 changes that.
 
 Known gaps in the existing code that the documents already claim as facts (fix list, all cheap):
 
-1. `Capability` has public fields and no private constructor → "Granted has no public constructor" is not yet true at the type level. **Fix in Phase 0 week 1** (§9.1).
-2. KIRA has a `Policy` *struct* (deny-by-tag list), not the per-body `Policy` *trait* the report describes. **Built in §4.5 as `BodyPolicy`.**
+1. ~~`Capability` has public fields and no private constructor~~ **Done 2026-09-14**: the struct is sealed; the only constructor is stage 7 of `Kira::gate`.
+2. ~~KIRA has a `Policy` struct, not the per-body trait~~ **Done 2026-09-14**: `BodyPolicy` trait, bound per region at §8 step 4; and `gate_via` authorizes through the NAMED body, so two bodies offering the same verb are each judged by their own policy (found by the sim test, fixed the same day).
 3. Docs quote mind 77/77 and world 60/60; the suites are 80/80 and 63/63. Update the report at its next revision.
 4. `docs/` carried Architecture v1.2; v1.3 (10 Jul 2026, in Downloads) is the canonical one. Copied to `docs/BrAInOS_Architecture_v1.3.pdf` on 2026-09-14.
 
@@ -169,17 +175,17 @@ Ownership follows the Team Briefing: **N** = Nischal (body), **A** = Arjun (enti
 
 | WP | What | Owner | Gate (closes when) | Depends on |
 |---|---|---|---|---|
-| **WP0.1** ESP32-S3 toolchain + `build.sh --esp32` | `espup`-installed Xtensa toolchain; `firmware/` builds from `./build.sh --esp32`; output prints the arch list as always | A | `./build.sh --esp32` produces `miniblur-a.bin` and prints `esp32s3` in the arch line | — |
-| **WP0.2** `miniblur-core` (no_std, zero deps) | leg geometry, servo table, tripod gait generator, joint envelope, current budget, tip-over invariant, lost-link watchdog, wire protocol codec. Used by firmware (Domain 2) **and** by KIRA at the seat (same numbers, checked twice) | A | `cargo test -p miniblur-core` green; envelope/tip-over/lost-link each have a refusal test | — |
-| **WP0.3** Hexapod `BodyPolicy` in KIRA | trait hook in `mind/src/kira.rs`; `HexapodPolicy` implements validate (verb shape, param ranges), simulate (forward-model the gait step → tip-over?), policy (hard invariants: angle envelope, current limit, stop-if-link-lost, no walking while battery < floor) | A | `mind` + operator tests: `gait.walk` out of envelope → **DENY at validate**; a step that tips → **DENY at simulate**; link lost → **DENY at policy**; a good step → GRANT | WP0.2 |
-| **WP0.4** Hexapod as a Reach body | firmware speaks the existing Reach protocol (hello/attest/ready/cmd/result) over Wi-Fi TCP, plus the same frames over USB serial for bench work; `reach.rs` OFFERABLE gains the `gait.*`, `servo.*`, `body.*` verbs; region id `reach/miniblur` | A (seat) / N (firmware side, from A's codec) | sim body joins the seat; wrong key refused and tamper-logged (T1 pattern) | WP0.2 |
-| **WP0.5** `sim/miniblur-sim` (the test rig) | a std Rust binary speaking the wire protocol, backed by `miniblur-core`'s model: servo targets → pose → foot contacts → CoM/support polygon → telemetry. Every gait change is regression-tested here before it touches the robot | A | `hexapod_test.py` runs seat + sim end-to-end; the same script later runs against the real board with `--body serial:/dev/ttyACM0` | WP0.2, WP0.4 |
-| **WP0.6** §8 steps 3–5 at the seat | step 3 **schema**: the hello carries a typed capability schema (joints, ranges, verbs+params); step 4 **incorporate**: region + bound `HexapodPolicy` from the schema; step 5 **calibrate**: `body.calibrate` writes a calibration record (per-servo center/min/max/direction, leg lengths) into the state graph as semantic nodes, so a re-plugged hexapod is recognised and its calibration comes from memory, not from the device | A | after calibrate, restart the operator: `body.list` shows miniblur with calibration age; the device holds nothing (Memory-Integrity Law) | WP0.4 |
+| **WP0.1** ESP32-S3 toolchain + `build.sh --esp32` | `espup`-installed Xtensa toolchain; `firmware/` builds from `./build.sh --esp32`; output prints the arch list as always | A | `./build.sh --esp32` produces `miniblur-a.bin` and prints `esp32s3` in the arch line | **DONE** — espup toolchain, `./build.sh --esp32` builds and names `esp32s3` |
+| **WP0.2** `miniblur-core` (no_std, zero deps) | leg geometry, servo table, tripod gait generator, joint envelope, current budget, tip-over invariant, lost-link watchdog, wire protocol codec. Used by firmware (Domain 2) **and** by KIRA at the seat (same numbers, checked twice) | A | `cargo test -p miniblur-core` green; envelope/tip-over/lost-link each have a refusal test | **VERIFIED** 49/49 (one pure-Rust dep, `libm`) |
+| **WP0.3** Hexapod `BodyPolicy` in KIRA | trait hook in `mind/src/kira.rs`; `HexapodPolicy` implements validate (verb shape, param ranges), simulate (forward-model the gait step → tip-over?), policy (hard invariants: angle envelope, current limit, stop-if-link-lost, no walking while battery < floor) | A | `mind` + operator tests: `gait.walk` out of envelope → **DENY at validate**; a step that tips → **DENY at simulate**; link lost → **DENY at policy**; a good step → GRANT | **VERIFIED** (mind 9/9 body_policy; hexapod_test H4a/H4b/H4c) |
+| **WP0.4** Hexapod as a Reach body | firmware speaks the existing Reach protocol (hello/attest/ready/cmd/result) over Wi-Fi TCP, plus the same frames over USB serial for bench work; `reach.rs` OFFERABLE gains the `gait.*`, `servo.*`, `body.*` verbs; region id `reach/miniblur` | A (seat) / N (firmware side, from A's codec) | sim body joins the seat; wrong key refused and tamper-logged (T1 pattern) | **VERIFIED** at the seat + sim; firmware side BUILT |
+| **WP0.5** `sim/miniblur-sim` (the test rig) | a std Rust binary speaking the wire protocol, backed by `miniblur-core`'s model: servo targets → pose → foot contacts → CoM/support polygon → telemetry. Every gait change is regression-tested here before it touches the robot | A | `hexapod_test.py` runs seat + sim end-to-end; the same script later runs against the real board with `--body serial:/dev/ttyACM0` | **VERIFIED** (`miniblur/sim`) |
+| **WP0.6** §8 steps 3–5 at the seat | step 3 **schema**: the hello carries a typed capability schema (joints, ranges, verbs+params); step 4 **incorporate**: region + bound `HexapodPolicy` from the schema; step 5 **calibrate**: `body.calibrate` writes a calibration record (per-servo center/min/max/direction, leg lengths) into the state graph as semantic nodes, so a re-plugged hexapod is recognised and its calibration comes from memory, not from the device | A | after calibrate, restart the operator: `body.list` shows miniblur with calibration age; the device holds nothing (Memory-Integrity Law) | **VERIFIED** (H1, H5a–g) |
 | **WP0.7** Firmware: power-on, servo sweep, calibration table, wiring doc v0.1 | one servo sweeps; six legs sweep; servo rail isolated from logic; calibration table produced from the bench UI | N | **MANUAL**: video of six-leg sweep; `docs/MINIBLUR_WIRING.md` v0.1 | WP0.1, WP0.2 |
 | **WP0.8** Firmware: tripod gait stands, shifts weight, walks | Domain 2 loop at ≥50 Hz on ESP32-A; gait from `miniblur-core`; envelope + current + lost-link enforced *on the board* regardless of what the seat sends | N | **MANUAL**: stands; walks any speed; unplug Wi-Fi → stops and stands within 500 ms; power-cut the body → journal at the seat intact | WP0.7 |
-| **WP0.9** Two bodies, one memory | the demo script (§4.7) runs in sim (**VERIFIED**) and then on metal (**MANUAL**); recorded, founder narrates, three takes; release tag `phase0-demo` | A + N | `hexapod_test.py` D1–D5 green against sim; the same D1–D5 pass against the board; video exists | all |
+| **WP0.9** Two bodies, one memory | the demo script (§4.7) runs in sim (**VERIFIED**) and then on metal (**MANUAL**); recorded, founder narrates, three takes; release tag `phase0-demo` | A + N | `hexapod_test.py` D1–D5 green against sim; the same D1–D5 pass against the board; video exists | **VERIFIED in sim** (D1–D3); metal + video MANUAL |
 | **WP0.10** Camera board (ESP32-B) online | second board offers `vision.look` (JPEG → digest) as another hand of the same body | N (board) / A (verb) | **MANUAL**: `vision.look` returns a dated frame; a stale frame is reported as stale | WP0.4 |
-| **WP0.11** Entity export v1.0 | `brainos-export` writes the complete state graph + skills + calibration + audit in a documented format; round-trip test | A | export → fresh key → import → same `body.list`, same skills replay, same episodes | — |
+| **WP0.11** Entity export v1.0 | `brainos-export` writes the complete state graph + skills + calibration + audit in a documented format; round-trip test | A | export → fresh key → import → same `body.list`, same skills replay, same episodes | **VERIFIED** 3/3 (`brainos-export export|verify|import [--adopt] [--force]`) |
 
 ### 4.2 Calendar (Technical Execution Report 4.2, carried over; week 1 has already slipped one week)
 
@@ -426,3 +432,4 @@ Each step ends in a commit under Arjun's name and a line in §3's evidence table
 ---
 
 *Revision log.* v1.0 — 14 Sep 2026 — first version; reconciles repo milestones with Architecture Stages; defines Phase 0 work packages, the hexapod protocol, policy, schema, demo, and the execution order.
+v1.1 — 14 Sep 2026 (same day) — evidence table updated with the day's results: WP0.1–0.6, 0.9 (sim), 0.11 done; firmware BUILT; named-body gating bug found by the sim and fixed; the servo rail budget is tight (2.69 A peak on 3 A) — a 5 A UBEC is recommended in the wiring doc.

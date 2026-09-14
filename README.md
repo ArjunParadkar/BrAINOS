@@ -1,5 +1,34 @@
 # BrAInOS — the BrAIn Key
 
+> **September 2026 — what this is now.** BrAInOS is the identity, memory and
+> unforgeable-policy layer for embodied AI: one BrAIn Key, one state graph,
+> many bodies, every physical action through KIRA. The laptop was the first
+> body and the proof harness; the bodies that matter have motors. The plan,
+> every component and every stage from here to the end goal are in
+> **[`docs/EXECUTION_PLAN.md`](docs/EXECUTION_PLAN.md)**; the architecture is
+> `docs/BrAInOS_Architecture_v1.3.pdf`. The sections below describe the
+> seed, the operator body and the Stage 4 entity as built; they are still
+> accurate.
+>
+> **Phase 0 (now → 31 Oct 2026): Mini-Blur.** A ten-servo hexapod on two
+> ESP32-S3 boards is the first body with legs. What exists on this branch:
+>
+> | piece | where | status |
+> |---|---|---|
+> | the hexapod as numbers — geometry, servo table, tripod gait, tip-over + rail invariants, lost-link watchdog, wire codec | `miniblur/core` (`no_std`) | VERIFIED 49/49 |
+> | per-body policy in KIRA (`BodyPolicy`, stages 4–6), sealed `Capability`, gating through the NAMED body | `mind/src/kira.rs` | VERIFIED mind 89/89 |
+> | the hexapod at the seat: §8 schema → `Legs` region → `HexapodPolicy`; calibration in the state graph, pushed back to the body | `body/operator/src/{hexapod,reach}.rs` | VERIFIED |
+> | the simulated body — the test rig; speaks the Reach protocol | `miniblur/sim` | VERIFIED (`bench`, `hexapod_test.py` 24/24) |
+> | two bodies, one memory, and it compounds (D1–D3) | `body/operator/tests/hexapod_test.py` | VERIFIED in sim, 24/24 |
+> | board A firmware — Domain 2 on the ESP32-S3 | `firmware/miniblur-a` (`./build.sh --esp32`) | BUILT; metal MANUAL (`docs/MINIBLUR_WIRING.md`) |
+> | entity export v1.0 | `brainos-export` | VERIFIED 3/3 |
+>
+> ```sh
+> cd miniblur && cargo test && cargo build --release -p miniblur-sim && ./target/release/miniblur-sim bench
+> cd ../body/operator && cargo build --release && python3 tests/hexapod_test.py     # seat + simulated hexapod
+> ./build.sh --esp32                                                                 # the board's firmware
+> ```
+
 A working seed of the BrAInOS architecture (`BrAInOS_Architecture v1.3`):
 a **universal boot key** you can plug into any UEFI machine. The firmware
 performs the sweep (§9.2), picks the core matching its own architecture,
