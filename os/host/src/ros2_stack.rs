@@ -26,7 +26,6 @@ use brainos_abi::verb::Verb;
 use brainos_adapters::ros2::{actionable_fraction_pct, from_node_graph, NodeGraph, Service, Topic};
 use brainos_body::calibration::Calibration;
 use brainos_body::hal::Telemetry;
-use brainos_body::policy::Arg;
 use brainos_body::schema::CapabilitySchema;
 use brainos_crypto::key::BrainKey;
 use brainos_entity::entity::Entity;
@@ -143,7 +142,7 @@ fn inhabit(what: &'static str, graph: &NodeGraph, seed: u8) -> Inhabited {
         Err(err) => (None, Err(format!("{err:?}"))),
     };
 
-    let mut ask = |e: &mut Entity, verb: &str, args: &[(&str, f64)]| -> Option<String> {
+    let ask = |e: &mut Entity, verb: &str, args: &[(&str, f64)]| -> Option<String> {
         let Some(b) = body else {
             return Some(String::from("no body: the entity declined to take it on"));
         };

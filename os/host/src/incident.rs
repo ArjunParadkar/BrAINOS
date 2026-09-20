@@ -39,7 +39,6 @@ use brainos_entity::entity::Entity;
 use brainos_kira::action::Request;
 use brainos_kira::audit::Decision;
 use brainos_kira::evidence::{Bundle, EvidenceError};
-use brainos_kira::gate::Verdict;
 
 fn v(s: &str) -> Verb {
     Verb::parse(s).expect("a well-formed verb")
@@ -102,7 +101,6 @@ pub struct Incident {
 }
 
 pub fn reconstruct() -> Incident {
-    let key = BrainKey::from_seed(&[0x1C; 32]);
     let device = BrainKey::from_seed(&[0x2C; 32]);
     let mut e = Entity::new(BrainKey::from_seed(&[0x1C; 32]), Tick(0));
     e.wake(None, None, Tick(1)).expect("a fresh entity wakes");

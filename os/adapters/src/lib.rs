@@ -40,6 +40,7 @@
 
 extern crate alloc;
 
+pub mod boundary;
 pub mod json;
 pub mod mhs;
 pub mod native;

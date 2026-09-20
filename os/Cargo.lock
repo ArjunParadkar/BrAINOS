@@ -21,6 +21,7 @@ version = "0.3.0"
 dependencies = [
  "brainos-abi",
  "brainos-body",
+ "brainos-kira",
  "brainos-rt",
 ]
 

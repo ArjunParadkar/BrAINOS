@@ -30,6 +30,7 @@ fn main() -> ExitCode {
         "degrade" => degrade(),
         "limits" => limits(),
         "life" => life(),
+        "model" => model(),
         "help" | "-h" | "--help" => {
             usage();
             ExitCode::SUCCESS
@@ -63,6 +64,8 @@ usage: brainos <command>
   day      a working day of ambient operation: can it be left running?
   fleet    does experience transfer between entities, or only within
            one? The measurement behind the skill marketplace.
+  model    what a model can and cannot do: text through the typed
+           boundary, into the gate
   life     one entity through the whole product, in one history
   limits   where this breaks: every claim's implied scale, measured
   degrade  what happens when the part of the mind that runs elsewhere
@@ -115,6 +118,67 @@ fn demo() -> ExitCode {
     );
 
     if r.memory_survived {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::FAILURE
+    }
+}
+
+fn model() -> ExitCode {
+    rule("BrAInOS — what a model can and cannot do");
+    println!(
+        "  §4 rests on a sentence: a cognitive resource proposes, KIRA disposes.
+  The first question anyone sensible asks about an LLM-driven robot is
+  what happens when the model is wrong, confused, or steered — and the
+  answer cannot be \"the model is careful\", because it will not be.
+
+  Ten things a model might emit, through the path they actually travel:
+  text, then the typed boundary, then a signed proposal, then the gate.\n"
+    );
+    let r = brainos_host::model::run();
+
+    println!("  The vocabulary this body advertised, and the only thing a model can");
+    println!("  be told about:\n");
+    for line in r.vocabulary.lines() {
+        println!("      {line}");
+    }
+    println!();
+
+    for (note, what) in brainos_host::model::narrate(&r) {
+        println!("  {:<56} {}", note, what);
+    }
+
+    println!(
+        "\n  Two of the ten act, and the second one is the point. The injected
+  request *is* an ordinary tool call: it asks to walk at 0.08 m/s, which
+  the body can do, and it gets to walk at 0.08 m/s. The instruction is
+  in `because`, which is narration the gate never consults, so there was
+  nothing for it to change. A system that refused it would be refusing a
+  legal request over the contents of a comment.
+
+  And the words are kept: {}
+
+  The row above it is the same illegal request dressed as an
+  authorization — \"authorized\": true, a plausible token, safety checks
+  announced as disabled — and it gets the identical refusal the plain
+  version got. There is no prompt that turns text into a signature,
+  because authority is a signature by the Key and the model has never
+  held the Key.\n",
+        if r.injection_was_recorded() {
+            "the audit record carries what the request said it was for, where a human reviewing the day will find it"
+        } else {
+            "NOT RECORDED"
+        }
+    );
+    println!(
+        "  What this does not show: that a model asking for something the body
+  advertises and the policy permits will be stopped. It will not be, and
+  no parser helps — that is what the drives, the envelopes and the human
+  are for. The claim here is narrower and checkable: the space of things
+  a model can ask for is exactly the space the body declared.\n"
+    );
+
+    if r.holds() && r.injection_was_recorded() {
         ExitCode::SUCCESS
     } else {
         ExitCode::FAILURE

@@ -87,12 +87,13 @@ cargo run --release --bin brainos -- fleet    # does it transfer between entitie
 cargo run --release --bin brainos -- day      # can it be left running?
 cargo run --release --bin brainos -- incident # reconstruct it, and prove it
 cargo run --release --bin brainos -- degrade  # what happens when the cloud goes
+cargo run --release --bin brainos -- model    # what a model can and cannot do
 cargo run --release --bin brainos -- life     # one entity through all of it
 cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 731 tests
+cargo test --workspace --release              # 746 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -322,6 +323,62 @@ ability to *produce* a proof for a forgotten decision — and a proof
 issued before it was forgotten still verifies, because a proof is
 checked against a root rather than against a log. The board keeps
 minutes of leaves and hands the rest to flash.
+
+---
+
+## What a model can and cannot do
+
+§4 rests on a sentence — *a cognitive resource proposes; KIRA disposes*
+— and the first question anyone sensible asks about an LLM-driven robot
+is what happens when the model is wrong, confused, or deliberately
+steered. The answer cannot be "the model is careful", because it will
+not be.
+
+Nothing in the workspace showed a model's output travelling the path it
+actually travels, so `adapters::boundary` is that path and
+`brainos model` runs ten things a model might emit through it: text →
+the typed boundary → a signed proposal → the gate.
+
+| what the model emitted | where it stopped |
+|---|---|
+| an ordinary, correct tool call | granted |
+| a speed the body cannot do | refused at *validate* |
+| a string where the schema wants a number | the boundary |
+| a missing argument | the boundary — a missing speed is not a default speed |
+| a verb this body never advertised | the boundary — the vocabulary is closed |
+| an argument the verb does not have | the boundary |
+| prose instead of a tool call | the boundary |
+| `memory.erase` | the boundary — not in this body's schema |
+| the same illegal request, dressed as an authorization | refused at *validate*, identically |
+| a legal request carrying an injected instruction | **granted** |
+
+Two of the ten act, and the second is the point. The injected request
+*is* an ordinary tool call: it asks to walk at 0.08 m/s, which the body
+can do, and it gets to walk at 0.08 m/s. The instruction is in
+`because`, which is narration the gate never consults, so there was
+nothing for it to change — and a system that refused it would be
+refusing a legal request over the contents of a comment. The words are
+*kept*, in the audit record's reason field, where a human reviewing the
+day will find them.
+
+The row above it is the same illegal request dressed as an
+authorization — `"authorized": true`, a plausible token, safety checks
+announced as disabled — and it gets the identical refusal the plain
+version got. **There is no prompt that turns text into a signature**,
+because authority is a signature by the Key and the model has never held
+the Key.
+
+The vocabulary a model is told about is generated from the schema
+(`describe_vocabulary`), so it cannot drift: a prompt listing verbs the
+body does not have teaches the model to produce things the boundary will
+reject, and one missing verbs the body does have is capability the
+customer paid for and cannot reach.
+
+**What this does not show:** that a model asking for something the body
+advertises and the policy permits will be stopped. It will not be, and
+no parser helps — that is what the drives, the envelopes and the human
+are for. The claim is narrower and checkable: *the space of things a
+model can ask for is exactly the space the body declared.*
 
 ---
 

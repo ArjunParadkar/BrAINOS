@@ -27,6 +27,7 @@ pub mod incident;
 pub mod life;
 pub mod limits;
 pub mod migrate;
+pub mod model;
 
 pub use clock::SystemClock;
 pub use store::{FileStore, StoreError};

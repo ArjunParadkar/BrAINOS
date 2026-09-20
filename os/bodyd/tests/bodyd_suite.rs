@@ -14,7 +14,7 @@ use brainos_bodyd::hexapod::{
 use brainos_bodyd::mechanism::{Mechanism, Refusal, Sample};
 use brainos_bodyd::protocol::{Command, Report, Wire};
 use brainos_bodyd::runtime::{BodyRuntime, Measured, State};
-use brainos_rt::envelope::{Channel, Envelope, Limit};
+use brainos_rt::envelope::{Channel, Envelope};
 use brainos_rt::reflex::StopReason;
 use miniblur_core::geometry::{LegGeom, Vec2};
 use miniblur_core::servo::ServoTable;

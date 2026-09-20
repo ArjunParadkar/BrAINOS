@@ -46,7 +46,7 @@ mod alloc_free {
     pub use brainos_fleet::marketplace::{countersign, install, Manifest, Package, SkillContents};
     pub use brainos_kira::gate::Verdict;
     pub use brainos_memory::episode::Outcome;
-    pub use brainos_memory::journal::{Journal, Record, Segment, SlotState};
+    pub use brainos_memory::journal::{Journal, Segment, SlotState};
 }
 
 const SEED: [u8; 32] = [0x11; 32];

@@ -11,7 +11,7 @@ use brainos_abi::codec::{Decode, Encode};
 use brainos_abi::ids::BodyId;
 use brainos_abi::time::{Clock, Duration, Tick};
 use brainos_abi::verb::Verb;
-use brainos_adapters::native::{mini_blur, workstation};
+use brainos_adapters::native::mini_blur;
 use brainos_body::calibration::{Calibration, JointTrim};
 use brainos_crypto::key::BrainKey;
 use brainos_entity::entity::Entity;

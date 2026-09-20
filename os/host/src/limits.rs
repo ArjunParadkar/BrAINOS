@@ -182,12 +182,10 @@ fn audit_at(n: usize) -> AuditPoint {
         h.field(&(i as u64).to_le_bytes());
         log.append_hash(h.finish());
     }
-    let mut root_us = 0;
-    root_us = micros(|| {
+    let root_us = micros(|| {
         let _ = log.root();
     });
-    let mut prove_us = 0;
-    prove_us = micros(|| {
+    let prove_us = micros(|| {
         let _ = log.prove(n / 2);
     });
     let proof_path = log.prove(n / 2).map(|p| p.path_len()).unwrap_or(0);

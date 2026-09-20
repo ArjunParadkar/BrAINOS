@@ -12,3 +12,4 @@ doctest = false
 brainos-abi = { workspace = true }
 brainos-body = { workspace = true }
 brainos-rt = { workspace = true }
+brainos-kira = { workspace = true }
