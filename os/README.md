@@ -37,7 +37,7 @@ cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # and read it with none of our code
 cargo run --release --bin brainos -- stat     # what this build contains
 
-cargo test --workspace --release              # 710 tests
+cargo test --workspace --release              # 712 tests
 tools/check-no-std.sh                         # the bare-metal build, when a target exists
 ```
 

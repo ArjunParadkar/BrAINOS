@@ -638,6 +638,46 @@ impl Entity {
             );
         }
 
+        // What is worth telling a human is worth remembering.
+        //
+        // This was missing, and the day-in-the-life run made it obvious
+        // once the question was asked: over ten simulated days the
+        // entity surfaced dozens of rail dips and leg stalls to its
+        // human and wrote *none* of them into memory. A robot that
+        // stalls a leg fifty times and remembers none of them cannot
+        // learn from them, cannot tell anyone next week that this has
+        // happened before, and cannot have salience decide what it
+        // keeps — because nothing salient was ever there to keep.
+        //
+        // The salience the ambient loop already computed is carried
+        // through as the memory's salience, so the pruning order and the
+        // attention order are the same judgement rather than two.
+        match &intent {
+            Intent::Surface { items } => {
+                for item in items {
+                    let node = Episode::observed(&item.what, t).record(
+                        &self.handle,
+                        &mut self.graph,
+                        Provenance::own(t),
+                    );
+                    self.graph.set_salience(&self.handle, node, item.salience.score());
+                }
+            }
+            Intent::Attend { body, why, .. } => {
+                let mut what = Text::<160>::new();
+                what.push_str("a body stopped and needed a decision: ");
+                what.push_str(why);
+                let node = Episode::observed(what.as_str(), t).record(
+                    &self.handle,
+                    &mut self.graph,
+                    Provenance::from_body(*body, t),
+                );
+                // a stop is the most consequential thing a body does
+                self.graph.set_salience(&self.handle, node, 100);
+            }
+            Intent::Idle { .. } | Intent::Think { .. } => {}
+        }
+
         self.goals.tidy(t);
         intent
     }

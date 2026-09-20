@@ -104,6 +104,55 @@ impl Intent {
     }
 }
 
+/// What a reading was, in words, so that both the human hearing it and
+/// the memory keeping it get a fact rather than a channel name.
+fn describe_reading(name: &str, s: &Surprise) -> alloc::string::String {
+    let mut t = alloc::string::String::new();
+    t.push_str(name);
+    t.push(' ');
+    push_f32(&mut t, s.observed);
+    t.push_str(" (expected ");
+    push_f32(&mut t, s.expected);
+    t.push_str(", ");
+    push_f32(&mut t, s.sigmas);
+    t.push_str(" sigmas)");
+    t
+}
+
+fn push_f32(t: &mut alloc::string::String, v: f32) {
+    let neg = v < 0.0;
+    let v = if neg { -v } else { v };
+    let whole = v as u64;
+    let frac = ((v - whole as f32) * 100.0) as u64;
+    if neg {
+        t.push('-');
+    }
+    push_u64_into(t, whole);
+    t.push('.');
+    if frac < 10 {
+        t.push('0');
+    }
+    push_u64_into(t, frac);
+}
+
+fn push_u64_into(t: &mut alloc::string::String, mut v: u64) {
+    if v == 0 {
+        t.push('0');
+        return;
+    }
+    let mut buf = [0u8; 20];
+    let mut n = 0;
+    while v > 0 {
+        buf[n] = b'0' + (v % 10) as u8;
+        v /= 10;
+        n += 1;
+    }
+    while n > 0 {
+        n -= 1;
+        t.push(buf[n] as char);
+    }
+}
+
 /// One thing the entity has recently told its human about.
 #[derive(Clone, Copy, Debug)]
 struct Surfaced {
@@ -333,7 +382,12 @@ impl Ambient {
 
                 if salience.should_surface() {
                     self.note_surfaced(s.key, now, s.sigmas);
-                    let item = Salient::new(&name, salience);
+                    // the channel's name alone — "leg.current" — is a
+                    // useless thing to tell a human and a worse thing to
+                    // write into memory, where somebody may read it a
+                    // week later. What it read, what was expected, and
+                    // how far off that is are what make it a fact
+                    let item = Salient::new(&describe_reading(&name, &s), salience);
                     self.attention.items = alloc::vec![item.clone()];
                     return Intent::Surface {
                         items: alloc::vec![item],

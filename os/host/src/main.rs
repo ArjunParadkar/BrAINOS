@@ -571,6 +571,16 @@ fn day() -> ExitCode {
         b.memories.to_string(),
     );
     row(
+        "…of those, about faults",
+        format!("{} ({}%)", w.memories_about_faults, (w.memories_about_faults * 100) / w.memories.max(1)),
+        format!("{} ({}%)", b.memories_about_faults, (b.memories_about_faults * 100) / b.memories.max(1)),
+    );
+    row(
+        "…routine work",
+        w.memories_routine.to_string(),
+        b.memories_routine.to_string(),
+    );
+    row(
         "faults noticed on the first",
         format!("{}", w.worst_first_notice()),
         format!("{}", b.worst_first_notice()),
@@ -611,12 +621,18 @@ fn day() -> ExitCode {
     } else {
         println!(
             "  The board keeps {}% of what the workstation keeps and loses nothing in
-  noticing. That is the claim §5 needs and it is not obvious: attention
-  is a property of the ambient loop — the damping, the severity bands,
-  consequence scaling evidence — rather than of how much is remembered.
-  What the small body loses is *recall*, and it loses it in the order
-  salience decides.\n",
-            (b.memories * 100) / w.memories.max(1)
+  noticing. Attention turns out to be a property of the ambient loop —
+  the damping, the severity bands, consequence scaling evidence rather
+  than adding to it — and not of how much is remembered.
+
+  And look at *what* it keeps. Forced to forget, the small body ends up
+  {}% faults against the workstation's {}%: the routine walks go and the
+  things that went wrong stay. That is salience deciding the order, and
+  it means a constrained entity's memory is not merely smaller, it is
+  denser in the things worth having kept.\n",
+            (b.memories * 100) / w.memories.max(1),
+            (b.memories_about_faults * 100) / b.memories.max(1),
+            (w.memories_about_faults * 100) / w.memories.max(1)
         );
     }
 

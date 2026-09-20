@@ -575,6 +575,25 @@ impl StateGraph {
     }
 
     /// Adjust a belief's confidence, respecting the origin ceiling.
+    /// Set how much a memory matters.
+    ///
+    /// Salience decides what survives pruning, and until now it was set
+    /// once at 80 for everything and then only decayed. That made the
+    /// forgetting order essentially "oldest first", which is not what
+    /// the architecture says and not what anyone would want: a routine
+    /// walk and a leg stall are not equally worth keeping. The ambient
+    /// loop already computes how much something matters in order to
+    /// decide whether to interrupt a human; this is where that same
+    /// judgement reaches memory, so attention and pruning are one
+    /// judgement rather than two that can disagree.
+    pub fn set_salience(&mut self, _h: &MemoryHandle, id: NodeId, salience: u8) -> bool {
+        let Ok(i) = self.nodes.binary_search_by_key(&id.0, |n| n.id.0) else {
+            return false;
+        };
+        self.nodes[i].salience = salience;
+        true
+    }
+
     pub fn revise(&mut self, _h: &MemoryHandle, id: NodeId, confidence: u8) -> bool {
         match self.nodes.binary_search_by_key(&id.0, |n| n.id.0) {
             Err(_) => false,

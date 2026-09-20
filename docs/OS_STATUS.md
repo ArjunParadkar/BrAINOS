@@ -83,7 +83,7 @@ cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 710 tests
+cargo test --workspace --release              # 712 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -395,19 +395,42 @@ pass as a result. Ten days do:
 
 | | workstation | ESP32-S3 |
 |---|---|---|
-| memories at the end | 1,983 | **260** |
+| memories at the end | 2,431 | **260** |
+| …of those, about faults | 448 (18%) | 256 (**98%**) |
+| …routine work | 1,980 | 2 |
 | faults noticed on the first | 1 | 1 |
 | human aware of what mattered | 98% | 98% |
 | interrupt precision | 98% | 98% |
 | interruptions per 1k ticks | 2 | 2 |
 | could be left running | yes | yes |
 
-The board keeps 13% of what the workstation keeps and loses **nothing**
-in noticing. That is the claim §5 needs and it is not obvious: attention
-is a property of the ambient loop — the damping, the severity bands,
-consequence scaling evidence rather than adding to it — rather than of
-how much is remembered. What the small body loses is *recall*, and it
-loses it in the order salience decides.
+The board keeps a tenth of what the workstation keeps and loses
+**nothing** in noticing. Attention turns out to be a property of the
+ambient loop — the damping, the severity bands, consequence scaling
+evidence rather than adding to it — and not of how much is remembered.
+
+And look at *what* it keeps. Forced to forget, the small body ends up
+98% faults against the workstation's 18%: the routine walks go and the
+things that went wrong stay. A constrained entity's memory is not merely
+smaller, it is denser in the things worth having kept.
+
+**Getting to that number required fixing something.** Asking "does it
+forget in the right order" exposed that there was no order to speak of,
+because the salient things were never memories in the first place: over
+ten simulated days the entity surfaced dozens of rail dips and leg
+stalls to its human and wrote *none* of them down. A robot that stalls a
+leg fifty times and remembers none of them cannot learn from them and
+cannot tell anyone next week that this has happened before. What the
+ambient loop surfaces is now recorded, carrying the salience it already
+computed, so attention and pruning are one judgement rather than two
+that can disagree. And salience had only ever been set once at 80 for
+everything and then decayed, which made the forgetting order
+approximately "oldest first".
+
+A surfaced reading also used to be the bare channel name — `leg.current`
+— which is a useless thing to tell a human and a worse thing to write
+into a memory somebody may read a week later. It now carries what was
+read, what was expected and how far off that is.
 
 ### And one finding that is not a bug
 
@@ -835,7 +858,14 @@ end-to-end assertion.
     KiB against 192 KiB available — and the audit window has to shrink
     too. A board budget wrong in the optimistic direction is the worst
     direction for a number that decides whether a robot works.
-22. In the fleet experiment itself, veterans were selling every tag they
+22. **The entity never remembered the things it thought were worth
+    interrupting a human about.** Ten simulated days, dozens of rail
+    dips and leg stalls surfaced, none written down. And salience was
+    set once at 80 for every memory and then only decayed, so the
+    pruning order was approximately "oldest first" rather than the
+    architecture's "least salient first". Both fixed; the measured
+    consequence is in the day section above.
+23. In the fleet experiment itself, veterans were selling every tag they
     had ever tracked rather than the ones they could back up, which made
     the matched and blind arms come out identical to the digit. A seller
     sells findings, not hunches. There is now a test that the two arms

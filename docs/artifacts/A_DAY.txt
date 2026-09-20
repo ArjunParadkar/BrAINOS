@@ -14,7 +14,7 @@ BrAInOS — a day in the life
   [precision   ] 42 interruptions, 38 of them (90%) for something that deserved one
   [quiet       ] 155 things surfaced, 42 of which (27%) actually interrupted — 2 interruptions per thousand ticks. An entity that surfaces everything is a firehose nobody keeps; one that surfaces nothing is a machine that quietly fails
   [thinking    ] 691 escalations above the reflex tier, with 100% of the budget left at the end and 0 escalations the budget refused
-  [dreaming    ] 0 consolidation passes during the day and 5 once the body was put away — a busy workshop never gives two hundred consecutive quiet ticks, and rewriting memory while a gait loop runs is the thing the quiet check exists to prevent. 201 memories at the end
+  [dreaming    ] 0 consolidation passes during the day and 5 once the body was put away — a busy workshop never gives two hundred consecutive quiet ticks, and rewriting memory while a gait loop runs is the thing the quiet check exists to prevent. 252 memories at the end
   [by kind     ] quiet: 19244 seen, 17 reached, 0 interrupted · rail dip: 482 seen, 91 reached, 4 interrupted · leg stall: 54 seen, 14 reached, 5 interrupted · reflex stop: 33 seen, 33 reached, 33 interrupted · the human spoke: 187 seen, 0 reached, 0 interrupted
   [calibration ] surprise rate 1% — a well-calibrated entity in a familiar place should be low single digits, and one that is surprised half the time is somewhere it does not understand and should say so
   [verdict     ] this entity could be left running: it caught what mattered, stayed quiet, and still had budget at the end
@@ -32,7 +32,9 @@ Ten of those days, on the board Phase 0 runs on
   of them, which is where the small body starts forgetting.
 
                                     workstation       ESP32-S3
-    memories at the end                    1983            260
+    memories at the end                    2431            260
+    …of those, about faults           448 (18%)      256 (98%)
+    …routine work                          1980              2
     faults noticed on the first               1              1
     human aware of what mattered            98%            98%
     interrupt precision                     98%            98%
@@ -40,10 +42,14 @@ Ten of those days, on the board Phase 0 runs on
     escalation budget left                 100%           100%
     could be left running                  true           true
 
-  The board keeps 13% of what the workstation keeps and loses nothing in
-  noticing. That is the claim §5 needs and it is not obvious: attention
-  is a property of the ambient loop — the damping, the severity bands,
-  consequence scaling evidence — rather than of how much is remembered.
-  What the small body loses is *recall*, and it loses it in the order
-  salience decides.
+  The board keeps 10% of what the workstation keeps and loses nothing in
+  noticing. Attention turns out to be a property of the ambient loop —
+  the damping, the severity bands, consequence scaling evidence rather
+  than adding to it — and not of how much is remembered.
+
+  And look at *what* it keeps. Forced to forget, the small body ends up
+  98% faults against the workstation's 18%: the routine walks go and the
+  things that went wrong stay. That is salience deciding the order, and
+  it means a constrained entity's memory is not merely smaller, it is
+  denser in the things worth having kept.
 

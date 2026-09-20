@@ -112,6 +112,11 @@ pub struct Day {
     pub dreams: u64,
     /// memories at the end
     pub memories: usize,
+    /// of those, how many are about something that went wrong — a
+    /// reading out of family, or a body stopping itself
+    pub memories_about_faults: usize,
+    /// and how many are the routine work
+    pub memories_routine: usize,
     /// what the escalation budget had left at the end, as a percentage
     /// of its cap
     pub budget_left_pct: u8,
@@ -337,6 +342,8 @@ pub fn run_on(ticks: u64, body_kind: Body) -> Day {
         false_alarms: 0,
         dreams: 0,
         memories: 0,
+        memories_about_faults: 0,
+        memories_routine: 0,
         budget_left_pct: 0,
         budget_refusals: 0,
         surprise_rate_pct: 0,
@@ -519,6 +526,20 @@ pub fn run_on(ticks: u64, body_kind: Body) -> Day {
     }
 
     day.memories = e.graph.len();
+    day.memories_about_faults = e
+        .graph
+        .nodes()
+        .iter()
+        .filter(|n| {
+            n.content.contains("sigmas)") || n.content.contains("a body stopped")
+        })
+        .count();
+    day.memories_routine = e
+        .graph
+        .nodes()
+        .iter()
+        .filter(|n| n.content.contains("legs.walk"))
+        .count();
     day.budget_left_pct = ((e.ambient.budget.available() as u64 * 100) / budget_cap.max(1) as u64)
         .min(100) as u8;
     day.surprise_rate_pct = e.ambient.forward.surprise_rate_pct();

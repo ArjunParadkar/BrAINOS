@@ -302,3 +302,47 @@ fn a_small_body_can_still_be_left_running() {
         "an entity on the board it ships on could not be left running for ten days"
     );
 }
+
+/// What is worth telling a human is worth remembering.
+///
+/// This was missing and the comparison above is what made it obvious:
+/// over ten simulated days the entity surfaced dozens of rail dips and
+/// leg stalls to its human and wrote none of them into memory. A robot
+/// that stalls a leg fifty times and remembers none of them cannot
+/// learn from them and cannot tell anyone next week that this has
+/// happened before.
+#[test]
+fn what_the_entity_surfaces_it_also_remembers() {
+    let d = run_on(LONG, Body::Workstation);
+    assert!(
+        d.memories_about_faults > 50,
+        "only {} of {} memories are about something going wrong, although the \
+         entity surfaced faults to its human throughout",
+        d.memories_about_faults,
+        d.memories
+    );
+}
+
+/// And the claim the body comparison rests on, measured rather than
+/// asserted: the small body loses recall *in the order salience
+/// decides*. Forced to forget, it drops the routine walks and keeps the
+/// things that went wrong.
+#[test]
+fn a_small_body_forgets_the_routine_and_keeps_the_faults() {
+    let board = run_on(LONG, Body::Board);
+    let workstation = run_on(LONG, Body::Workstation);
+
+    let board_pct = (board.memories_about_faults * 100) / board.memories.max(1);
+    let workstation_pct = (workstation.memories_about_faults * 100) / workstation.memories.max(1);
+
+    assert!(
+        board_pct > workstation_pct + 30,
+        "the constrained body's memory is {board_pct}% faults against the \
+         unconstrained one's {workstation_pct}% — not enough of a difference to say \
+         salience decided the order rather than age"
+    );
+    assert!(
+        board.memories_routine < workstation.memories_routine,
+        "the small body kept as much routine work as the large one"
+    );
+}
