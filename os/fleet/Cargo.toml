@@ -3,8 +3,12 @@ name = "brainos-fleet"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "Stage 7 — fleets of sovereign entities, the capability marketplace, and hosted brain placement."
 
 [lib]
 doctest = false
 
 [dependencies]
+brainos-abi = { workspace = true }
+brainos-crypto = { workspace = true }
+brainos-body = { workspace = true }

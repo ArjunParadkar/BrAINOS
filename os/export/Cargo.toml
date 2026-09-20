@@ -3,8 +3,13 @@ name = "brainos-export"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "Entity export v1.0 — the complete state graph, in a documented format, signed and round-trip tested. The freedom principle."
 
 [lib]
 doctest = false
 
 [dependencies]
+brainos-abi = { workspace = true }
+brainos-crypto = { workspace = true }
+brainos-memory = { workspace = true }
+brainos-entity = { workspace = true }

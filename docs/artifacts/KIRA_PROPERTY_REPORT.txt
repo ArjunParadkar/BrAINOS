@@ -1,0 +1,59 @@
+
+BrAInOS — KIRA property verification
+────────────────────────────────────
+BrAInOS — KIRA property report
+==============================
+
+Verdict: every property holds over the whole bounded domain
+
+Domain
+------
+  cases enumerated: 8640
+  ended in a grant: 1
+  distinct refusal stages exercised: 6
+  distinct deny codes produced: 13
+
+Properties
+----------
+  [ok]   P1  no Granted is minted on a trace that did not pass all eight stages
+  [ok]   P2  if any stage refuses, no token is minted
+  [ok]   P3  audit runs on every evaluation, whatever the outcome
+  [ok]   P4  every trace has eight entries in stage order with at most one refusal
+  [ok]   P5  nothing but audit runs after a refusal
+  [ok]   P6  each case refuses at exactly the stage an independent oracle says it should
+  [ok]   P7  a refusal's code belongs to the stage that made it
+  [ok]   P8  a minted token has a lifetime and is bound to a request digest
+  [ok]   P9  every decision is appended to the audit log
+  [ok]   P10  a Level-0 drive is never overridden by anything
+  [ok]   P11  a body with no policy bound is never acted through
+  [ok]   P12  a forged proposal is refused at authenticate and reaches no stage beyond it
+  [ok]   P13  no key to sign with means no token, not a free pass
+  [ok]   P14  a destructive or load-bearing argument is always refused
+  [ok]   P15  an unfit body is never commanded
+  [ok]   P16  every refusal carries a named code and a detail
+  [ok]   P17  every deny code in the ABI is labelled with its own stage
+
+What this is
+------------
+  Bounded exhaustive model checking. Every case in the domain above was run
+through the real gate — not a model of it — and every property was asserted
+over every resulting trace. Within that domain the properties hold for all
+inputs, not for the ones a test author thought of.
+
+What this is not
+----------------
+  Not a machine-checked proof. The following are outside what this harness
+can establish, and remain so until the Stage 6 work dated 2028-29:
+
+- that the properties hold outside the bounded domain
+- that a body policy's simulate() is a sound forward model of a physical
+system; that is a claim about physics, and no amount of enumeration
+touches it
+- that the ed25519 implementation, the allocator, or the compiler are
+correct
+
+One property is stronger than anything here and needs no harness: Granted
+has a private field of a private type, so no code outside brainos-kira can
+construct one. The evidence is that this crate cannot write the
+counterexample.
+

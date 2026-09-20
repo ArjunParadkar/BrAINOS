@@ -3,8 +3,14 @@ name = "brainos-proof"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "Stage 6 — the properties KIRA must have, checked exhaustively over a bounded domain. A proof harness, not a proof assistant."
 
 [lib]
 doctest = false
 
 [dependencies]
+brainos-abi = { workspace = true }
+brainos-crypto = { workspace = true }
+brainos-body = { workspace = true }
+brainos-kira = { workspace = true }
+brainos-rt = { workspace = true }

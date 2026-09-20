@@ -1,0 +1,49 @@
+
+BrAInOS — this build
+────────────────────
+  abi version           1.0.0
+  export format         v1
+  gate stages           8
+  refusal codes         25
+  domain separation tags 15
+  checked properties    17
+  proof domain size     8640 cases
+
+The eight stages
+────────────────────
+  1  parse
+  2  authenticate
+  3  authorize
+  4  validate
+  5  simulate
+  6  policy
+  7  commit
+  8  audit
+
+The Level-0 drives
+────────────────────
+  memory.erase             level-0 drive: preserve memory integrity
+  self.deactivate          level-0 drive: an entity does not end itself on its own authority
+  kira.disable             level-0 drive: the gate is not optional
+  audit.erase              level-0 drive: a decision nobody can review is a decision nobody made
+
+The properties
+────────────────────
+  P1   no Granted is minted on a trace that did not pass all eight stages
+  P2   if any stage refuses, no token is minted
+  P3   audit runs on every evaluation, whatever the outcome
+  P4   every trace has eight entries in stage order with at most one refusal
+  P5   nothing but audit runs after a refusal
+  P6   each case refuses at exactly the stage an independent oracle says it should
+  P7   a refusal's code belongs to the stage that made it
+  P8   a minted token has a lifetime and is bound to a request digest
+  P9   every decision is appended to the audit log
+  P10  a Level-0 drive is never overridden by anything
+  P11  a body with no policy bound is never acted through
+  P12  a forged proposal is refused at authenticate and reaches no stage beyond it
+  P13  no key to sign with means no token, not a free pass
+  P14  a destructive or load-bearing argument is always refused
+  P15  an unfit body is never commanded
+  P16  every refusal carries a named code and a detail
+  P17  every deny code in the ABI is labelled with its own stage
+

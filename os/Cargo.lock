@@ -18,6 +18,11 @@ version = "0.3.0"
 [[package]]
 name = "brainos-adapters"
 version = "0.3.0"
+dependencies = [
+ "brainos-abi",
+ "brainos-body",
+ "brainos-rt",
+]
 
 [[package]]
 name = "brainos-body"
@@ -63,14 +68,41 @@ dependencies = [
 [[package]]
 name = "brainos-export"
 version = "0.3.0"
+dependencies = [
+ "brainos-abi",
+ "brainos-crypto",
+ "brainos-entity",
+ "brainos-memory",
+]
 
 [[package]]
 name = "brainos-fleet"
 version = "0.3.0"
+dependencies = [
+ "brainos-abi",
+ "brainos-body",
+ "brainos-crypto",
+]
 
 [[package]]
 name = "brainos-host"
 version = "0.3.0"
+dependencies = [
+ "brainos-abi",
+ "brainos-adapters",
+ "brainos-body",
+ "brainos-cognition",
+ "brainos-crypto",
+ "brainos-entity",
+ "brainos-export",
+ "brainos-fleet",
+ "brainos-kira",
+ "brainos-memory",
+ "brainos-proof",
+ "brainos-rt",
+ "brainos-transport",
+ "brainos-worlds",
+]
 
 [[package]]
 name = "brainos-kira"
@@ -94,6 +126,13 @@ dependencies = [
 [[package]]
 name = "brainos-proof"
 version = "0.3.0"
+dependencies = [
+ "brainos-abi",
+ "brainos-body",
+ "brainos-crypto",
+ "brainos-kira",
+ "brainos-rt",
+]
 
 [[package]]
 name = "brainos-rt"
@@ -105,6 +144,10 @@ dependencies = [
 [[package]]
 name = "brainos-transport"
 version = "0.3.0"
+dependencies = [
+ "brainos-abi",
+ "brainos-crypto",
+]
 
 [[package]]
 name = "brainos-worlds"

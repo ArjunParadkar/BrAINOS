@@ -3,8 +3,27 @@ name = "brainos-host"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "The std side: platform clocks, a file-backed journal, and the brainos binary."
 
 [lib]
 doctest = false
 
+[[bin]]
+name = "brainos"
+path = "src/main.rs"
+
 [dependencies]
+brainos-abi = { workspace = true }
+brainos-crypto = { workspace = true }
+brainos-rt = { workspace = true }
+brainos-memory = { workspace = true }
+brainos-body = { workspace = true }
+brainos-kira = { workspace = true }
+brainos-cognition = { workspace = true }
+brainos-worlds = { workspace = true }
+brainos-entity = { workspace = true }
+brainos-transport = { workspace = true }
+brainos-adapters = { workspace = true }
+brainos-proof = { workspace = true }
+brainos-fleet = { workspace = true }
+brainos-export = { workspace = true }

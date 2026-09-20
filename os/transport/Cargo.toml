@@ -3,8 +3,11 @@ name = "brainos-transport"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "The wire: framing, attested sessions, replay protection, link health. Knows nothing about verbs."
 
 [lib]
 doctest = false
 
 [dependencies]
+brainos-abi = { workspace = true }
+brainos-crypto = { workspace = true }

@@ -78,6 +78,18 @@ impl Segment {
     pub fn from_u8(v: u8) -> Option<Segment> {
         Segment::ALL.get(v as usize).copied()
     }
+
+    /// Where the durable state-graph blob goes.
+    ///
+    /// The graph is encoded as one unit rather than split across
+    /// segments, because its nodes reference each other by id and a
+    /// half-written graph would have dangling edges. Segmentation buys
+    /// its benefit elsewhere: the skill graph and the life record are
+    /// written separately, so a gait's worth of new episodes does not
+    /// rewrite them.
+    pub const fn graph() -> Segment {
+        Segment::Episodes
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
