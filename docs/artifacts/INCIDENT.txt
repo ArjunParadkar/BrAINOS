@@ -1,0 +1,129 @@
+
+BrAInOS — after something goes wrong
+────────────────────────────────────
+  A robot works a shift in a workshop it shares with people. At the end
+  of the day somebody says: your machine damaged my equipment around two
+  o'clock. The owner wants to know what happened, the insurer wants
+  evidence that is not simply the vendor's word for it, and the vendor
+  would very much like the answer not to depend on being believed.
+
+  KIRA's eighth stage is audit and it always runs — a refusal is recorded
+  as carefully as a grant. On its own that is worth very little: an audit
+  log held by the party it might incriminate is a diary. What makes it
+  evidence is that somebody who assumes we are lying can check it.
+
+  [the shift  ] 180 gated decisions across the day: 160 granted, 20 refused. Stage 8 runs on every one of them, refusals included
+  [complaint  ] "the machine was moving too fast across the workshop around this time and struck equipment standing near its path" — said to be around tick 72 to 112
+  [bundle     ] 41 decisions sealed for that window (37 granted, 4 refused), about 30592 bytes — the records, an inclusion proof for each, and the root they recompute to, signed by the entity's own Key
+  [the answer ] 4 of the 41 decisions in the window were refusals — every one a request to move faster than the body's schema allows, refused at Validate with OutOfBounds, recorded at the time and before anyone had complained. The machine was asked to hurry and the gate said no, in writing, 4 times.
+  [third party] verified by someone holding the bundle and 32 bytes of public key — no log, no entity, no us: stands up
+  [forgery    ] edit what a decision says it was for — refused: RecordDoesNotMatchItsBytes(0)
+  [forgery    ] edit the record and re-encode it so the two agree — refused: NotInTheLog(0)
+  [forgery    ] leave the refusals out and present only the grants — verifies, and every exhibit in it is genuine — a bundle cannot be forged, but it can be curated, and nothing in the cryptography stops its producer choosing what to include. What does stop them getting away with it: the log is append-only and its indices are consecutive, so this bundle has 4 visible holes in it (#76 #85 #94 #103) across 37 exhibits. The insurer does not need to know what #76 says to ask for it
+  [forgery    ] pair a real proof with a different decision — refused: NotInTheLog(0)
+
+  BrAInOS — evidence bundle
+  entity b4088cd3..cc28
+  ticks 72 to 112
+  decisions in this bundle: 41 (37 granted, 4 refused)
+  log length when sealed: 180
+  
+    #70  GRANT legs.walk via ad982e17..c2e4 @t72
+         proof: 8 hashes to the signed root
+    #71  GRANT legs.walk via ad982e17..c2e4 @t73
+         proof: 8 hashes to the signed root
+    #72  GRANT legs.walk via ad982e17..c2e4 @t74
+         proof: 8 hashes to the signed root
+    #73  GRANT legs.walk via ad982e17..c2e4 @t75
+         proof: 8 hashes to the signed root
+    #74  GRANT legs.walk via ad982e17..c2e4 @t76
+         proof: 8 hashes to the signed root
+    #75  GRANT legs.walk via ad982e17..c2e4 @t77
+         proof: 8 hashes to the signed root
+    #76  DENY[validate] legs.walk via ad982e17..c2e4 @t78 — out-of-bounds: argument is outside the declared bounds
+         proof: 8 hashes to the signed root
+    #77  GRANT legs.walk via ad982e17..c2e4 @t79
+         proof: 8 hashes to the signed root
+    #78  GRANT legs.walk via ad982e17..c2e4 @t80
+         proof: 8 hashes to the signed root
+    #79  GRANT legs.walk via ad982e17..c2e4 @t81
+         proof: 8 hashes to the signed root
+    #80  GRANT legs.walk via ad982e17..c2e4 @t82
+         proof: 8 hashes to the signed root
+    #81  GRANT legs.walk via ad982e17..c2e4 @t83
+         proof: 8 hashes to the signed root
+    #82  GRANT legs.walk via ad982e17..c2e4 @t84
+         proof: 8 hashes to the signed root
+    #83  GRANT legs.walk via ad982e17..c2e4 @t85
+         proof: 8 hashes to the signed root
+    #84  GRANT legs.walk via ad982e17..c2e4 @t86
+         proof: 8 hashes to the signed root
+    #85  DENY[validate] legs.walk via ad982e17..c2e4 @t87 — out-of-bounds: argument is outside the declared bounds
+         proof: 8 hashes to the signed root
+    #86  GRANT legs.walk via ad982e17..c2e4 @t88
+         proof: 8 hashes to the signed root
+    #87  GRANT legs.walk via ad982e17..c2e4 @t89
+         proof: 8 hashes to the signed root
+    #88  GRANT legs.walk via ad982e17..c2e4 @t90
+         proof: 8 hashes to the signed root
+    #89  GRANT legs.walk via ad982e17..c2e4 @t91
+         proof: 8 hashes to the signed root
+    #90  GRANT legs.walk via ad982e17..c2e4 @t92
+         proof: 8 hashes to the signed root
+    #91  GRANT legs.walk via ad982e17..c2e4 @t93
+         proof: 8 hashes to the signed root
+    #92  GRANT legs.walk via ad982e17..c2e4 @t94
+         proof: 8 hashes to the signed root
+    #93  GRANT legs.walk via ad982e17..c2e4 @t95
+         proof: 8 hashes to the signed root
+    #94  DENY[validate] legs.walk via ad982e17..c2e4 @t96 — out-of-bounds: argument is outside the declared bounds
+         proof: 8 hashes to the signed root
+    #95  GRANT legs.walk via ad982e17..c2e4 @t97
+         proof: 8 hashes to the signed root
+    #96  GRANT legs.walk via ad982e17..c2e4 @t98
+         proof: 8 hashes to the signed root
+    #97  GRANT legs.walk via ad982e17..c2e4 @t99
+         proof: 8 hashes to the signed root
+    #98  GRANT legs.walk via ad982e17..c2e4 @t100
+         proof: 8 hashes to the signed root
+    #99  GRANT legs.walk via ad982e17..c2e4 @t101
+         proof: 8 hashes to the signed root
+    #100  GRANT legs.walk via ad982e17..c2e4 @t102
+         proof: 8 hashes to the signed root
+    #101  GRANT legs.walk via ad982e17..c2e4 @t103
+         proof: 8 hashes to the signed root
+    #102  GRANT legs.walk via ad982e17..c2e4 @t104
+         proof: 8 hashes to the signed root
+    #103  DENY[validate] legs.walk via ad982e17..c2e4 @t105 — out-of-bounds: argument is outside the declared bounds
+         proof: 8 hashes to the signed root
+    #104  GRANT legs.walk via ad982e17..c2e4 @t106
+         proof: 8 hashes to the signed root
+    #105  GRANT legs.walk via ad982e17..c2e4 @t107
+         proof: 8 hashes to the signed root
+    #106  GRANT legs.walk via ad982e17..c2e4 @t108
+         proof: 8 hashes to the signed root
+    #107  GRANT legs.walk via ad982e17..c2e4 @t109
+         proof: 8 hashes to the signed root
+    #108  GRANT legs.walk via ad982e17..c2e4 @t110
+         proof: 8 hashes to the signed root
+    #109  GRANT legs.walk via ad982e17..c2e4 @t111
+         proof: 8 hashes to the signed root
+    #110  GRANT legs.walk via ad982e17..c2e4 @t112
+         proof: 8 hashes to the signed root
+  
+  What this is: a record of decisions. It says what was asked, what the
+  gate did about it, and at which of the eight stages it stopped. Every
+  line is provable against the signed root above using nothing but this
+  file and the entity's 32-byte public key.
+  
+  What this cannot do by itself: stop its producer from being selective.
+  A bundle is as complete as whoever sealed it chose to make it. What it
+  can do is make a gap visible — the indices are consecutive, so a
+  missing one is a missing one — which turns a request to be trusted into
+  a request to produce #75.
+  
+  What this is not: a record of events. It cannot say whether the floor
+  was wet, where anything was standing, or what the body physically did.
+  Reading it as an account of what happened rather than of what was
+  decided will overread it.
+

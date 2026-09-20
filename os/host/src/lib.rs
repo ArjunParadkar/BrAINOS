@@ -21,6 +21,7 @@ pub mod day;
 pub mod demo;
 pub mod fleet_experiment;
 pub mod fullstack;
+pub mod incident;
 pub mod migrate;
 
 pub use clock::SystemClock;

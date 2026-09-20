@@ -26,6 +26,7 @@ fn main() -> ExitCode {
         "export" => export(args.get(2).map(|s| s.as_str())),
         "leave" => leave(),
         "fleet" => fleet(),
+        "incident" => incident(),
         "help" | "-h" | "--help" => {
             usage();
             ExitCode::SUCCESS
@@ -59,6 +60,8 @@ usage: brainos <command>
   day      a working day of ambient operation: can it be left running?
   fleet    does experience transfer between entities, or only within
            one? The measurement behind the skill marketplace.
+  incident after something goes wrong: reconstruct it from the audit log
+           and prove it to someone who assumes you are lying
   leave    the freedom principle, exercised: an entity that lived its
            whole life on one vendor's hexapod is moved to a competitor's
            arm, after the first vendor has ceased to exist
@@ -109,6 +112,42 @@ fn demo() -> ExitCode {
     } else {
         ExitCode::FAILURE
     }
+}
+
+fn incident() -> ExitCode {
+    rule("BrAInOS — after something goes wrong");
+    println!(
+        "  A robot works a shift in a workshop it shares with people. At the end
+  of the day somebody says: your machine damaged my equipment around two
+  o'clock. The owner wants to know what happened, the insurer wants
+  evidence that is not simply the vendor's word for it, and the vendor
+  would very much like the answer not to depend on being believed.
+
+  KIRA's eighth stage is audit and it always runs — a refusal is recorded
+  as carefully as a grant. On its own that is worth very little: an audit
+  log held by the party it might incriminate is a diary. What makes it
+  evidence is that somebody who assumes we are lying can check it.\n"
+    );
+
+    let i = brainos_host::incident::reconstruct();
+    for (step, text) in brainos_host::incident::narrate(&i) {
+        println!("  [{:<11}] {}", step, text);
+    }
+
+    println!("\n{}", indent(&i.bundle_text));
+
+    if i.is_accountable() {
+        ExitCode::SUCCESS
+    } else {
+        eprintln!("  the reconstruction did not stand up\n");
+        ExitCode::FAILURE
+    }
+}
+
+fn indent(s: &str) -> String {
+    s.lines()
+        .map(|l| format!("  {l}\n"))
+        .collect::<String>()
 }
 
 fn fleet() -> ExitCode {

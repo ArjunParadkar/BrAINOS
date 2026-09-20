@@ -26,10 +26,11 @@ cargo run --release --bin brainos -- bench    # measured latencies and footprint
 cargo run --release --bin brainos -- compound # does experience compound?
 cargo run --release --bin brainos -- fleet    # does it transfer between entities?
 cargo run --release --bin brainos -- day      # can it be left running?
+cargo run --release --bin brainos -- incident # reconstruct it, and prove it
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 662 tests
+cargo test --workspace --release              # 677 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -359,6 +360,60 @@ be a `brainos-*` line appearing there. A committed fixture pins the
 format; 326 single-byte mutations are all caught, truncations read as
 broken rather than as a smaller entity, and a byte appended after the
 signature is refused.
+
+---
+
+## After something goes wrong
+
+A robot works a shift in a workshop it shares with people. At the end of
+the day somebody says: *your machine damaged my equipment around two
+o'clock.* The owner wants to know what happened, the insurer wants
+evidence that is not simply the vendor's word for it, and the vendor
+would very much like the answer not to depend on being believed.
+
+§4 makes KIRA's eighth stage audit and says it always runs — a refusal
+is recorded as carefully as a grant. On its own that is worth very
+little: **an audit log held by the party it might incriminate is a
+diary.** What makes it evidence is that somebody who assumes we are
+lying can check it.
+
+`brainos incident` works the shift, names the window, seals a bundle and
+then has it checked by a party holding nothing but the bundle and
+thirty-two bytes of public key — no log, no entity, no us. A
+representative run: 180 gated decisions, 160 granted and 20 refused; the
+complaint's window covers 41 of them; the bundle is about 30 kB.
+
+**The refusals are the evidence.** What exonerates a machine is not a
+record of it behaving well. It is a record of the gate having refused,
+at a named stage, the specific thing it is accused of. Four of the 41
+decisions in that window were requests to move faster than the body's
+schema allows, each refused at *validate* with `out-of-bounds`, written
+down at the time, before anyone had complained about anything.
+
+Four ways of lying with the bundle, and what happens:
+
+| the attempt | the result |
+|---|---|
+| edit what a decision says it was for | refused — the proof is over the record's exact bytes |
+| edit it *and* re-encode so the two agree | refused — the new bytes are not in the log |
+| pair a genuine proof with a different decision | refused — `verify_record` checks both |
+| drop the refusals and present only the grants | **verifies** |
+
+The fourth is the honest limit and it is worth stating plainly: a bundle
+cannot be forged, but it *can* be curated, and nothing in the
+cryptography stops its producer choosing what to include. What the
+design can do is make the holes visible. The log is append-only and its
+indices are consecutive, so a bundle running #70 to #110 with #76, #85,
+#94 and #103 absent has four holes in it, and the insurer does not need
+to know what #76 says in order to ask for it. An honest bundle over a
+contiguous window has none, and a test asserts that — because if the
+honest bundle also had holes, a hole would prove nothing.
+
+And the bundle states what it is not. An audit log is a record of
+*decisions*, not of physics. It can say the gate granted a walk at
+0.08 m/s having checked eight things; it cannot say whether the floor
+was wet or where the equipment was standing. A document that did not say
+so would be read as an account of events.
 
 ---
 
