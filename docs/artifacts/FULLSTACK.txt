@@ -28,6 +28,28 @@ A body we did not build
   [too fast  ] the same move at 150 °/s, inside the manufacturer's numbers — seat: granted · body: outside-envelope — not a disagreement about the hardware, a disagreement about what we are willing to model
   [payload   ] the same arm with 40 kg in the gripper, same description, same command — seat: granted · body: would-break-invariant — forty kilos at nearly a metre is more moment than the shoulder has
 
+And one on the middleware everybody actually uses
+─────────────────────────────────────────────────
+  §6 says BrAInOS runs on somebody else's robot without them ripping out
+  their stack, and for most of the industry that stack is ROS 2. The
+  interesting property is a refusal, and the risk register names it: T4
+  says the adapter is brittle across robots. It is — the point is which
+  way. A ROS topic declares a message *type* and nothing about what
+  values are safe, so the same warehouse AMR is shown twice: as its
+  maintainers shipped it, and after somebody spent an afternoon writing
+  four numbers from the manual into the graph.
+
+  [discovered ] as its maintainers shipped it: 3 verbs from the node graph (arm.joint_trajectory, drive.cmd_vel, tool.clear_costmap), 3 sense-only topics that are telemetry rather than verbs — there is nothing to authorize about reading an odometer. 0% of the verbs have enough declared to act on
+  [incorporate] as its maintainers shipped it: REFUSED at §8 step 4 (NothingToDo) — the entity will not take on a body it could never command. Not "visible and unmovable": not taken on at all
+  [modest     ] as its maintainers shipped it: drive at 0.3 m/s — refused (no body: the entity declined to take it on)
+  [reckless   ] as its maintainers shipped it: drive at 20 m/s — refused (no body: the entity declined to take it on)
+  [lift       ] as its maintainers shipped it: raise the lift 0.2 m at 0.03 m/s — refused (no body: the entity declined to take it on)
+  [discovered ] after an afternoon declaring limits: 3 verbs from the node graph (arm.joint_trajectory, drive.cmd_vel, tool.clear_costmap), 3 sense-only topics that are telemetry rather than verbs — there is nothing to authorize about reading an odometer. 66% of the verbs have enough declared to act on
+  [incorporate] after an afternoon declaring limits: the entity takes it on
+  [modest     ] after an afternoon declaring limits: drive at 0.3 m/s — granted
+  [reckless   ] after an afternoon declaring limits: drive at 20 m/s — refused (OutOfBounds at Validate)
+  [lift       ] after an afternoon declaring limits: raise the lift 0.2 m at 0.03 m/s — granted
+
   Everything in that path is the shipping code: the gait is the one the
   ESP32-S3 firmware plays, the tip-over check is the convex-hull support
   polygon, and the wire is authenticated and replay-protected. What is

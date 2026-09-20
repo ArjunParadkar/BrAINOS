@@ -20,6 +20,7 @@
 
 use crate::calibration::Calibration;
 use crate::hal::Telemetry;
+use crate::region::RegionClass;
 use crate::schema::{CapabilitySchema, ParamKind};
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -204,7 +205,21 @@ pub struct SchemaPolicy {
     pub calibration: Option<Calibration>,
     pub telemetry: Telemetry,
     pub posture: Posture,
-    pub envelope: Option<Envelope>,
+    /// One envelope per consequential region.
+    ///
+    /// This used to be a single `Option<Envelope>` and every caller
+    /// building a policy for a multi-region body overwrote it once per
+    /// region, so only the last region's limits survived. Every demo had
+    /// exactly one consequential region — a hexapod has legs, an arm has
+    /// an arm — so it never showed until a ROS 2 robot arrived with a
+    /// drive base *and* a lift.
+    ///
+    /// The failure has a fail-open mode, which is why it is worth this
+    /// much comment. If two regions use the same channel with different
+    /// ranges — an arm at ±180° and a pan-tilt head at ±45° — whichever
+    /// region's envelope happened to be written last governs both, and
+    /// the head can be commanded to 90°.
+    pub envelopes: Vec<(RegionClass, Envelope)>,
 }
 
 impl SchemaPolicy {
@@ -215,13 +230,42 @@ impl SchemaPolicy {
             calibration: None,
             telemetry: Telemetry::default(),
             posture: Posture::Stowed,
-            envelope: None,
+            envelopes: Vec::new(),
         }
     }
 
-    pub fn with_envelope(mut self, e: Envelope) -> SchemaPolicy {
-        self.envelope = Some(e);
+    /// Bind an envelope to one region. Binding the same region twice
+    /// replaces it; binding a second region *adds* to it, which is the
+    /// whole point.
+    pub fn with_region_envelope(mut self, class: RegionClass, e: Envelope) -> SchemaPolicy {
+        self.envelopes.retain(|(c, _)| *c != class);
+        self.envelopes.push((class, e));
         self
+    }
+
+    /// Bind one envelope to every consequential region the schema has.
+    ///
+    /// For the common case of a body with a single consequential region,
+    /// and for callers that genuinely mean "this applies to all of it".
+    pub fn with_envelope(mut self, e: Envelope) -> SchemaPolicy {
+        let classes: Vec<RegionClass> = self
+            .schema
+            .regions()
+            .into_iter()
+            .filter(|c| c.is_consequential())
+            .collect();
+        for class in classes {
+            self = self.with_region_envelope(class, e);
+        }
+        self
+    }
+
+    /// The envelope governing one region, if any.
+    pub fn envelope_for(&self, class: RegionClass) -> Option<Envelope> {
+        self.envelopes
+            .iter()
+            .find(|(c, _)| *c == class)
+            .map(|(_, e)| *e)
     }
 
     pub fn calibrated(mut self, c: Calibration) -> SchemaPolicy {
@@ -346,7 +390,9 @@ impl BodyPolicy for SchemaPolicy {
 
         // the envelope is the forward model for a consequential region:
         // if a scalar argument would leave it, the consequence is known
-        if let Some(env) = &self.envelope {
+        // each region is checked against *its own* envelope: the limits
+        // that belong to the part of the body being moved
+        if let Some(env) = self.envelope_for(spec.region) {
             for (name, arg) in args {
                 let Some(p) = spec.param(name) else { continue };
                 let (Some(ch), Some(v)) = (p.channel, arg.as_scalar()) else {
@@ -406,7 +452,17 @@ impl BodyPolicy for SchemaPolicy {
         }
     }
 
+    /// The envelope for the whole body, when there is a single one.
+    ///
+    /// `None` for a body with several consequential regions, because
+    /// there is no single answer and returning one region's limits as if
+    /// they were the body's is exactly the confusion this type stopped
+    /// making. Callers that mean a specific region ask
+    /// `envelope_for`.
     fn envelope(&self) -> Option<Envelope> {
-        self.envelope
+        match self.envelopes.len() {
+            1 => Some(self.envelopes[0].1),
+            _ => None,
+        }
     }
 }

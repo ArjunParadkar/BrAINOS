@@ -14,6 +14,7 @@
 //! have Linux" has to mean in practice if it is to mean anything.
 
 pub mod clock;
+pub mod ros2_stack;
 pub mod store;
 pub mod bench;
 pub mod compound;

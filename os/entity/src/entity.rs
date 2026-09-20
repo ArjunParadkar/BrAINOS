@@ -360,7 +360,12 @@ impl Entity {
                 brainos_abi::time::Duration::from_millis(10),
                 brainos_abi::time::Duration::from_millis(200),
             );
-            policy = policy.with_envelope(env);
+            // each region keeps its *own* limits. This was
+            // `with_envelope`, which replaced, so a body with a drive
+            // base and a lift kept only whichever came last — and where
+            // two regions share a channel, the surviving envelope
+            // governs both, which fails open.
+            policy = policy.with_region_envelope(class, env);
         }
         policy.posture = brainos_body::policy::Posture::Standing;
         self.kira.bind(body, Box::new(policy), schema);

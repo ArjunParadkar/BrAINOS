@@ -18,7 +18,8 @@ use brainos_body::region::{BodyMap, RegionClass};
 use brainos_body::schema::{CapabilitySchema, ParamKind, ParamSpec, VerbSpec};
 use brainos_crypto::key::BrainKey;
 use brainos_crypto::rng::Drbg;
-use brainos_rt::envelope::Channel;
+use brainos_abi::ids::BodyId;
+use brainos_rt::envelope::{Channel, Envelope};
 
 fn v(s: &str) -> Verb {
     Verb::parse(s).unwrap()
@@ -886,4 +887,137 @@ fn a_join_renders_a_line_for_the_state_graph() {
     assert!(line.contains("native"), "{line}");
     assert!(line.contains("verbs=3"), "{line}");
     assert!(line.contains("@t1234"), "{line}");
+}
+
+// ---------------------------------------------------------------------
+// one envelope per region, not one per body
+// ---------------------------------------------------------------------
+//
+// `SchemaPolicy::envelope` was a single `Option<Envelope>` and every
+// caller building a policy for a multi-region body overwrote it once
+// per region, so only the last region's limits survived. Every demo had
+// exactly one consequential region — a hexapod has legs, an arm has an
+// arm — so it never showed until a ROS 2 robot arrived with a drive
+// base *and* a lift.
+//
+// The failure has a fail-open mode, which is the reason these tests
+// exist rather than a comment: two regions using the same channel with
+// different ranges meant whichever was written last governed both.
+
+fn two_region_schema() -> CapabilitySchema {
+    CapabilitySchema::new("rover with an arm and a gripper", "native")
+        .with(
+            VerbSpec::new(
+                Verb::literal("arm.reach"),
+                RegionClass::Arm,
+                "move the arm to an angle",
+            )
+            .with(ParamSpec::scalar("angle", Channel::Angle, -180.0, 180.0)),
+        )
+        .with(
+            VerbSpec::new(
+                Verb::literal("gripper.pinch"),
+                RegionClass::Gripper,
+                "close the gripper to an angle",
+            )
+            .with(ParamSpec::scalar("angle", Channel::Angle, -45.0, 45.0)),
+        )
+}
+
+fn envelope_for(min: f32, max: f32) -> Envelope {
+    Envelope::new(
+        1,
+        Duration::from_millis(10),
+        Duration::from_millis(200),
+    )
+    .with(Channel::Angle, min, max)
+}
+
+#[test]
+fn each_region_is_checked_against_its_own_envelope() {
+    let body = BodyId::from_bytes([0x2A; 32]);
+    let mut p = SchemaPolicy::new(body, two_region_schema())
+        .with_region_envelope(RegionClass::Arm, envelope_for(-180.0, 180.0))
+        .with_region_envelope(RegionClass::Gripper, envelope_for(-45.0, 45.0));
+    p.posture = Posture::Standing;
+    p.observe(&Telemetry {
+        link_alive: true,
+        rail_v: Some(7.4),
+        current_a: Some(0.4),
+        tilt_deg: Some(0.5),
+        hottest_c: Some(35.0),
+        ..Default::default()
+    });
+
+    assert_eq!(p.envelopes.len(), 2, "one region's envelope replaced the other's");
+
+    // the arm may reach past ninety degrees
+    assert!(
+        p.simulate(
+            &Verb::literal("arm.reach"),
+            &vec![("angle".to_string(), Arg::Scalar(120.0))]
+        )
+        .is_ok(),
+        "the arm was refused a motion inside its own envelope"
+    );
+    // the gripper may not, although the arm's envelope would allow it —
+    // this is the fail-open case
+    assert!(
+        p.simulate(
+            &Verb::literal("gripper.pinch"),
+            &vec![("angle".to_string(), Arg::Scalar(90.0))]
+        )
+        .is_err(),
+        "the head was allowed to swing to 90 degrees because the arm's envelope \
+         governed both regions"
+    );
+    // and what the gripper may do, it may do
+    assert!(p
+        .simulate(
+            &Verb::literal("gripper.pinch"),
+            &vec![("angle".to_string(), Arg::Scalar(30.0))]
+        )
+        .is_ok());
+}
+
+/// Binding the same region twice replaces; binding a second region
+/// adds. That distinction is the whole fix.
+#[test]
+fn binding_a_second_region_adds_rather_than_replaces() {
+    let body = BodyId::from_bytes([0x2B; 32]);
+    let p = SchemaPolicy::new(body, two_region_schema())
+        .with_region_envelope(RegionClass::Arm, envelope_for(-180.0, 180.0))
+        .with_region_envelope(RegionClass::Gripper, envelope_for(-45.0, 45.0))
+        .with_region_envelope(RegionClass::Arm, envelope_for(-90.0, 90.0));
+
+    assert_eq!(p.envelopes.len(), 2);
+    assert_eq!(
+        p.envelope_for(RegionClass::Arm)
+            .and_then(|e| e.limit(Channel::Angle))
+            .map(|l| l.max),
+        Some(90.0),
+        "rebinding a region did not replace its envelope"
+    );
+    assert_eq!(
+        p.envelope_for(RegionClass::Gripper)
+            .and_then(|e| e.limit(Channel::Angle))
+            .map(|l| l.max),
+        Some(45.0),
+        "rebinding one region disturbed another's envelope"
+    );
+}
+
+/// And a body with several consequential regions has no single
+/// envelope, because there is no single answer — returning one region's
+/// limits as if they were the body's is the confusion that caused this.
+#[test]
+fn a_multi_region_body_does_not_claim_one_envelope() {
+    let body = BodyId::from_bytes([0x2C; 32]);
+    let p = SchemaPolicy::new(body, two_region_schema())
+        .with_region_envelope(RegionClass::Arm, envelope_for(-180.0, 180.0))
+        .with_region_envelope(RegionClass::Gripper, envelope_for(-45.0, 45.0));
+    assert!(
+        BodyPolicy::envelope(&p).is_none(),
+        "a two-region body reported a single envelope for the whole body"
+    );
 }

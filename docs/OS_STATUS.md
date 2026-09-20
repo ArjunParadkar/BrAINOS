@@ -83,7 +83,7 @@ cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 712 tests
+cargo test --workspace --release              # 721 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -761,12 +761,43 @@ installed on this machine. `os/tools/check-no-std.sh` runs it when one
 is, and exits 2 rather than 0 when none is, so a check that did not
 happen cannot report success.
 
-**The ROS 2 adapter is brittle on purpose.** A ROS topic declares a
-message type and nothing about what values are safe, so a robot that
-publishes no limits comes back visible and unmovable. Risk T4 in the
-register says the adapter is brittle across robots; it is brittle in the
-direction of refusing to move, and there is deliberately no default
-speed.
+**The ROS 2 adapter is brittle on purpose, and more so than this
+document used to say.** A ROS topic declares a message *type* and
+nothing about what values are safe: `/cmd_vel` takes a Twist and the
+type is equally happy with 0.2 m/s and 20 m/s. Risk T4 says the adapter
+is brittle across robots. It is — the point is which way.
+
+Running it end to end corrected the wording here. The claim was "visible
+and unmovable"; what actually happens is that a robot declaring no
+limits has **no actionable verbs at all**, so §8 step 4 refuses to
+incorporate it. The entity will not take on a body it could never
+command. The same warehouse AMR, twice:
+
+| | as shipped | after an afternoon |
+|---|---|---|
+| verbs derived from the node graph | 3 | 3 |
+| sense-only topics (telemetry, not verbs) | 3 | 3 |
+| actionable | **0%** | 66% |
+| incorporated | **refused** | yes |
+| drive at 0.3 m/s | — | granted |
+| drive at 20 m/s | — | refused at *validate* |
+| raise the lift | — | granted |
+
+The difference is four numbers from the manual. There is deliberately no
+default speed, because a reasonable default for a speed is how a robot
+gets driven into a wall at a speed nobody chose.
+
+**And it found a fail-open defect.** This is the first body in the
+workspace with *two* consequential regions — a drive base and a lift —
+and `SchemaPolicy` held a single `Option<Envelope>` that every caller
+overwrote once per region, so only the last region's limits survived.
+Every previous demo had exactly one consequential region, so it never
+showed. The fail-open case is two regions sharing a channel with
+different ranges: an arm at ±180° and a gripper at ±45° meant whichever
+was written last governed both, and the gripper could be commanded to
+90°. Each region now carries its own envelope, and a body with several
+has no single one — returning one region's limits as if they were the
+body's is the confusion that caused this.
 
 ---
 
@@ -865,7 +896,15 @@ end-to-end assertion.
     pruning order was approximately "oldest first" rather than the
     architecture's "least salient first". Both fixed; the measured
     consequence is in the day section above.
-23. In the fleet experiment itself, veterans were selling every tag they
+23. **A body with two consequential regions enforced only one region's
+    envelope.** `SchemaPolicy` held a single `Option<Envelope>` and
+    callers overwrote it once per region. Every demo had exactly one
+    consequential region — a hexapod has legs, an arm has an arm — so it
+    never showed until a ROS 2 warehouse robot arrived with a drive base
+    and a lift. Fail-open where two regions share a channel: an arm at
+    ±180° and a gripper at ±45° meant the gripper could be commanded to
+    90°.
+24. In the fleet experiment itself, veterans were selling every tag they
     had ever tracked rather than the ones they could back up, which made
     the matched and blind arms come out identical to the digit. A seller
     sells findings, not hunches. There is now a test that the two arms

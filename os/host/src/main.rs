@@ -520,6 +520,21 @@ fn stack() -> ExitCode {
     for line in brainos_host::fullstack::manufacturer_demo() {
         println!("  [{:<10}] {}", line.step, line.text);
     }
+    rule("And one on the middleware everybody actually uses");
+    println!(
+        "  §6 says BrAInOS runs on somebody else's robot without them ripping out
+  their stack, and for most of the industry that stack is ROS 2. The
+  interesting property is a refusal, and the risk register names it: T4
+  says the adapter is brittle across robots. It is — the point is which
+  way. A ROS topic declares a message *type* and nothing about what
+  values are safe, so the same warehouse AMR is shown twice: as its
+  maintainers shipped it, and after somebody spent an afternoon writing
+  four numbers from the manual into the graph.\n"
+    );
+    for line in brainos_host::ros2_stack::narrate(&brainos_host::ros2_stack::run()) {
+        println!("  [{:<11}] {}", line.0, line.1);
+    }
+
     println!(
         "\n  Everything in that path is the shipping code: the gait is the one the
   ESP32-S3 firmware plays, the tip-over check is the convex-hull support
