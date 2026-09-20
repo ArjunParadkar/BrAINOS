@@ -21,11 +21,15 @@ than a second copy of them.
 cd os
 cargo run --release --bin brainos -- demo     # Phase 0, in simulation
 cargo run --release --bin brainos -- stack    # intent → gate → wire → body → gait
-cargo run --release --bin brainos -- verify   # all three property domains
+cargo run --release --bin brainos -- verify   # all four property domains
 cargo run --release --bin brainos -- bench    # measured latencies and footprint
 cargo run --release --bin brainos -- compound # does experience compound?
+cargo run --release --bin brainos -- fleet    # does it transfer between entities?
 cargo run --release --bin brainos -- day      # can it be left running?
-cargo test --workspace --release              # 618 tests
+cargo run --release --bin brainos -- leave    # the freedom principle, exercised
+cargo run --release --bin brainos -- export FILE   # write an entity out
+cargo run -p read-export --release -- FILE         # read it back with none of our code
+cargo test --workspace --release              # 656 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -34,7 +38,8 @@ Transcripts of each are in [`artifacts/`](artifacts/).
 
 ## What exists
 
-Eighteen crates, about 38,000 lines of Rust, 618 tests. Every crate
+Eighteen crates plus a standalone tool, about 41,000 lines of Rust, 656
+tests. Every crate
 except `host` is `no_std`, forbids `unsafe`, and depends on nothing
 outside the workspace but `ed25519-dalek` and `libm`.
 
@@ -48,9 +53,9 @@ outside the workspace but `ed25519-dalek` and `libm`.
 | §8 acquisition | `body`, `adapters` | the five-step protocol as a state machine, and ROS 2 / MHS bridges into steps 1–3 |
 | §3.8 three worlds | `worlds` | self / human / internet postures, bounded sessions, ingress tainting, and the adversarial filter the entity runs on its human's behalf |
 | Stage 4 | `entity` | one Key, one state graph, every body at once; arbitration; the life record |
-| Stage 6 (part) | `proof` | two exhaustive property domains |
+| Stage 6 (part) | `proof` | four property domains: two exhaustive, one fuzzed, one adversarial |
 | Stage 7 | `fleet` | a registry that cannot command, a marketplace that cannot push, hosts that hold nothing |
-| freedom principle | `export` | entity export v1.0 |
+| freedom principle | `export`, `tools/read-export` | entity export v3, and a reader that depends on no BrAInOS crate |
 | — | `abi`, `transport`, `nostd`, `host` | vocabulary, the wire, the `no_std` canary, and the only crate with an operating system underneath it |
 
 ---
@@ -79,10 +84,10 @@ must be acquired again through §8.
 
 ---
 
-## Three property domains
+## Four property domains
 
-`brainos verify` enumerates both completely and runs every case through
-the real code.
+`brainos verify` enumerates the first two completely and runs every case
+through the real code.
 
 **The gate — 8,640 cases.** Every combination of signature validity,
 request freshness, body binding, argument shape, body fitness, ruleset,
@@ -104,6 +109,30 @@ exactly its own bytes; and a format carrying an integrity check catches
 accepted `-0.0` and non-canonical NaNs, which the encoder flattens, so
 decoding was not injective and a signature over the bytes was not a
 signature over the value.
+
+**The adversary — 29 attacks.** The first three domains ask whether the
+system does the right thing; this one asks whether it can be made to do
+the wrong thing on purpose, which is a different question and the one
+that matters for a word like *unforgeable*. Forge a proposal; keep a
+genuine signature and swap the request under it; pair a valid token with
+a different action, body, time or entity; widen a delegation, drop its
+caveats, use it after revocation; reach a drive directly, through a
+delegation scoped to everything, and with the owner's full cooperation;
+launder an untrusted claim into an admissible one through consolidation;
+remove an audit entry; reach a quorum by signing twice; replay a frame;
+command a body before it has proven what it is. Every attack runs
+against the real types — a forged signature is a real ed25519 signature
+by the wrong key.
+
+None succeeded. One failed in the *wrong place*, which is what the
+domain was worth building for: a delegation scoped to everything died at
+*authenticate* rather than at the drive, because the gate authenticated
+the request against the **issuer's** key and a third-party holder by
+definition does not have it. `Delegation` is documented as "standing
+authority handed to something that is not the entity" and it could not
+be; every delegation test in the suite delegated to the entity's own id,
+so the case never came up. The gate now separates the signer from the
+authority.
 
 It is **not** a machine-checked proof, and the report says so as
 prominently as it says the result. Outside the domains nothing is
@@ -268,6 +297,110 @@ has to be built in rather than hoped for.
 
 ---
 
+## Can the customer actually leave?
+
+§1 says the customer owns the entity permanently and that leaving means
+abandoning a life rather than losing access to one. Every company says
+something like that; the question is whether the architecture makes it
+true. `brainos leave` does it.
+
+An entity lives its whole life on one vendor's hexapod — learns that the
+workshop floor is carpet, learns that its own left middle femur binds,
+practises walking and finds out by trying that the gait works on carpet
+and fails on the tiled section. The customer exports it. Then that
+vendor is **destroyed entirely**: entity, bodies, gate, audit log,
+journal. One file crosses the gap, plus a Key the vendor never held. A
+competitor's six-axis arm, described in the manufacturer's own format,
+adopts it.
+
+What arrives: the same entity, its memories, its skills, its age, and
+*what it worked out by trying* — `carpet 100% over 19 tests`, intact.
+That last one is the moat, and it is not the file, it is the nineteen
+attempts behind it.
+
+What correctly does not: the hexapod's calibration is still remembered —
+memory is not edited for convenience — but it does not govern the arm,
+which is calibrated from scratch. `legs.walk` is gone from the
+repertoire and asking for it is refused at *authorize*. **A memory of a
+skill is not a licence to act with a body you do not have.** The arm
+then moves on the first try.
+
+And the file is readable without us. `os/tools/read-export` is a
+standalone program whose entire dependency list is `ed25519-dalek`, with
+SHA-256 implemented in eighty lines from FIPS 180-4 and the layout taken
+from the specification that ships *inside every export*. It verifies the
+signature, recomputes the Merkle root and prints what the entity
+remembers. A test asserts the dependency list, because the list is the
+claim: the first sign of "the customer owns their entity" rotting would
+be a `brainos-*` line appearing there. A committed fixture pins the
+format; 326 single-byte mutations are all caught, truncations read as
+broken rather than as a smaller entity, and a byte appended after the
+signature is refused.
+
+---
+
+## Does experience transfer between entities?
+
+`compound` answers the first half of §2.4. This is the second half, and
+it is the half §6's skill marketplace rests on: is what one entity
+worked out worth anything to another?
+
+It has an obvious failure mode, worth stating before the numbers. What
+an entity learns is not "walking needs carpet". It is "walking needs
+carpet *here*" — and nothing in the claim says where here is. A robot in
+a carpeted workshop and one in a tiled kitchen learn opposite rules and
+both are right.
+
+Thirty-six entities across three deployments whose hidden rules differ
+and are all equally true. Four arms: learn alone, adopt a veteran's
+experience from the same kind of deployment, adopt from a random one, or
+be handed the true rule as a ceiling. Pre-registered before the run:
+*matched > alone > blind, and blind recovers eventually.*
+
+The ordering held. **The recovery did not.** Under the first adoption
+rule — copy the seller's evidence wholesale — a badly-sourced skill left
+the entity permanently worse than one that started from nothing: 80%
+against alone's 87%, still short after twelve hundred episodes. The cost
+showed up as *refusal* rather than failure: blind entities declined
+something that would have worked 19% of the time against alone's 12%,
+and that number did not shrink. The mechanism is the one `skill.rs`
+already warned about in its own comment.
+
+So the rule changed. What transfers is the **claim**, not the seller's
+numbers; the buyer holds it on trust, acts on it — which is what makes a
+bought skill worth buying — and deliberately violates it one blocked
+opportunity in twelve until it has five tests of its own.
+
+|                     | first slice | final | missed opportunity |
+|---|---|---|---|
+| old rule · blind    | 73% | 80% | 19% → 19% |
+| **new rule · blind**| 77% | **87%** | 18% → **12%** |
+| old rule · matched  | 89% | 90% | |
+| **new rule · matched** | 85% | **89%** | |
+| learning alone      | 80% | 87% | 15% → 12% |
+| ceiling (true rule) | 89% | 90% | |
+
+A badly-sourced skill now stops costing anything after about 600
+episodes and reaches a fresh entity's final level by 1,000; under the
+old rule it reached neither, ever. A well-sourced one is still worth
+hundreds of episodes of experience delivered on the first day and lands
+within a point of the ceiling. The price is about one point off
+well-sourced adoption and four deliberate violations per entity — the
+cost of checking a claim that happened to be true. Under the old rule
+the same mechanism made a claim that happened to be false permanent.
+
+**The product consequence is concrete:** a skill marketplace that ships
+without recording what kind of place a skill was learned in, *and*
+without the buyer re-testing it, does not merely fail to help. It
+degrades the fleet, permanently.
+
+The three deployments are three rules I wrote. This says what the
+mechanism does when worlds differ; it does not say how much real
+deployments differ, and quoting the number without that sentence
+misquotes it.
+
+---
+
 ## What this does not show
 
 **Nothing here has touched a motor.** Mini-Blur is simulated throughout.
@@ -338,6 +471,36 @@ end-to-end assertion.
 13. Preconditions were learned by intersecting the context of successes,
     which measures co-occurrence and not necessity. See above; this one
     is a design change rather than a fix.
+14. **An entity's age was whatever number the host passed to `wake()`.**
+    §2.4 makes age the x-axis of the curve the moat becomes visible on,
+    and it was settable by the one party with an interest in setting it.
+    A 25-tick-old entity printed as 50,000 ticks old because that was
+    the number I happened to pick. The counter is the entity's now: a
+    returning entity resumes from where it actually stopped, recovered
+    from its own record. Found by running the vendor migration.
+15. The wake episode was stamped with the caller's tick rather than the
+    entity's. Those used to be the same number.
+16. **A skill's learned judgement did not survive a reboot.** A skill
+    node's content is prose, and prose was the only durable form a skill
+    had — so an entity that spent sixty attempts establishing that its
+    gait needs carpet, nineteen of them genuine tests, woke up knowing
+    its success rate and nothing about why. Measured: `[("carpet", 100,
+    19)]` before, `[]` after. That is the moat evaporating at every power
+    cycle and at every export. Nodes now carry their exact structured
+    form alongside their readable one.
+17. A delegation could not be used by anyone but the entity itself,
+    because the gate authenticated the request against the issuer's key.
+    Found by the adversary domain, and only because an attack failed in
+    the wrong *place* rather than failing to fail.
+18. A skill's candidate preconditions were unbounded — fine when they
+    lived in memory, not fine once a skill is serialized into a node.
+    Capped at 32, evicting the weakest *untested* candidate first:
+    forget a hunch before a finding.
+19. In the fleet experiment itself, veterans were selling every tag they
+    had ever tracked rather than the ones they could back up, which made
+    the matched and blind arms come out identical to the digit. A seller
+    sells findings, not hunches. There is now a test that the two arms
+    differ at all.
 
 ---
 

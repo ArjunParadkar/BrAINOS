@@ -27,10 +27,14 @@ cargo run --release --bin brainos -- verify   # the Stage 6 property report
 cargo run --release --bin brainos -- bench    # measured latencies and footprint
 cargo run --release --bin brainos -- wire     # the transport under a bad link
 cargo run --release --bin brainos -- compound # does experience compound?
+cargo run --release --bin brainos -- fleet    # does it transfer between entities?
 cargo run --release --bin brainos -- day      # can it be left running?
+cargo run --release --bin brainos -- leave    # the freedom principle, exercised
+cargo run --release --bin brainos -- export FILE   # write an entity out
+cargo run -p read-export --release -- FILE         # and read it with none of our code
 cargo run --release --bin brainos -- stat     # what this build contains
 
-cargo test --workspace --release              # 618 tests
+cargo test --workspace --release              # 656 tests
 tools/check-no-std.sh                         # the bare-metal build, when a target exists
 ```
 
@@ -53,9 +57,9 @@ minutes.
 | `entity` | Key + state graph + every body at once; arbitration; the life record | Stage 4 |
 | `transport` | framing, attested sessions, replay protection, link health | — |
 | `adapters` | ROS 2 node graphs and MHS device schemas become capability schemas | Phase 1 |
-| `proof` | the properties KIRA must have, checked exhaustively over a bounded domain | Stage 6 (part) |
+| `proof` | four domains: the gate and the two envelopes enumerated exhaustively, every decoder fuzzed, and twenty-nine attacks that try to get away with it | Stage 6 (part) |
 | `fleet` | a directory that cannot command, a marketplace that cannot push, hosts that hold nothing | Stage 7 |
-| `export` | entity export v1.0 — complete, documented, signed, round-tripped | freedom principle |
+| `export` | entity export v3 — complete, documented, signed, round-tripped, and readable by `tools/read-export`, which depends on no crate of ours | freedom principle |
 | `bodyd` | what runs on the machine with the motors; a hexapod that links `miniblur-core` and an arm with a torque budget | Domain 2 |
 | `nostd` | a canary that depends on everything and is unconditionally `#![no_std]` | — |
 | `host` | the only crate allowed an operating system underneath it | — |
@@ -339,3 +343,49 @@ an end-to-end assertion.
     same bit twice and cancel, emitting its own seed unmodified — which
     reads in the report exactly like an integrity check having failed.
     One frame in six thousand, about what the arithmetic predicts.
+12. An entity's age was whatever number the host passed to `wake()`.
+    §2.4 makes age the x-axis of the curve the moat becomes visible on,
+    and it was settable by the one party with an interest in setting it:
+    a 25-tick-old entity printed as 50,000 ticks old because that was
+    the number I happened to pick. `Life`'s own comment says that a
+    metric which is easy to move without getting better will be moved
+    without getting better. The counter is the entity's now, recovered
+    from its own record, and the caller's number is ignored. Found by
+    running the vendor migration and reading the output rather than the
+    assertion.
+13. A skill's learned judgement did not survive a reboot. A skill node's
+    content is prose, and prose was the only durable form a skill had,
+    so `rehydrate` recovered the verb, the name and the counts and
+    reconstructed everything else as empty. An entity that spent sixty
+    attempts establishing that its gait needs carpet — nineteen of them
+    genuine tests of the claim — woke up knowing its success rate and
+    nothing about why:
+
+        BEFORE  preconditions=[("carpet", 100, 19)]  binding=1  per-body=1
+        AFTER   preconditions=[]                     binding=0  per-body=0
+
+    Nodes now carry their exact structured form alongside their readable
+    one. Found by going to build the fleet-transfer experiment and
+    asking where one entity's preconditions are actually kept.
+14. A `Delegation` could not be used by anyone except the entity itself,
+    although its own documentation says it is "standing authority handed
+    to something that is not the entity". The gate authenticated the
+    request against the **issuer's** key, which a third-party holder by
+    definition does not have. Every delegation test in the suite
+    delegated to the entity's own id, so the case never arose. Found by
+    the adversary domain — and only because an attack failed in the
+    wrong *place* rather than failing to fail, which is why that domain
+    distinguishes `Repelled` from `RepelledWrongly`.
+15. A skill's candidate preconditions were unbounded. Harmless while
+    they lived only in memory; not harmless once a skill is serialized
+    into a node, because an unbounded skill is then an unbounded node.
+    Capped at 32, evicting the weakest *untested* candidate first — an
+    entity should forget a hunch before it forgets something it found
+    out.
+16. In the fleet experiment itself, veterans were selling every tag they
+    had ever tracked rather than the ones they could back up, so the
+    matched and blind arms adopted near-identical lists and came out to
+    the digit. A seller sells findings, not hunches. There is now a test
+    that the two arms differ at all, because two arms agreeing perfectly
+    is what a broken experiment looks like when it is lucky enough to be
+    obvious.
