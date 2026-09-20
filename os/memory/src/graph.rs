@@ -383,6 +383,43 @@ impl StateGraph {
         self.nodes.is_empty()
     }
 
+    /// Roughly what this graph occupies in RAM, live — not what it
+    /// encodes to.
+    ///
+    /// The difference matters and was being ignored. The encoded form is
+    /// what goes in the journal; the live form is what has to fit in an
+    /// ESP32-S3's SRAM, and it is larger, because every `String` and
+    /// every `Vec` carries a capacity and a header of its own. A board
+    /// budget built from the encoded number is a board budget that is
+    /// wrong in the optimistic direction.
+    ///
+    /// Approximate on purpose: it is for deciding whether something
+    /// fits, and being right to a few percent answers that as well as
+    /// being exact would.
+    pub fn approximate_bytes(&self) -> usize {
+        let per_node = core::mem::size_of::<Node>();
+        self.nodes
+            .iter()
+            .map(|n| {
+                per_node
+                    + n.content.capacity()
+                    + n.state.capacity()
+                    + n.edges.capacity() * core::mem::size_of::<Edge>()
+            })
+            .sum::<usize>()
+            + core::mem::size_of::<StateGraph>()
+    }
+
+    /// Change what this graph may hold.
+    ///
+    /// Takes effect on the next write rather than pruning immediately:
+    /// shrinking a graph is a decision about which memories to lose, and
+    /// the decay-and-forget pass is where that decision is made, with
+    /// salience in front of it.
+    pub fn set_bounds(&mut self, bounds: Bounds) {
+        self.bounds = bounds;
+    }
+
     pub fn nodes(&self) -> &[Node] {
         &self.nodes
     }

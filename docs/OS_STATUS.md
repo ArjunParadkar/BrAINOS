@@ -32,7 +32,7 @@ cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 692 tests
+cargo test --workspace --release              # 698 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -209,12 +209,39 @@ pre-authorized envelope rather than asking per step. The measurement
 agreeing with the architecture is the useful direction for it to agree
 in.
 
-**An entity at default bounds does not fit on the board.** A memory
-encodes to about 120 bytes; 4,096 episodes is ~490 KiB, and an ESP32-S3
-has 512 KiB of SRAM in total. `Bounds::EMBEDDED` is 256 episodes, about
-30 KiB. The same entity remembers less in a small body and more in a
-large one — the bound is a property of the body it is currently thinking
-in, not of who it is.
+**An entity does not fit on the board, and shrinking its memory is not
+enough.** This number was wrong in the optimistic direction until the
+limits run forced a proper measurement. It counted the *encoded* state
+graph — what goes in the journal — and called that the entity. The
+entity is larger than its journal: strings and vectors carry capacities
+and headers, the retrieval index is not in the journal at all, and the
+audit trail keeps a working window of records with eight stage notes
+each. Populated to the bound, with every action actually gated:
+
+| configuration | graph | index | audit | total | 192 KiB available |
+|---|---|---|---|---|---|
+| default bounds | 1,304 KiB | 688 KiB | 2,536 KiB | 4,530 KiB | no |
+| embedded bounds | 82 KiB | 43 KiB | 158 KiB | 285 KiB | **still no** |
+| embedded bounds + embedded audit window | 82 KiB | 43 KiB | 27 KiB | **153 KiB** | yes |
+
+So `Bounds::EMBEDDED` on its own is not sufficient, which the old
+measurement said it was. The audit trail's *record window* dominates,
+because a record keeps its eight stage notes as eight separate strings,
+and the records' real home is the machine of record rather than the
+board. `Entity::for_embedded_body` sets both numbers.
+
+**And the remaining headroom on a board is a duration, not a size.** The
+Merkle log keeps 32 bytes per gated decision forever, so the 39 KiB left
+over is about 1,236 more decisions — roughly two minutes at ten a
+second. Keeping every leaf in SRAM was a workstation decision being made
+silently on the board. `MerkleLog::forget_leaves_before` is the answer
+and it is safe for a specific reason: the root comes from the frontier,
+not from the leaves, so forgetting them does not move it and every
+checkpoint the entity ever signed stays correct. What is lost is the
+ability to *produce* a proof for a forgotten decision — and a proof
+issued before it was forgotten still verifies, because a proof is
+checked against a root rather than against a log. The board keeps
+minutes of leaves and hands the rest to flash.
 
 ---
 
@@ -701,7 +728,14 @@ end-to-end assertion.
     a robot making ten gated decisions a second. An expensive checkpoint
     means taking fewer, and checkpoints are what make an audit log
     evidence. Now a frontier of perfect subtrees: 4 µs, flat.
-21. In the fleet experiment itself, veterans were selling every tag they
+21. **The board-footprint number counted the wrong thing.** It measured
+    the encoded state graph and called that the entity, which left out
+    the retrieval index entirely and the audit trail's record window.
+    Measured properly, `Bounds::EMBEDDED` alone is *not* enough — 285
+    KiB against 192 KiB available — and the audit window has to shrink
+    too. A board budget wrong in the optimistic direction is the worst
+    direction for a number that decides whether a robot works.
+22. In the fleet experiment itself, veterans were selling every tag they
     had ever tracked rather than the ones they could back up, which made
     the matched and blind arms come out identical to the digit. A seller
     sells findings, not hunches. There is now a test that the two arms

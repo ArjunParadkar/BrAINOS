@@ -143,25 +143,22 @@ fn a_memory_costs_a_predictable_number_of_bytes() {
 
 #[test]
 fn the_embedded_bounds_are_what_makes_an_entity_fit_on_the_board() {
-    // This is the finding the constant exists for: at default bounds a
-    // state graph does not fit in an ESP32-S3's SRAM, and at embedded
-    // bounds it does. If that ever stops being true, the bounds are
-    // wrong rather than the test.
+    // This is the finding the constant exists for: at default bounds an
+    // entity does not fit in an ESP32-S3's SRAM, and at embedded bounds
+    // — with the audit window shrunk too, which the first honest
+    // measurement showed was also necessary — it does. If that ever
+    // stops being true, the bounds are wrong rather than the test.
     let fits = fits_on_the_board();
-    let default = fits
-        .iter()
-        .find(|(w, _, _, _)| w.contains("default"))
-        .unwrap();
-    let embedded = fits
-        .iter()
-        .find(|(w, _, _, _)| w.contains("embedded"))
-        .unwrap();
+    let default = fits.first().expect("a default configuration");
+    let tuned = fits.last().expect("a tuned configuration");
 
-    assert!(!default.3, "default bounds should not fit on the board");
-    assert!(embedded.3, "embedded bounds should fit on the board");
+    assert!(!default.fits, "default bounds should not fit on the board");
+    assert!(tuned.fits, "a tuned entity should fit on the board");
     assert!(
-        embedded.1 * 4 < embedded.2,
-        "embedded should fit with room to spare, not just barely"
+        tuned.total < tuned.available,
+        "the tuned entity needs {} KiB of {} KiB",
+        tuned.total / 1024,
+        tuned.available / 1024
     );
 }
 
@@ -195,4 +192,98 @@ fn the_implications_are_derived_from_the_measurements_rather_than_written_down()
 #[test]
 fn the_implications_survive_an_empty_measurement_set() {
     assert!(implications(&[]).is_empty());
+}
+
+// ---------------------------------------------------------------------
+// does an entity actually fit on the board Phase 0 runs on?
+// ---------------------------------------------------------------------
+//
+// This used to count the *encoded* state graph — what goes in the
+// journal — and call that the entity. The entity is larger than its
+// journal, and the gap is not small: the retrieval index is not in the
+// journal at all, and the audit trail keeps its working window of
+// records with eight stage notes each. Measured properly, `EMBEDDED`
+// bounds alone are not enough.
+
+#[test]
+fn an_entity_at_default_bounds_does_not_fit_on_an_esp32() {
+    let fits = brainos_host::bench::fits_on_the_board();
+    let default = &fits[0];
+    assert!(
+        !default.fits,
+        "default bounds now fit in {} KiB, which would be a large change and \
+         probably a measurement error: {:?}",
+        default.available / 1024,
+        default.parts
+    );
+}
+
+/// The finding: shrinking what it remembers is not sufficient on its
+/// own. The audit trail's working window dominates, because a record
+/// keeps its eight stage notes as eight separate strings.
+#[test]
+fn shrinking_memory_alone_is_not_enough() {
+    let fits = brainos_host::bench::fits_on_the_board();
+    let naive = &fits[1];
+    assert!(
+        !naive.fits,
+        "embedded bounds with a default audit window now fit — if that is genuinely \
+         true the bench text needs rewriting, because it says the opposite"
+    );
+    let audit = naive
+        .parts
+        .iter()
+        .find(|(p, _)| *p == "audit trail")
+        .map(|(_, b)| *b)
+        .unwrap_or(0);
+    let graph = naive
+        .parts
+        .iter()
+        .find(|(p, _)| *p == "state graph, live")
+        .map(|(_, b)| *b)
+        .unwrap_or(0);
+    assert!(
+        audit > graph,
+        "the audit trail ({audit} B) is no longer the dominant term over the state \
+         graph ({graph} B), which is the whole reason for the embedded window"
+    );
+}
+
+/// And with both tuned, it fits.
+#[test]
+fn an_entity_tuned_for_the_board_fits_on_the_board() {
+    let fits = brainos_host::bench::fits_on_the_board();
+    let tuned = fits.last().expect("a tuned configuration");
+    assert!(
+        tuned.fits,
+        "a fully tuned entity needs {} KiB of {} KiB: {:?}",
+        tuned.total / 1024,
+        tuned.available / 1024,
+        tuned.parts
+    );
+    assert!(
+        tuned.decisions > 100,
+        "only {} decisions were gated, so the audit term is not real",
+        tuned.decisions
+    );
+}
+
+/// The headroom on a board is a *duration*, not a size: the audit log
+/// keeps 32 bytes per gated decision forever. This asserts the shape of
+/// that constraint, because it is what decides how often leaves have to
+/// be handed to flash.
+#[test]
+fn the_headroom_on_a_board_is_measured_in_minutes() {
+    let fits = brainos_host::bench::fits_on_the_board();
+    let tuned = fits.last().expect("a tuned configuration");
+    assert!(
+        tuned.decisions_of_headroom > 0,
+        "there is no headroom at all"
+    );
+    assert!(
+        tuned.seconds_of_headroom < 3_600,
+        "the headroom is {} seconds, which is hours — if that is right, \
+         `forget_leaves_before` is less urgent than the bench text says",
+        tuned.seconds_of_headroom
+    );
 }

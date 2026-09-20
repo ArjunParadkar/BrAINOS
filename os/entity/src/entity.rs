@@ -141,6 +141,31 @@ impl Entity {
     /// The memory handle. Public because the entity's own subsystems
     /// need it; there is nothing useful to do with it elsewhere, since
     /// every method that takes one also takes the graph it belongs to.
+    /// Set the memory bounds before waking. A body decides how much its
+    /// entity may remember while it is thinking in it — the bound is a
+    /// property of the body, not of who the entity is.
+    pub fn set_bounds(&mut self, bounds: brainos_memory::graph::Bounds) {
+        self.graph.set_bounds(bounds);
+    }
+
+    /// Configure this entity for a body that has very little memory.
+    ///
+    /// Two numbers, both measured rather than chosen: how much it may
+    /// remember, and how many audit records it keeps in front of it. An
+    /// entity on a board remembers less and keeps a shorter working
+    /// window; it is the same entity, thinking in a smaller body.
+    pub fn for_embedded_body(&mut self) {
+        self.set_bounds(brainos_memory::graph::Bounds::EMBEDDED);
+        self.kira.trail.set_window_cap(32);
+    }
+
+    /// What the retrieval index currently occupies. Not in the journal
+    /// and not in the encoded size, and at the default bound larger than
+    /// the memories it indexes.
+    pub fn index_bytes(&self) -> usize {
+        self.index.approximate_bytes()
+    }
+
     pub fn handle(&self) -> &MemoryHandle {
         &self.handle
     }

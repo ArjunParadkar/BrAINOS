@@ -792,20 +792,64 @@ fn bench() -> ExitCode {
     rule("Does it fit on the board?");
     println!(
         "  An ESP32-S3 has 512 KiB of SRAM. Allowing 320 KiB for the firmware, the
-  gait loop's buffers and the wire, a state graph has about 192 KiB.\n"
+  gait loop's buffers, the wire and the WiFi stack, an entity has about
+  192 KiB.
+
+  This used to count the *encoded* state graph — what goes in the
+  journal — and call that the entity. The entity is larger than its
+  journal: strings and vectors carry capacities and headers, the
+  retrieval index is not in the journal at all and at the default bound
+  is bigger than the memories it indexes, and the audit trail keeps 32
+  bytes per decision forever. A board budget built from the encoded
+  number is wrong in the optimistic direction, which is the worst
+  direction for a number that decides whether a robot works. Each part
+  is now populated to its bound and asked what it occupies.\n"
     );
-    for (what, needs, available, fits) in brainos_host::bench::fits_on_the_board() {
+    for fit in brainos_host::bench::fits_on_the_board() {
+        println!("  {}", fit.what);
+        for (part, bytes) in &fit.parts {
+            let resident = *part != "encoded journal payload";
+            println!(
+                "      {:<28} {:>7} KiB{}",
+                part,
+                bytes / 1024,
+                if resident { "" } else { "   (transient, not counted)" }
+            );
+        }
         println!(
-            "  {:<36} needs {:>4} KiB of {:>4} KiB   {}",
-            what,
-            needs / 1024,
-            available / 1024,
-            if fits { "fits" } else { "DOES NOT FIT" }
+            "      {:<28} {:>7} KiB of {} KiB   {}",
+            "resident total",
+            fit.total / 1024,
+            fit.available / 1024,
+            if fit.fits { "FITS" } else { "DOES NOT FIT" }
         );
+        if fit.fits {
+            println!(
+                "      headroom holds {} more gated decisions at 32 bytes each —\n\
+                 {:>34} about {} minutes at ten a second\n",
+                fit.decisions_of_headroom,
+                "",
+                fit.seconds_of_headroom / 60
+            );
+        } else {
+            println!();
+        }
     }
     println!(
-        "\n  This is why Bounds::EMBEDDED exists and is not a smaller number chosen
-  for tidiness. An entity on the board remembers less and consolidates
+        "  The last line is the one that matters for Phase 0. The audit log keeps
+  32 bytes per gated decision forever, so on a board the headroom is a
+  *duration*, not a size, and it is minutes rather than days. Keeping
+  every leaf in SRAM was a workstation decision being made silently on
+  the board. `MerkleLog::forget_leaves_before` is the answer: the root
+  comes from the frontier, not from the leaves, so forgetting them does
+  not move it and every checkpoint the entity ever signed stays correct.
+  What is lost is the ability to *produce* a proof for a forgotten
+  decision — and a proof issued before it was forgotten still verifies,
+  because a proof is checked against a root rather than against a log.
+  So the board keeps minutes of leaves and hands the rest to flash.
+
+  This is also why Bounds::EMBEDDED exists and is not a smaller number
+  chosen for tidiness. An entity on the board remembers less and consolidates
   more often; the same entity on a workstation body remembers more. It is
   the same entity either way — the bound is a property of the body it is
   currently thinking in, not of who it is.\n"

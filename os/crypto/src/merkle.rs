@@ -68,6 +68,8 @@ pub struct MerkleLog {
     /// two agree on every prefix, because a clever root that disagrees
     /// with the obvious one would invalidate every proof ever issued.
     frontier: Vec<(u8, Hash)>,
+    /// leaves dropped from the front, so indices stay meaningful
+    forgotten: usize,
 }
 
 impl MerkleLog {
@@ -75,15 +77,24 @@ impl MerkleLog {
         MerkleLog {
             leaves: Vec::new(),
             frontier: Vec::new(),
+            forgotten: 0,
         }
     }
 
+    /// How many decisions this log covers, including forgotten leaves.
+    /// The root is over all of them.
     pub fn len(&self) -> usize {
+        self.leaves.len() + self.forgotten
+    }
+
+    /// How many leaves are still held, and therefore still provable
+    /// from here.
+    pub fn provable(&self) -> usize {
         self.leaves.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.leaves.is_empty()
+        self.len() == 0
     }
 
     /// Append one record. Returns its index, which is what a `Proof`
@@ -95,7 +106,7 @@ impl MerkleLog {
     pub fn append_hash(&mut self, h: Hash) -> usize {
         self.leaves.push(h);
         self.absorb(h);
-        self.leaves.len() - 1
+        self.len() - 1
     }
 
     /// Fold a new leaf into the frontier: merge with the neighbour above
@@ -113,7 +124,47 @@ impl MerkleLog {
     }
 
     pub fn leaf(&self, i: usize) -> Option<Hash> {
-        self.leaves.get(i).copied()
+        if i < self.forgotten {
+            return None;
+        }
+        self.leaves.get(i - self.forgotten).copied()
+    }
+
+    /// Forget the oldest leaves, keeping the last `keep`.
+    ///
+    /// This exists because of a measurement. On an ESP32-S3 an entity
+    /// has about 192 KiB, of which a populated one at `Bounds::EMBEDDED`
+    /// uses ~125 KiB — and the audit log grows 32 bytes per gated
+    /// decision, *forever*. The remaining headroom is therefore about
+    /// two thousand decisions, which at ten a second is a few minutes.
+    /// Keeping every leaf in RAM is a workstation decision that was
+    /// silently also being made on the board.
+    ///
+    /// What makes forgetting safe is the frontier. The root is
+    /// maintained from O(log n) subtree hashes, not from the leaves, so
+    /// **the root is unaffected** and every checkpoint the entity has
+    /// signed remains correct. What is lost is the ability to *produce*
+    /// a proof for a forgotten decision. Proofs already issued stay
+    /// valid — they are checked against a root, not against this log —
+    /// which is precisely the property that lets a robot keep three
+    /// minutes of leaves in SRAM and hand the rest to flash or to the
+    /// machine of record.
+    ///
+    /// Returns how many were forgotten.
+    pub fn forget_leaves_before(&mut self, keep: usize) -> usize {
+        if self.leaves.len() <= keep {
+            return 0;
+        }
+        let drop = self.leaves.len() - keep;
+        self.leaves.drain(..drop);
+        self.forgotten += drop;
+        drop
+    }
+
+    /// How many leaves this log no longer holds. A proof cannot be
+    /// produced for them here; one issued earlier still verifies.
+    pub fn forgotten(&self) -> usize {
+        self.forgotten
     }
 
     /// The root over the whole log. An empty log's root is the zero
@@ -166,7 +217,10 @@ impl MerkleLog {
 
     /// An inclusion proof for one entry.
     pub fn prove(&self, index: usize) -> Option<Proof> {
-        if index >= self.leaves.len() {
+        // a forgotten leaf cannot be proven from here. A proof issued
+        // before it was forgotten still verifies, because a proof is
+        // checked against a root rather than against this log.
+        if self.forgotten > 0 || index >= self.leaves.len() {
             return None;
         }
         let mut path = Vec::new();

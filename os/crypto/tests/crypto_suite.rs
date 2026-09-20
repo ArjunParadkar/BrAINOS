@@ -607,3 +607,71 @@ fn the_cost_of_a_root_is_logarithmic() {
     // 4095 is twelve ones in binary, and that is the whole cost
     assert_eq!(odd.frontier_len(), 12);
 }
+
+/// Forgetting old leaves must not move the root.
+///
+/// This is what makes an entity affordable on a board. A populated
+/// entity at embedded bounds leaves about two thousand decisions' worth
+/// of headroom, which at ten gated decisions a second is a few minutes,
+/// and the log grows 32 bytes per decision forever. Keeping every leaf
+/// in SRAM was a workstation decision being made silently on the board.
+///
+/// The frontier is what makes it safe: the root comes from O(log n)
+/// subtree hashes, not from the leaves. Every checkpoint an entity ever
+/// signed stays correct.
+#[test]
+fn forgetting_old_leaves_does_not_move_the_root() {
+    let mut log = MerkleLog::new();
+    for i in 0..1_000u32 {
+        log.append(&i.to_le_bytes());
+    }
+    let before = log.root();
+    let len_before = log.len();
+
+    let dropped = log.forget_leaves_before(64);
+    assert_eq!(dropped, 936);
+    assert_eq!(log.root(), before, "forgetting leaves moved the root");
+    assert_eq!(log.len(), len_before, "the log forgot how long it is");
+    assert_eq!(log.provable(), 64);
+    assert_eq!(log.forgotten(), 936);
+
+    // and it keeps growing correctly afterwards
+    for i in 1_000..1_100u32 {
+        log.append(&i.to_le_bytes());
+    }
+    let mut fresh = MerkleLog::new();
+    for i in 0..1_100u32 {
+        fresh.append(&i.to_le_bytes());
+    }
+    assert_eq!(
+        log.root(),
+        fresh.root(),
+        "a log that forgot and then grew disagrees with one that never forgot"
+    );
+}
+
+/// What is actually lost is the ability to *produce* a proof for a
+/// forgotten decision. A proof issued before it was forgotten still
+/// verifies, because a proof is checked against a root rather than
+/// against the log.
+#[test]
+fn a_proof_issued_before_forgetting_still_verifies_afterwards() {
+    let mut log = MerkleLog::new();
+    for i in 0..500u32 {
+        log.append(&i.to_le_bytes());
+    }
+    let proof = log.prove(7).expect("a proof while the leaf is held");
+    let root = log.root();
+
+    log.forget_leaves_before(16);
+    assert!(
+        log.prove(7).is_none(),
+        "a proof was produced for a leaf the log no longer holds"
+    );
+    assert!(
+        proof.verify_record(&7u32.to_le_bytes(), &root),
+        "a proof issued earlier stopped verifying, which would make forgetting \
+         retroactively destroy evidence"
+    );
+    assert_eq!(log.root(), root);
+}

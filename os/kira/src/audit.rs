@@ -197,6 +197,34 @@ impl Default for AuditTrail {
 }
 
 impl AuditTrail {
+    /// The working window a board can afford.
+    ///
+    /// A measurement, not a preference. A populated entity at
+    /// `Bounds::EMBEDDED` making 256 gated decisions carried 158 KiB of
+    /// audit trail on an ESP32-S3 that has about 192 KiB for the whole
+    /// entity — and almost all of it was the *record window*, not the
+    /// leaves, because a record keeps its eight stage notes as eight
+    /// separate strings. The records' real home is the machine of
+    /// record; what a board needs is the leaves, for the root, and
+    /// enough recent records to tell a human why it just refused
+    /// something.
+    pub fn embedded() -> AuditTrail {
+        AuditTrail::new(32)
+    }
+
+    /// How many records the working window holds.
+    pub fn window_cap(&self) -> usize {
+        self.window_cap
+    }
+
+    /// Resize the working window, dropping the oldest if it shrinks.
+    pub fn set_window_cap(&mut self, cap: usize) {
+        self.window_cap = cap;
+        while self.window.len() > self.window_cap {
+            self.window.remove(0);
+        }
+    }
+
     pub fn new(window_cap: usize) -> AuditTrail {
         AuditTrail {
             log: MerkleLog::new(),
@@ -249,6 +277,28 @@ impl AuditTrail {
             self.window.remove(0);
         }
         index
+    }
+
+    /// Roughly what the trail occupies in RAM, live: the working window
+    /// of records plus 32 bytes for every leaf hash ever appended.
+    ///
+    /// The second term is the one that grows without bound. It is 32
+    /// bytes per gated decision and it is kept forever on purpose —
+    /// pruning the records while keeping the leaves is what lets a
+    /// proof issued last year still verify — but on a board it is the
+    /// term that decides how long the robot can run before something
+    /// has to be offloaded.
+    pub fn approximate_bytes(&self) -> usize {
+        let records: usize = self
+            .window
+            .iter()
+            .map(|r| {
+                core::mem::size_of::<AuditRecord>()
+                    + r.reason.capacity()
+                    + r.notes.iter().map(|n| n.capacity()).sum::<usize>()
+            })
+            .sum();
+        records + self.log.len() * 32 + core::mem::size_of::<AuditTrail>()
     }
 
     pub fn recent(&self, n: usize) -> &[AuditRecord] {

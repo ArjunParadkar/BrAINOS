@@ -692,6 +692,25 @@ impl SkillGraph {
         self.skills.is_empty()
     }
 
+    /// Roughly what the skill graph occupies in RAM, live.
+    pub fn approximate_bytes(&self) -> usize {
+        self.skills
+            .iter()
+            .map(|s| {
+                core::mem::size_of::<Skill>()
+                    + s.name.capacity()
+                    + s.preconditions
+                        .iter()
+                        .map(|p| core::mem::size_of::<Precondition>() + p.tag.capacity())
+                        .sum::<usize>()
+                    + s.effects.iter().map(|e| e.capacity()).sum::<usize>()
+                    + s.steps.capacity() * core::mem::size_of::<Step>()
+                    + s.per_body.capacity() * core::mem::size_of::<BodyStats>()
+            })
+            .sum::<usize>()
+            + core::mem::size_of::<SkillGraph>()
+    }
+
     pub fn all(&self) -> &[Skill] {
         &self.skills
     }

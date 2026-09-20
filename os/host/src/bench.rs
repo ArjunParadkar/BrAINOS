@@ -48,6 +48,7 @@ use brainos_bodyd::runtime::{BodyRuntime, Measured};
 use brainos_crypto::key::BrainKey;
 use brainos_entity::entity::Entity;
 use brainos_memory::consolidate::Dream;
+use brainos_memory::graph::Bounds;
 use brainos_memory::episode::Outcome;
 use brainos_rt::envelope::{Channel, Envelope};
 use miniblur_core::servo::ServoTable;
@@ -623,35 +624,138 @@ pub fn footprint() -> Vec<(&'static str, usize, &'static str)> {
 /// Does a whole entity fit on the board?
 ///
 /// The question an ESP32-S3 asks, and the reason `Bounds::EMBEDDED`
-/// exists. 512 KiB of SRAM, of which the gait loop's buffers, the wire's
-/// frames and the firmware itself want a good share.
-pub fn fits_on_the_board() -> Vec<(&'static str, usize, usize, bool)> {
-    let (_, per_memory) = {
-        let (empty, full, nodes) = memory_per_episode();
-        (empty, (full - empty) / (nodes - 1).max(1))
-    };
-    // a generous allowance for everything else on the board
+/// exists. 512 KiB of SRAM, of which the gait loop's buffers, the
+/// wire's frames, the WiFi stack and the firmware itself want a good
+/// share.
+///
+/// **This used to count the wrong thing.** It measured the *encoded*
+/// size of the state graph — what goes in the journal — and called that
+/// the entity. The entity is larger than its journal: every `String`
+/// and `Vec` carries a capacity and a header, the retrieval index is
+/// not in the journal at all and at the default bound is bigger than
+/// the memories it indexes, and the audit trail keeps 32 bytes per
+/// decision forever. A board budget built from the encoded number is
+/// wrong in the optimistic direction, which is the worst direction for
+/// a number that decides whether a robot works.
+///
+/// So this now populates a real entity to the bound and asks each part
+/// what it occupies.
+pub fn fits_on_the_board() -> Vec<Fit> {
+    // 512 KiB, of which a generous share belongs to everything that is
+    // not the entity: the gait loop, the wire, the WiFi stack, the
+    // firmware. What is left is what an entity may have.
     const SRAM: usize = 512 * 1024;
     const RESERVED: usize = 320 * 1024;
     let available = SRAM - RESERVED;
 
-    let default_bound = brainos_memory::graph::Bounds::default();
-    let embedded_bound = brainos_memory::graph::Bounds::EMBEDDED;
-
     vec![
-        (
-            "default bounds (4,096 episodes)",
-            per_memory * default_bound.max_episodes,
+        populate("default bounds (4,096 episodes)", Bounds::default(), 4_096, available),
+        populate(
+            "embedded bounds, default audit window",
+            Bounds::EMBEDDED,
+            4_096,
             available,
-            per_memory * default_bound.max_episodes <= available,
         ),
-        (
-            "embedded bounds (256 episodes)",
-            per_memory * embedded_bound.max_episodes,
+        populate(
+            "embedded bounds, embedded audit window",
+            Bounds::EMBEDDED,
+            32,
             available,
-            per_memory * embedded_bound.max_episodes <= available,
         ),
     ]
+}
+
+/// One configuration, measured part by part.
+#[derive(Clone, Debug)]
+pub struct Fit {
+    pub what: &'static str,
+    pub parts: Vec<(&'static str, usize)>,
+    pub total: usize,
+    pub available: usize,
+    pub fits: bool,
+    /// gated decisions made while populating, so the audit term is real
+    pub decisions: usize,
+    /// with the headroom left over, how many more decisions the audit
+    /// log alone can hold at 32 bytes each — and at ten a second, how
+    /// long that is
+    pub decisions_of_headroom: usize,
+    pub seconds_of_headroom: usize,
+}
+
+fn populate(
+    what: &'static str,
+    bounds: Bounds,
+    audit_window: usize,
+    available: usize,
+) -> Fit {
+    let key = BrainKey::from_seed(&[0x8F; 32]);
+    let device = BrainKey::from_seed(&[0x9F; 32]);
+    let mut e = Entity::new(BrainKey::from_seed(&[0x8F; 32]), Tick(0));
+    e.set_bounds(bounds);
+    e.kira.trail.set_window_cap(audit_window);
+    e.wake(None, None, Tick(1)).unwrap();
+    let body = e
+        .acquire(&device, mini_blur(), calibration(), 10)
+        .expect("the hexapod joins");
+    e.observe_body(&body, &fit());
+    e.learn_skill(v("legs.walk"), "walk");
+    let _ = key;
+
+    // fill it to the bound the way a working day would — and gate every
+    // action, because the audit trail keeps 32 bytes per decision
+    // forever and that term was reading zero while nothing was gated
+    let target = bounds.max_episodes;
+    let mut decisions = 0usize;
+    for i in 0..target {
+        let t = e.tick;
+        let _ = e.propose(
+            brainos_kira::action::Request::on_body(v("legs.walk"), body, t)
+                .arg("speed", brainos_body::policy::Arg::Scalar(0.08))
+                .arg("heading", brainos_body::policy::Arg::Scalar(0.0)),
+        );
+        decisions += 1;
+        e.outcome(
+            v("legs.walk"),
+            Some(body),
+            Outcome::Succeeded,
+            "forward on carpet in the workshop, past the bench",
+            &["carpet", "workshop"],
+        );
+        if i % 256 == 0 {
+            let _ = e.recall("what is the floor like", 3);
+        }
+    }
+    let _ = e.recall("what is the floor like", 3);
+
+    let graph = e.graph.approximate_bytes();
+    let index = e.index_bytes();
+    let skills = e.skills.approximate_bytes();
+    let audit = e.kira.trail.approximate_bytes();
+    let parts = vec![
+        ("state graph, live", graph),
+        ("retrieval index", index),
+        ("skill graph", skills),
+        ("audit trail", audit),
+        (
+            "encoded journal payload",
+            e.graph.encode_durable().map(|b| b.len()).unwrap_or(0),
+        ),
+    ];
+    // the journal payload is transient, not resident, so it is reported
+    // but not counted
+    let total = graph + index + skills + audit;
+    let headroom = available.saturating_sub(total);
+    let decisions_of_headroom = headroom / 32;
+    Fit {
+        what,
+        parts,
+        total,
+        available,
+        fits: total <= available,
+        decisions,
+        decisions_of_headroom,
+        seconds_of_headroom: decisions_of_headroom / 10,
+    }
 }
 
 /// How many bytes a memory costs, measured rather than estimated.
