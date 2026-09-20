@@ -435,7 +435,17 @@ impl Entity {
             .iter()
             .map(|c| alloc::string::ToString::to_string(*c))
             .collect();
-        if self.skills.for_verb(&verb).is_some() {
+        // A denial is not an attempt. `Outcome::counts_toward_skill`
+        // exists for exactly this and was not being consulted: every
+        // decline was inflating the skill's attempt count *and*, once
+        // preconditions learned to expire, refreshing their
+        // last-tested time — so an entity that declined because it did
+        // not want to find out was recorded as having found out.
+        //
+        // The second half is the one that mattered. It meant a belief
+        // could never go stale, because declining to test it counted as
+        // testing it.
+        if outcome.counts_toward_skill() && self.skills.for_verb(&verb).is_some() {
             self.skills.observe(
                 &self.handle,
                 &mut self.graph,

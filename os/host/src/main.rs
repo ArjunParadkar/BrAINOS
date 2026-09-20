@@ -245,6 +245,51 @@ fn compound() -> ExitCode {
         }
     }
 
+    rule("And when the world changes?");
+    println!(
+        "  The question that decides whether accumulated experience is an asset
+  or a liability. The entity learns that walking works on carpet, so it
+  declines to walk on tile. If the floor is later replaced with tile that
+  walks perfectly well, it never attempts there, never observes a success,
+  and never revises — its own caution prevents it from learning that its
+  caution is now wrong.\n"
+    );
+    let a = brainos_host::compound::adaptation(2_000, 6);
+    for run in [&a.incurious, &a.curious] {
+        println!(
+            "  {:<46} before {:>3}%   just after {:>3}%   long after {:>3}%   attempts in the new regime {:>5}",
+            run.curiosity.name(),
+            run.before,
+            run.immediately_after,
+            run.recovered_to,
+            run.attempts_in_the_new_regime
+        );
+    }
+    println!();
+    if a.curiosity_pays() {
+        println!(
+            "  An entity that occasionally checks whether it is still right recovers
+  to {}% where one that never does gets back to {}%. Curiosity costs
+  something — attempting what you believe will fail is mostly failing —
+  and here it pays for itself.",
+            a.curious.recovered_to, a.incurious.recovered_to
+        );
+    } else {
+        println!(
+            "  NULL on curiosity: {}% against {}%, which does not clear the margin.
+  Reported as a null rather than reframed.",
+            a.curious.recovered_to, a.incurious.recovered_to
+        );
+    }
+    if !a.incurious.recovered() {
+        println!(
+            "\n  The incurious entity lost {} points permanently. That is the hole:
+  experience becomes a liability the moment the world stops matching it,
+  and nothing in the architecture as written closes it.",
+            a.incurious.permanent_loss_pts()
+        );
+    }
+
     rule("Verdict");
     if e.survives_the_control() {
         println!(

@@ -10,24 +10,24 @@ BrAInOS — does experience compound?
 
   structured · always attempts · 2000 episodes
       episodes  attempted  succeeded   declined  judgement   learned
-         0-250        250         80          0        32%         0
-       250-500        250         76          0        30%         0
-       500-750        250         79          0        31%         0
-      750-1000        250         92          0        36%         0
-     1000-1250        250         76          0        30%         0
-     1250-1500        250         85          0        34%         0
-     1500-1750        250         80          0        32%         0
-     1750-2000        250         74          0        29%         0
+         0-250        250         80          0        32%         2
+       250-500        250         76          0        30%         3
+       500-750        250         79          0        31%         2
+      750-1000        250         92          0        36%         2
+     1000-1250        250         76          0        30%         3
+     1250-1500        250         85          0        34%         2
+     1500-1750        250         80          0        32%         2
+     1750-2000        250         74          0        29%         2
 
   structured · consults what it learned · 2000 episodes
       episodes  attempted  succeeded   declined  judgement   learned
-         0-250        122         63        128        72%         1
-       250-500        124         64        126        71%         1
-       500-750        131         73        119        72%         1
-      750-1000        123         59        127        68%         1
-     1000-1250        104         67        146        77%         2
+         0-250         74         56        176        86%         2
+       250-500         65         57        185        89%         2
+       500-750         73         65        177        89%         2
+      750-1000         65         55        185        88%         2
+     1000-1250         73         66        177        89%         2
      1250-1500         62         59        188        90%         2
-     1500-1750         72         62        178        86%         2
+     1500-1750         74         62        176        85%         2
      1750-2000         65         56        185        90%         2
 
   structureless (control) · always attempts · 2000 episodes
@@ -70,9 +70,24 @@ What it found
                               would be a correlate rather than a cause
 
   Every precondition it ended up holding, with its strength:
-    carpet           94%
+    carpet           87%
     battery_ok       100%
-    unloaded         52%
+    unloaded         0%
+
+And when the world changes?
+───────────────────────────
+  The question that decides whether accumulated experience is an asset
+  or a liability. The entity learns that walking works on carpet, so it
+  declines to walk on tile. If the floor is later replaced with tile that
+  walks perfectly well, it never attempts there, never observes a success,
+  and never revises — its own caution prevents it from learning that its
+  caution is now wrong.
+
+  never tries what it believes will fail         before  88%   just after  69%   long after  87%   attempts in the new regime   382
+  occasionally checks whether it is still right  before  84%   just after  77%   long after  84%   attempts in the new regime   500
+
+  NULL on curiosity: 84% against 87%, which does not clear the margin.
+  Reported as a null rather than reframed.
 
 Verdict
 ────────────────────

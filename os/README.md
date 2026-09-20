@@ -30,7 +30,7 @@ cargo run --release --bin brainos -- compound # does experience compound?
 cargo run --release --bin brainos -- day      # can it be left running?
 cargo run --release --bin brainos -- stat     # what this build contains
 
-cargo test --workspace --release              # 611 tests
+cargo test --workspace --release              # 618 tests
 tools/check-no-std.sh                         # the bare-metal build, when a target exists
 ```
 
@@ -201,6 +201,39 @@ What it does not show is that a robot gets better. The world is simulated
 and its structure is one I wrote. What it shows is that the mechanism
 finds structure when there is some and does not manufacture an
 improvement when there is none.
+
+### And when the world changes?
+
+The harder question, and the one that decides whether accumulated
+experience is an asset or a liability. The entity learns that walking
+works on carpet, so it declines to walk on tile. If the floor is later
+replaced with tile that walks perfectly well, it never attempts there,
+never observes a success, and never revises — *its own caution prevents
+it from learning that its caution is wrong*, and the more experience it
+has the more confident the mistake.
+
+Running it confirmed the hole exactly: **zero** attempts in the new
+regime, competence lost permanently.
+
+The obvious fix — occasional random exploration — is a null. Attempting
+what you believe will fail is mostly failing, it costs a great deal in
+the stable regime, and it recovers little.
+
+What closed it was changing what a precondition *is*. Necessity is a
+claim about absence: what makes something required is that *without* it
+the thing fails. Intersecting the context of successes measures
+co-occurrence, which is a different claim, and holding a correlate as a
+cause is the trap above. So strength is now measured from **tests** —
+attempts made without the tag — and a belief that has not been tested
+recently stops binding, which forces the occasional test that keeps it
+honest. Attempting with the tag a thousand more times says nothing about
+whether the tag is needed.
+
+With that, the same entity recovers from 88% to 87% after the world
+changes under it, making 382 attempts where it previously made none. And
+the epistemics read properly: it ends up holding *carpet 87%* and
+*battery 100%* while the irrelevant third condition sits at **0%** —
+tested, and found not to matter.
 
 ## Can it be left running?
 

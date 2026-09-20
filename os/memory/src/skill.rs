@@ -36,19 +36,83 @@ use brainos_abi::verb::Verb;
 
 pub type SkillId = NodeId;
 
+/// How much evidence a precondition remembers.
+///
+/// Support and against are exponentially-forgetting counters: when their
+/// total passes this, both halve. The ratio survives, the magnitude does
+/// not, and that is the point — a belief backed by two hundred
+/// observations from last year should not need two hundred
+/// counterexamples to shift.
+pub const EVIDENCE_WINDOW: u16 = 64;
+
+/// How long a precondition stays binding without being tested.
+///
+/// A precondition is *tested* when the entity attempts without it and
+/// finds out what happens. Confirming that carpet is sufficient is not
+/// confirming that carpet is necessary, and only varying the thing
+/// distinguishes a correlate from a cause — which `Precondition` has
+/// always admitted and which an entity with a binding precondition can
+/// never do, because it declines exactly the situations that would
+/// tell it.
+///
+/// So beliefs expire unless tested. The cost is one attempt per window
+/// that the entity expects to fail; the return is that when the world
+/// changes, it finds out.
+pub const STALE_AFTER: u64 = 400;
+
 /// A condition learned from experience.
+///
+/// **What makes something a precondition is that without it the thing
+/// fails.** That is a claim about absence, and the only way to learn it
+/// is to act without the tag and find out. Intersecting the context of
+/// successes — which is what this used to do — finds *correlates*, and
+/// a correlate held as a cause has a nasty property: the entity
+/// declines exactly the situations that would tell it otherwise, so
+/// caution prevents the correction, and the more experience it has the
+/// more confident the mistake.
+///
+/// A two-thousand-episode run with the world's rule changing halfway
+/// found the hole exactly: the entity made **zero** attempts in the new
+/// regime and lost its competence permanently.
+///
+/// So strength is measured from *tests* — attempts made without the tag
+/// — and not from confirmations. Attempting with the tag a thousand more
+/// times says nothing about whether the tag is needed.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Precondition {
     pub tag: String,
-    /// how many successful attempts had this tag present
+    /// successes that had this tag present. Reporting only: it says the
+    /// tag co-occurs with success, which is not the claim.
     pub support: u16,
-    /// how many successful attempts did not
+    /// successes that did not have it — counterexamples to necessity
     pub against: u16,
+    /// attempts made *without* this tag, whatever the outcome. The
+    /// denominator of the only claim that matters.
+    pub tests: u16,
+    /// of those, how many failed
+    pub test_failures: u16,
+    /// when the entity last attempted without this tag — the last time
+    /// it found out rather than assumed
+    pub last_tested: Tick,
 }
 
 impl Precondition {
-    /// How strongly the evidence backs this being required, 0–100.
+    /// How strongly the evidence backs this being *required*, 0–100:
+    /// the fraction of attempts without it that failed.
+    ///
+    /// Untested is zero, not unknown-but-probably-fine. An entity that
+    /// treated an untested correlate as a requirement would be back
+    /// where it started.
     pub fn strength(&self) -> u8 {
+        if self.tests == 0 {
+            return 0;
+        }
+        ((self.test_failures as u32 * 100) / self.tests as u32) as u8
+    }
+
+    /// How often it merely co-occurred with success. Reported so the
+    /// difference between correlation and the tested claim is visible.
+    pub fn co_occurrence_pct(&self) -> u8 {
         let total = self.support as u32 + self.against as u32;
         if total == 0 {
             return 0;
@@ -56,12 +120,48 @@ impl Precondition {
         ((self.support as u32 * 100) / total) as u8
     }
 
-    /// Enough evidence to treat as binding rather than advisory. Five
-    /// supporting observations and no counterexamples is the threshold —
-    /// low enough to be useful early, high enough that one coincidence
-    /// does not become a rule.
+    /// Enough tests, failing often enough, to treat as required.
+    ///
+    /// Five tests and eighty percent. The threshold is below a hundred
+    /// on purpose: a real body in a real place fails sometimes for
+    /// reasons that have nothing to do with the condition, and a rule
+    /// that demanded perfection would never bind.
+    pub fn is_well_supported(&self) -> bool {
+        self.tests >= 5 && self.strength() >= 80
+    }
+
+    /// Has it been tested recently enough to still be binding?
+    pub fn is_fresh(&self, now: Tick) -> bool {
+        now.since(self.last_tested) <= STALE_AFTER
+    }
+
+    /// Binding: tested enough, failing often enough, and recently
+    /// enough.
+    ///
+    /// All three matter. Without the tests a correlate becomes a rule;
+    /// without the failures the rule is backed by nothing; without
+    /// freshness it outlives the world it was learned in and the
+    /// entity's own caution stops it finding out.
+    pub fn is_binding_at(&self, now: Tick) -> bool {
+        self.is_well_supported() && self.is_fresh(now)
+    }
+
+    /// Kept for callers that only want the evidence question.
     pub fn is_binding(&self) -> bool {
-        self.support >= 5 && self.strength() >= 90
+        self.is_well_supported()
+    }
+
+    /// Age the evidence, so the answer reflects what has been tested
+    /// recently rather than what was ever tested.
+    fn forget(&mut self) {
+        if self.tests > EVIDENCE_WINDOW {
+            self.tests /= 2;
+            self.test_failures /= 2;
+        }
+        if self.support.saturating_add(self.against) > EVIDENCE_WINDOW {
+            self.support /= 2;
+            self.against /= 2;
+        }
     }
 }
 
@@ -70,6 +170,9 @@ impl Encode for Precondition {
         e.str(&self.tag);
         e.u16(self.support);
         e.u16(self.against);
+        e.u16(self.tests);
+        e.u16(self.test_failures);
+        self.last_tested.encode(e);
     }
 }
 
@@ -79,6 +182,9 @@ impl Decode for Precondition {
             tag: alloc::string::ToString::to_string(d.str()?),
             support: d.u16()?,
             against: d.u16()?,
+            tests: d.u16()?,
+            test_failures: d.u16()?,
+            last_tested: Tick::decode(d)?,
         })
     }
 }
@@ -193,11 +299,27 @@ impl Skill {
     /// returns what is missing rather than a bool because "I know how to
     /// do this but the floor is wet" is a far more useful thing for
     /// cognition to receive than `false`.
+    /// Which binding preconditions the context does not satisfy, as of
+    /// `now`. A precondition that has gone stale is not binding, so it
+    /// does not appear here and the entity attempts — which is how it
+    /// finds out whether it is still right.
+    pub fn missing_at(&self, context: &[&str], now: Tick) -> Vec<&Precondition> {
+        self.preconditions
+            .iter()
+            .filter(|p| p.is_binding_at(now) && !context.iter().any(|c| *c == p.tag))
+            .collect()
+    }
+
+    /// The same question ignoring staleness: what does the evidence say?
     pub fn missing(&self, context: &[&str]) -> Vec<&Precondition> {
         self.preconditions
             .iter()
-            .filter(|p| p.is_binding() && !context.iter().any(|c| *c == p.tag))
+            .filter(|p| p.is_well_supported() && !context.iter().any(|c| *c == p.tag))
             .collect()
+    }
+
+    pub fn applicable_at(&self, context: &[&str], now: Tick) -> bool {
+        self.missing_at(context, now).is_empty()
     }
 
     pub fn applicable(&self, context: &[&str]) -> bool {
@@ -232,33 +354,48 @@ impl Skill {
             }
         }
 
-        // preconditions are learned from successes only: what was present
-        // when it failed is not evidence about what it needs
+        // Every attempt without a tag is a *test* of that precondition,
+        // whatever the outcome. This is the only moment the entity finds
+        // out rather than assumes.
+        for p in self.preconditions.iter_mut() {
+            if !context.iter().any(|c| c == &p.tag) {
+                p.tests = p.tests.saturating_add(1);
+                p.last_tested = at;
+                if !success {
+                    p.test_failures = p.test_failures.saturating_add(1);
+                }
+                if success {
+                    p.against = p.against.saturating_add(1);
+                }
+            } else if success {
+                p.support = p.support.saturating_add(1);
+            }
+            p.forget();
+        }
+
+        // a tag is only worth tracking once it has co-occurred with a
+        // success; a tag seen only during failures is not a candidate
         if !success {
             return;
-        }
-        for p in self.preconditions.iter_mut() {
-            if context.iter().any(|c| c == &p.tag) {
-                p.support = p.support.saturating_add(1);
-            } else {
-                p.against = p.against.saturating_add(1);
-            }
         }
         for tag in context {
             if !self.preconditions.iter().any(|p| &p.tag == tag) {
                 self.preconditions.push(Precondition {
                     tag: tag.clone(),
                     support: 1,
-                    // a tag first seen on the tenth success was absent for
-                    // the previous nine, and pretending otherwise would
-                    // make a late coincidence look like a strong condition
-                    against: self.successes.saturating_sub(1).min(u16::MAX as u32) as u16,
+                    against: 0,
+                    // untested, and therefore not binding: the entity has
+                    // to act without it before it may require it
+                    tests: 0,
+                    test_failures: 0,
+                    last_tested: at,
                 });
             }
         }
-        // a condition that is present about as often as not is noise
+        // a tag that has been tested and did not matter stops being a
+        // candidate at all
         self.preconditions
-            .retain(|p| p.support >= 2 || p.against < 2);
+            .retain(|p| p.tests < 5 || p.strength() >= 20);
     }
 
     pub fn render(&self) -> String {
@@ -275,7 +412,7 @@ impl Skill {
         if !self.preconditions.is_empty() {
             s.push_str(" :: needs ");
             let mut first = true;
-            for p in self.preconditions.iter().filter(|p| p.is_binding()) {
+            for p in self.preconditions.iter().filter(|p| p.is_well_supported()) {
                 if !first {
                     s.push(',');
                 }
@@ -500,6 +637,22 @@ impl SkillGraph {
     }
 
     /// The skills applicable in a context, best first.
+    pub fn applicable_at(&self, context: &[&str], now: Tick) -> Vec<&Skill> {
+        let mut out: Vec<&Skill> = self
+            .skills
+            .iter()
+            .filter(|s| s.applicable_at(context, now))
+            .collect();
+        out.sort_by(|a, b| {
+            b.success_rate_pct()
+                .cmp(&a.success_rate_pct())
+                .then(b.attempts.cmp(&a.attempts))
+                .then(a.id.0.cmp(&b.id.0))
+        });
+        out
+    }
+
+    /// The same, ignoring staleness.
     pub fn applicable(&self, context: &[&str]) -> Vec<&Skill> {
         let mut out: Vec<&Skill> = self
             .skills

@@ -473,12 +473,18 @@ fn an_empty_index_returns_nothing_rather_than_panicking() {
 // ---------- skills ----------
 
 #[test]
-fn a_skill_learns_its_preconditions_from_successes_only() {
+fn a_precondition_is_learned_by_testing_it_not_by_noticing_a_correlation() {
+    // What makes something a precondition is that *without* it the
+    // thing fails. That is a claim about absence, and the only way to
+    // learn it is to act without the tag and find out. Intersecting the
+    // context of successes finds correlates, and a correlate held as a
+    // cause is a belief the entity can never correct, because it
+    // declines exactly the situations that would tell it.
     let (h, mut g, mut s) = setup();
     let walk = v("legs.walk");
     s.learn(&h, &mut g, walk, "walk", Provenance::own(Tick(1)));
 
-    // eight successes, all on carpet
+    // eight successes, all on carpet, all with the battery fine
     for t in 1..9 {
         s.observe(
             &h,
@@ -492,8 +498,21 @@ fn a_skill_learns_its_preconditions_from_successes_only() {
             None,
         );
     }
-    // two failures on tile — tile must NOT become a precondition
-    for t in 9..11 {
+    let skill = s.for_verb(&walk).unwrap();
+    let carpet = skill
+        .preconditions
+        .iter()
+        .find(|p| p.tag == "carpet")
+        .expect("carpet is a candidate");
+    assert_eq!(carpet.co_occurrence_pct(), 100, "it always co-occurred");
+    assert_eq!(carpet.tests, 0);
+    assert!(
+        !carpet.is_binding(),
+        "an untested correlate must not become a requirement"
+    );
+
+    // now actually test it: six attempts on tile, all of which fail
+    for t in 9..15 {
         s.observe(
             &h,
             &mut g,
@@ -501,39 +520,101 @@ fn a_skill_learns_its_preconditions_from_successes_only() {
             false,
             false,
             None,
-            &["tile".to_string()],
+            &["tile".to_string(), "battery_ok".to_string()],
             Tick(t),
             None,
         );
     }
-
     let skill = s.for_verb(&walk).unwrap();
-    let binding: Vec<&str> = skill
+    let carpet = skill
         .preconditions
         .iter()
-        .filter(|p| p.is_binding())
-        .map(|p| p.tag.as_str())
-        .collect();
-    assert!(binding.contains(&"carpet"), "{binding:?}");
-    assert!(!binding.contains(&"tile"), "failures do not teach conditions");
-    assert_eq!(skill.attempts, 10);
-    assert_eq!(skill.successes, 8);
-    assert_eq!(skill.success_rate_pct(), 80);
+        .find(|p| p.tag == "carpet")
+        .unwrap();
+    assert_eq!(carpet.tests, 6);
+    assert_eq!(carpet.test_failures, 6);
+    assert_eq!(carpet.strength(), 100);
+    assert!(carpet.is_binding(), "six tests, all failing, is a requirement");
 }
 
 #[test]
-fn a_missing_precondition_is_named_rather_than_returning_false() {
+fn testing_a_condition_that_does_not_matter_stops_it_binding() {
+    let (h, mut g, mut s) = setup();
+    let walk = v("legs.walk");
+    s.learn(&h, &mut g, walk, "walk", Provenance::own(Tick(1)));
+
+    // every success happens to be unloaded, so it looks like a condition
+    for t in 1..9 {
+        s.observe(
+            &h,
+            &mut g,
+            &walk,
+            true,
+            false,
+            None,
+            &["carpet".to_string(), "unloaded".to_string()],
+            Tick(t),
+            None,
+        );
+    }
+    // then the entity tries while loaded, and it works fine
+    for t in 9..16 {
+        s.observe(
+            &h,
+            &mut g,
+            &walk,
+            true,
+            false,
+            None,
+            &["carpet".to_string(), "loaded".to_string()],
+            Tick(t),
+            None,
+        );
+    }
+    let skill = s.for_verb(&walk).unwrap();
+    let unloaded = skill.preconditions.iter().find(|p| p.tag == "unloaded");
+    assert!(
+        unloaded.is_none() || !unloaded.unwrap().is_binding(),
+        "a condition that was tested and did not matter must not bind"
+    );
+}
+
+#[test]
+fn a_belief_that_has_not_been_tested_recently_stops_binding() {
+    // Without this an entity's caution prevents its own correction: it
+    // declines the situations that would tell it the world has changed,
+    // so it never finds out, and the more experience it has the more
+    // confident the mistake.
     let (h, mut g, mut s) = setup();
     let walk = v("legs.walk");
     s.learn(&h, &mut g, walk, "walk", Provenance::own(Tick(1)));
     for t in 1..9 {
         s.observe(&h, &mut g, &walk, true, false, None, &["carpet".to_string()], Tick(t), None);
     }
+    for t in 9..16 {
+        s.observe(&h, &mut g, &walk, false, false, None, &["tile".to_string()], Tick(t), None);
+    }
+
     let skill = s.for_verb(&walk).unwrap();
-    assert!(skill.applicable(&["carpet"]));
-    let missing = skill.missing(&["tile"]);
-    assert_eq!(missing.len(), 1);
-    assert_eq!(missing[0].tag, "carpet");
+    let now = Tick(20);
+    assert!(
+        skill.missing_at(&["tile"], now).len() == 1,
+        "freshly tested, it binds"
+    );
+
+    // a long time later, with no test in between
+    let much_later = Tick(20 + brainos_memory::skill::STALE_AFTER + 1);
+    assert!(
+        skill.missing_at(&["tile"], much_later).is_empty(),
+        "a belief nobody has checked in a long time is not a licence to \
+         keep declining"
+    );
+    assert!(
+        skill.applicable_at(&["tile"], much_later),
+        "so the entity attempts, and finds out"
+    );
+    // and the evidence itself has not changed — only its freshness
+    assert!(!skill.missing(&["tile"]).is_empty());
 }
 
 #[test]

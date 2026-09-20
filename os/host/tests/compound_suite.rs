@@ -158,12 +158,27 @@ fn judgement_improves_over_a_life_rather_than_arriving_at_once() {
     );
     assert!(learner.improvement_pts() > 0);
 
-    // and the preconditions accumulate rather than appearing at once
+    // and it holds onto what it learned rather than drifting.
+    //
+    // This used to assert that preconditions *accumulate* across
+    // windows, which stopped being true when necessity started being
+    // measured by testing: the entity attempts freely while it believes
+    // nothing, so it collects the tests it needs within the first
+    // window. Learning sooner is the improvement, not a regression, and
+    // the judgement curve is where the improvement shows.
     let early_learned = learner.windows.first().unwrap().binding_preconditions;
     let late_learned = learner.windows.last().unwrap().binding_preconditions;
     assert!(
-        late_learned > early_learned,
-        "it held {early_learned} preconditions early and {late_learned} late"
+        early_learned >= 1,
+        "it had learned nothing by the end of the first window"
+    );
+    assert!(
+        late_learned >= early_learned,
+        "it lost preconditions over its life: {early_learned} then {late_learned}"
+    );
+    assert_eq!(
+        late_learned, 2,
+        "the world's rule has two conditions and it should hold exactly those"
     );
 }
 
@@ -258,4 +273,116 @@ fn every_situation_is_reachable() {
         seen.insert(Situation::from_bits(n));
     }
     assert_eq!(seen.len(), 8, "three binary conditions is eight situations");
+}
+
+// =====================================================================
+// what happens when the world changes
+// =====================================================================
+
+use brainos_host::compound::{adaptation, world_changes, Curiosity, Regime};
+
+#[test]
+fn an_entity_recovers_when_the_world_changes_underneath_it() {
+    // The question that decides whether accumulated experience is an
+    // asset or a liability. Before the fix, this scored zero attempts in
+    // the new regime and a permanent loss of competence: the entity
+    // declined exactly the situations that would have told it the world
+    // had changed, so caution prevented its own correction.
+    let a = world_changes(Curiosity::None, 2_000, 6, b"incurious");
+    assert!(a.before >= 70, "it learned the first world: {}%", a.before);
+    assert!(
+        a.attempts_in_the_new_regime > 50,
+        "it made only {} attempts in situations the old rule told it to \
+         avoid, so it could never find out",
+        a.attempts_in_the_new_regime
+    );
+    assert!(
+        a.recovered(),
+        "before {}%, long after {}% — a permanent loss of {} points",
+        a.before,
+        a.recovered_to,
+        a.permanent_loss_pts()
+    );
+}
+
+#[test]
+fn it_dips_when_the_world_changes_rather_than_being_unaffected() {
+    // An entity that showed no dip would not have been using what it
+    // learned, which would make the recovery meaningless.
+    let a = world_changes(Curiosity::None, 2_000, 6, b"incurious");
+    assert!(
+        a.immediately_after < a.before,
+        "no dip at all: {}% then {}%",
+        a.before,
+        a.immediately_after
+    );
+}
+
+#[test]
+fn random_curiosity_is_a_null_once_the_entity_tests_what_it_believes() {
+    // Occasional random exploration was the obvious fix and it does not
+    // earn its place: attempting what you believe will fail is mostly
+    // failing, and the principled version — beliefs expire unless
+    // tested — does the job without the cost. Reported as a null.
+    let e = adaptation(2_000, 6);
+    assert!(
+        !e.curiosity_pays(),
+        "curiosity recovered to {}% against {}%, which would make it worth \
+         its cost after all",
+        e.curious.recovered_to,
+        e.incurious.recovered_to
+    );
+}
+
+#[test]
+fn the_entity_ends_up_believing_the_new_rule_rather_than_the_old_one() {
+    let a = world_changes(Curiosity::None, 2_000, 6, b"incurious");
+    let believes = |tag: &str| {
+        a.learned
+            .iter()
+            .any(|(t, strength)| t == tag && *strength >= 80)
+    };
+    // the new rule keeps the battery and drops the surface
+    assert!(
+        believes("battery_ok"),
+        "the battery still matters in both regimes: {:?}",
+        a.learned
+    );
+    assert!(
+        !believes("carpet"),
+        "it still thinks the floor matters after the floor was replaced: {:?}",
+        a.learned
+    );
+}
+
+#[test]
+fn the_change_is_reproducible() {
+    assert_eq!(
+        world_changes(Curiosity::None, 500, 4, b"x"),
+        world_changes(Curiosity::None, 500, 4, b"x")
+    );
+}
+
+#[test]
+fn both_regimes_are_learnable_on_their_own() {
+    use brainos_crypto::rng::Drbg;
+    use brainos_host::compound::Situation;
+    let mut rng = Drbg::deterministic(b"regimes");
+    let tile_and_battery = Situation {
+        carpet: false,
+        battery_ok: true,
+        loaded: false,
+    };
+    let mut original = 0;
+    let mut changed = 0;
+    for _ in 0..1_000 {
+        if Regime::Original.outcome(tile_and_battery, &mut rng) {
+            original += 1;
+        }
+        if Regime::Changed.outcome(tile_and_battery, &mut rng) {
+            changed += 1;
+        }
+    }
+    assert!(original < 150, "tile fails under the original rule");
+    assert!(changed > 850, "tile works under the new one");
 }

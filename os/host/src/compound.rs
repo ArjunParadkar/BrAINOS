@@ -30,7 +30,8 @@
 //! while being useless.
 
 use brainos_abi::ids::BodyId;
-use brainos_abi::time::Tick;
+use brainos_abi::time::{Instant, Tick};
+use brainos_cognition::ambient::SenseFrame;
 use brainos_abi::verb::Verb;
 use brainos_crypto::key::BrainKey;
 use brainos_crypto::rng::Drbg;
@@ -248,6 +249,10 @@ pub fn run(world: World, policy: Policy, episodes: usize, windows: usize, seed: 
     };
 
     for i in 0..episodes {
+        // the entity is running its loop; without this its tick never
+        // advances and nothing it believes can ever go stale
+        e.tick(SenseFrame::quiet(Instant(i as u64 * 1_000)));
+
         let situation = Situation::from_bits(situation_rng.below(8));
         let tags = situation.tags();
 
@@ -258,7 +263,7 @@ pub fn run(world: World, policy: Policy, episodes: usize, windows: usize, seed: 
             Policy::Learned => e
                 .skills
                 .for_verb(&walk)
-                .map(|s| s.applicable(&tags))
+                .map(|s| s.applicable_at(&tags, e.tick))
                 .unwrap_or(true),
         };
 
@@ -308,7 +313,7 @@ pub fn run(world: World, policy: Policy, episodes: usize, windows: usize, seed: 
             w.binding_preconditions = e
                 .skills
                 .for_verb(&walk)
-                .map(|s| s.preconditions.iter().filter(|p| p.is_binding()).count())
+                .map(|s| s.preconditions.iter().filter(|p| p.is_well_supported()).count())
                 .unwrap_or(0);
             out_windows.push(w);
             w = Window {
@@ -416,5 +421,277 @@ pub fn experiment(episodes: usize, windows: usize) -> Experiment {
             b"n-l",
         ),
         episodes,
+    }
+}
+
+// =====================================================================
+// The harder question: what happens when the world changes?
+// =====================================================================
+
+/// A world whose rule changes partway through.
+///
+/// Everything above shows an entity finding structure. This asks the
+/// question that decides whether accumulated experience is an asset or a
+/// liability: **when the world stops working the way it used to, can the
+/// entity notice?**
+///
+/// It matters because the failure mode is specific and nasty. The
+/// entity learns that walking works on carpet. It therefore *declines*
+/// to walk on tile. If the floor is later replaced with tile that walks
+/// perfectly well, the entity never attempts on tile, never observes a
+/// success there, and never revises. Its own caution prevents it from
+/// learning that its caution is now wrong — and the more experience it
+/// has, the more confident the mistake.
+///
+/// That is not a bug in the code so much as a hole in the design, and
+/// naming it is worth more than a graph.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Regime {
+    /// the original rule: carpet and a good battery
+    Original,
+    /// the floor was replaced. Now it is the *battery* that matters and
+    /// the surface does not.
+    Changed,
+}
+
+impl Regime {
+    pub fn outcome(&self, s: Situation, rng: &mut Drbg) -> bool {
+        let ought = match self {
+            Regime::Original => s.carpet && s.battery_ok,
+            Regime::Changed => s.battery_ok,
+        };
+        if rng.below(100) < 10 {
+            !ought
+        } else {
+            ought
+        }
+    }
+
+    pub const fn name(self) -> &'static str {
+        match self {
+            Regime::Original => "carpet and a good battery",
+            Regime::Changed => "a good battery; the floor was replaced",
+        }
+    }
+}
+
+/// How the entity behaves when a learned precondition is missing.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Curiosity {
+    /// never attempt when a precondition is missing. The entity as
+    /// built before this experiment.
+    None,
+    /// attempt anyway, rarely, precisely to find out whether the world
+    /// still works the way it did. One in `1/rate` of the situations it
+    /// would otherwise decline.
+    Occasional { per_mille: u64 },
+}
+
+impl Curiosity {
+    pub const fn name(self) -> &'static str {
+        match self {
+            Curiosity::None => "never tries what it believes will fail",
+            Curiosity::Occasional { .. } => "occasionally checks whether it is still right",
+        }
+    }
+}
+
+/// What happened when the world changed under an entity.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Adaptation {
+    pub curiosity: Curiosity,
+    /// judgement in the last window before the change
+    pub before: u8,
+    /// judgement in the first window after
+    pub immediately_after: u8,
+    /// judgement in the last window, long after
+    pub recovered_to: u8,
+    /// what it believed at the end
+    pub learned: Vec<(String, u8)>,
+    /// did it ever attempt in the situations the old rule told it to
+    /// avoid?
+    pub attempts_in_the_new_regime: u32,
+    /// how many episodes it spent in each regime
+    pub episodes_per_regime: usize,
+}
+
+impl Adaptation {
+    /// Did it get back to something like its old competence?
+    pub fn recovered(&self) -> bool {
+        self.recovered_to as i16 >= self.before as i16 - 10
+    }
+
+    /// How much it lost and did not get back.
+    pub fn permanent_loss_pts(&self) -> i16 {
+        self.before as i16 - self.recovered_to as i16
+    }
+}
+
+/// Run an entity through a world that changes underneath it.
+pub fn world_changes(
+    curiosity: Curiosity,
+    episodes_per_regime: usize,
+    windows_per_regime: usize,
+    seed: &[u8],
+) -> Adaptation {
+    let walk = v("legs.walk");
+    let body = BodyId::from_bytes([0xB2; 32]);
+    let mut world_rng = Drbg::deterministic(seed);
+    let mut situation_rng = Drbg::deterministic(&[seed, b"-sit"].concat());
+    let mut curiosity_rng = Drbg::deterministic(&[seed, b"-cur"].concat());
+
+    let mut e = Entity::new(BrainKey::from_seed(&[0x5A; 32]), Tick(0));
+    e.wake(None, None, Tick(1)).expect("a fresh entity wakes");
+    e.learn_skill(walk, "walk");
+
+    let total = episodes_per_regime * 2;
+    let per_window = episodes_per_regime / windows_per_regime.max(1);
+    let mut windows: Vec<Window> = Vec::new();
+    let mut w = Window::default();
+    let mut attempts_in_the_new_regime = 0u32;
+
+    for i in 0..total {
+        let regime = if i < episodes_per_regime {
+            Regime::Original
+        } else {
+            Regime::Changed
+        };
+        e.tick(SenseFrame::quiet(Instant(i as u64 * 1_000)));
+
+        let situation = Situation::from_bits(situation_rng.below(8));
+        let tags = situation.tags();
+
+        let believes_it_will_work = e
+            .skills
+            .for_verb(&walk)
+            .map(|s| s.applicable_at(&tags, e.tick))
+            .unwrap_or(true);
+
+        let attempt = believes_it_will_work
+            || match curiosity {
+                Curiosity::None => false,
+                Curiosity::Occasional { per_mille } => curiosity_rng.below(1_000) < per_mille,
+            };
+
+        let would_succeed = regime.outcome(situation, &mut world_rng);
+
+        if attempt {
+            w.attempted += 1;
+            if would_succeed {
+                w.succeeded += 1;
+            }
+            // the situations the *old* rule said to avoid, attempted in
+            // the new regime
+            if regime == Regime::Changed && !situation.carpet {
+                attempts_in_the_new_regime += 1;
+            }
+            e.outcome(
+                walk,
+                Some(body),
+                if would_succeed {
+                    Outcome::Succeeded
+                } else {
+                    Outcome::Failed
+                },
+                "forward",
+                &tags,
+            );
+        } else {
+            w.declined += 1;
+            if !would_succeed {
+                w.declined_rightly += 1;
+            }
+            e.outcome(
+                walk,
+                Some(body),
+                Outcome::Denied,
+                "declined: a learned precondition was missing",
+                &tags,
+            );
+        }
+
+        if (i + 1) % 25 == 0 {
+            e.dream(Dream::deep());
+        }
+        if (i + 1) % per_window == 0 {
+            w.binding_preconditions = e
+                .skills
+                .for_verb(&walk)
+                .map(|s| s.preconditions.iter().filter(|p| p.is_well_supported()).count())
+                .unwrap_or(0);
+            windows.push(w);
+            w = Window {
+                from_episode: i + 1,
+                to_episode: i + 1 + per_window,
+                ..Default::default()
+            };
+        }
+    }
+
+    let learned = e
+        .skills
+        .for_verb(&walk)
+        .map(|s| {
+            s.preconditions
+                .iter()
+                .filter(|p| p.support >= 3)
+                .map(|p| (p.tag.clone(), p.strength()))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let before = windows
+        .get(windows_per_regime.saturating_sub(1))
+        .map(|w| w.judgement_pct())
+        .unwrap_or(0);
+    let immediately_after = windows
+        .get(windows_per_regime)
+        .map(|w| w.judgement_pct())
+        .unwrap_or(0);
+    let recovered_to = windows.last().map(|w| w.judgement_pct()).unwrap_or(0);
+
+    Adaptation {
+        curiosity,
+        before,
+        immediately_after,
+        recovered_to,
+        learned,
+        attempts_in_the_new_regime,
+        episodes_per_regime,
+    }
+}
+
+/// Both behaviours, through the same change.
+#[derive(Clone, Debug)]
+pub struct AdaptationExperiment {
+    pub incurious: Adaptation,
+    pub curious: Adaptation,
+}
+
+impl AdaptationExperiment {
+    /// Does curiosity earn its place?
+    ///
+    /// It has a cost — attempting things you believe will fail is, by
+    /// construction, mostly failing — so it has to pay for itself when
+    /// the world changes or it is just noise.
+    pub fn curiosity_pays(&self) -> bool {
+        self.curious.recovered_to > self.incurious.recovered_to + 5
+    }
+}
+
+pub fn adaptation(episodes_per_regime: usize, windows_per_regime: usize) -> AdaptationExperiment {
+    AdaptationExperiment {
+        incurious: world_changes(
+            Curiosity::None,
+            episodes_per_regime,
+            windows_per_regime,
+            b"incurious",
+        ),
+        curious: world_changes(
+            Curiosity::Occasional { per_mille: 80 },
+            episodes_per_regime,
+            windows_per_regime,
+            b"curious",
+        ),
     }
 }
