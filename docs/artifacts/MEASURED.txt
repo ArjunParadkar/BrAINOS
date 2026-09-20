@@ -8,20 +8,20 @@ BrAInOS — measured
 
   operation                                                  min    median    budget spread  fits
   ────────────────────────────────────────────────────────────────────────────────────────────────────────
-  KIRA: one full eight-stage evaluation (granted)        117.9us   154.6us  100.00ms   1.4x  yes, 0% of budget
-  KIRA: one evaluation refused at authorize               98.9us   101.7us  100.00ms   1.2x  yes, 0% of budget
-  ed25519: one signature                                  34.9us    35.6us         —   1.4x  —
-  ed25519: one verification                               34.8us    35.4us         —   1.0x  —
-  hexapod: plan and verify a whole gait cycle             24.6us    24.7us     1.00s   1.0x  yes, 0% of budget
-  hexapod: the tip-over check alone, over a whole cycle     7.2us     7.3us         —   1.0x  —
-  hexapod: the tip-over check on one pose                  163ns     164ns   10.00ms   1.1x  yes, 0% of budget
-  bodyd: one reflex pass                                    28ns      28ns   10.00ms   1.4x  yes, 0% of budget
-  memory: one recall over a full graph                   680.9us   707.3us  100.00ms   1.4x  yes, 0% of budget
-  memory: writing one episode                              1.4us     1.9us   10.00ms   1.8x  yes, 0% of budget
-  memory: one consolidation pass                         132.9us   588.6us    30.00s   4.6x  yes, 0% of budget
-  journal: seal one record                                1.52ms    1.55ms  100.00ms   1.4x  yes, 1% of budget
-  wire: seal one frame                                     1.1us     1.2us   10.00ms   1.0x  yes, 0% of budget
-  wire: open one frame                                     1.2us     1.2us   10.00ms   1.1x  yes, 0% of budget
+  KIRA: one full eight-stage evaluation (granted)        159.8us   164.3us  100.00ms   1.1x  yes, 0% of budget
+  KIRA: one evaluation refused at authorize              103.6us   105.9us  100.00ms   1.1x  yes, 0% of budget
+  ed25519: one signature                                  48.3us    49.2us         —   1.1x  —
+  ed25519: one verification                               49.6us    51.4us         —   1.2x  —
+  hexapod: plan and verify a whole gait cycle             33.5us    33.9us     1.00s   1.1x  yes, 0% of budget
+  hexapod: the tip-over check alone, over a whole cycle     9.8us     9.9us         —   1.1x  —
+  hexapod: the tip-over check on one pose                  224ns     225ns   10.00ms   1.1x  yes, 0% of budget
+  bodyd: one reflex pass                                    39ns      39ns   10.00ms   1.4x  yes, 0% of budget
+  memory: one recall over a full graph                   951.7us   980.8us  100.00ms   1.1x  yes, 0% of budget
+  memory: writing one episode                              1.9us     2.6us   10.00ms   1.8x  yes, 0% of budget
+  memory: one consolidation pass                         184.0us   746.0us    30.00s   4.4x  yes, 0% of budget
+  journal: seal one record                                1.51ms    2.08ms  100.00ms   1.5x  yes, 1% of budget
+  wire: seal one frame                                     1.5us     1.6us   10.00ms   1.0x  yes, 0% of budget
+  wire: open one frame                                     1.5us     1.5us   10.00ms   1.0x  yes, 0% of budget
 
   1 of 14 measurements have a p99 more than 3x their min, which means
   this machine was busy while they ran. The min is the number to believe;
@@ -29,10 +29,10 @@ BrAInOS — measured
 
 What the numbers mean
 ─────────────────────
-  A gate evaluation is 117.9 us and 59% of it is the two ed25519 operations 
+  A gate evaluation is 159.8 us and 61% of it is the two ed25519 operations 
   — one to sign the proposal, one to verify it. Everything else the eight 
   stages do, including the body's forward model and the Merkle append, is 
-  the remaining 41%. 
+  the remaining 39%. 
 
   That has a consequence for where the gate runs. ed25519 in software on an 
   Xtensa core at 240 MHz is a few milliseconds per operation, so the same 
@@ -42,18 +42,18 @@ What the numbers mean
   instead of asking per step. The measurement agrees with the architecture 
   rather than the other way round, which is the useful direction. 
 
-  One reflex pass is 28 ns, and re-deriving the tip-over margin from scratch 
-  would add 163 ns. A 1 kHz servo loop has a millisecond; both together are 
+  One reflex pass is 39 ns, and re-deriving the tip-over margin from scratch 
+  would add 224 ns. A 1 kHz servo loop has a millisecond; both together are 
   under a percent of it, on this machine. Scaled by the hundred-fold an 
   Xtensa core is slower, still under one percent. 
 
-  Retrieval over a graph at its episodic bound is 680.9 us, about 493x the 
+  Retrieval over a graph at its episodic bound is 951.7 us, about 496x the 
   cost of writing one memory. That ratio is what makes rebuilding the index 
   on read rather than maintaining it on write the right trade: reads are 
   rare and thinking is what they feed, writes are constant and happen while 
   something is moving. 
 
-  Sealing the whole state graph into a journal record is 1.52 ms. At that 
+  Sealing the whole state graph into a journal record is 1.51 ms. At that 
   cost, committing on every episode would be wasteful and committing only at 
   sleep would lose a session to a power cut — which is what the segmenting 
   is for: episodes commit often and cheaply, the skill graph and the life 

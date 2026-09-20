@@ -6,8 +6,25 @@ BrAInOS — this build
   gate stages           8
   refusal codes         25
   domain separation tags 15
-  checked properties    17
-  proof domain size     8640 cases
+  gate properties       17
+
+The six property domains
+────────────────────────
+  Reported together because "proof domain size: 8,640" was the gate's
+  number and this line used to print it as if it were the whole of what
+  is checked. It is one of six.
+
+  the gate                      8640 cases   exhaustive; 17 properties over every trace
+  the two envelopes              400 cases   exhaustive; against the real hexapod and its real geometry
+  hostile input             ~36,000 inputs   randomised and mutation fuzzing over 9 decoders
+  the adversary                 29 attacks   directed; each says what it holds and what it wants
+  power loss                  546 instants   exhaustive; every byte a journal write can stop at, on 3 media
+  a body of several parts        240 cases   exhaustive; and asserted to fail against the old code
+
+  Bounded model checking, fuzzing and directed attack. Not a
+  machine-checked proof, and `brainos verify` says so as prominently as
+  it says the result.
+
 
 The eight stages
 ────────────────────

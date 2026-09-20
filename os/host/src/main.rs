@@ -1049,8 +1049,60 @@ fn stat() -> ExitCode {
     println!("  gate stages           {}", Stage::ALL.len());
     println!("  refusal codes         {}", DenyCode::ALL.len());
     println!("  domain separation tags {}", Tag::ALL.len());
-    println!("  checked properties    {}", PROPERTIES.len());
-    println!("  proof domain size     {} cases", Domain::SIZE);
+    println!("  gate properties       {}", PROPERTIES.len());
+
+    rule("The six property domains");
+    println!(
+        "  Reported together because \"proof domain size: 8,640\" was the gate's
+  number and this line used to print it as if it were the whole of what
+  is checked. It is one of six.\n"
+    );
+    let rows: [(&str, String, &str); 6] = [
+        (
+            "the gate",
+            format!("{} cases", Domain::SIZE),
+            "exhaustive; 17 properties over every trace",
+        ),
+        (
+            "the two envelopes",
+            String::from("400 cases"),
+            "exhaustive; against the real hexapod and its real geometry",
+        ),
+        (
+            "hostile input",
+            String::from("~36,000 inputs"),
+            "randomised and mutation fuzzing over 9 decoders",
+        ),
+        (
+            "the adversary",
+            format!("{} attacks", brainos_proof::adversary::attacks().len()),
+            "directed; each says what it holds and what it wants",
+        ),
+        (
+            "power loss",
+            format!(
+                "{} instants",
+                brainos_proof::durability::verify_durability(4).instants
+            ),
+            "exhaustive; every byte a journal write can stop at, on 3 media",
+        ),
+        (
+            "a body of several parts",
+            format!(
+                "{} cases",
+                brainos_proof::regions::verify_regions().cases
+            ),
+            "exhaustive; and asserted to fail against the old code",
+        ),
+    ];
+    for (name, size, note) in rows {
+        println!("  {:<24} {:>15}   {}", name, size, note);
+    }
+    println!(
+        "\n  Bounded model checking, fuzzing and directed attack. Not a
+  machine-checked proof, and `brainos verify` says so as prominently as
+  it says the result.\n"
+    );
 
     rule("The eight stages");
     for s in Stage::ALL {
