@@ -7,7 +7,58 @@ tree. It is a status report, not a plan — the plan is
 `BrAInOS_Architecture_v1.3.pdf`.
 
 Nothing in `mind/`, `core/`, `miniblur/`, `firmware/` or `body/` was
-changed. Stages 1–2 and the Phase 0 work are exactly as they were and
+changed.
+
+---
+
+## If you read one section, read this one
+
+Six things came out of running the system rather than reading it, and
+each one changes a decision rather than a line of code.
+
+**1. An entity does not fit on the ESP32-S3, and shrinking its memory is
+not the fix.** The old footprint number counted the encoded state graph
+and called that the entity, leaving out the retrieval index entirely and
+the audit trail's record window. Measured properly: default bounds need
+4,530 KiB, `Bounds::EMBEDDED` alone still needs 285 KiB, and the board
+has about 192 KiB. It fits at 153 KiB only with the audit window shrunk
+too. *Phase 0 hardware decision.*
+
+**2. What is left over on the board is a duration, not a size.** The
+audit log keeps 32 bytes per gated decision forever, so the remaining
+39 KiB is roughly two minutes at ten decisions a second. Leaves have to
+go to flash, and now safely can: the root comes from the frontier, so
+forgetting leaves does not move it and every checkpoint stays correct.
+*Firmware decision.*
+
+**3. A skill marketplace without provenance is net-negative.** Measured,
+not argued: a skill adopted from a deployment unlike your own left the
+entity *permanently worse* than one that learned alone — 80% against
+87%, still short after twelve hundred episodes. Selling skills blind
+degrades a fleet. The fix (deliver the claim, not the seller's numbers,
+and probe it) recovers it to 87%, and both halves are now in the types.
+*§6 product decision.*
+
+**4. A `Delegation` could not be used by anyone but the entity itself.**
+Its own documentation says "standing authority handed to something that
+is not the entity", and the gate authenticated the request against the
+*issuer's* key, which a third-party holder by definition does not have.
+Every test in the suite delegated to the entity's own id, so it never
+came up. Stage 7's fleet story rested on a feature that did not work.
+
+**5. A skill's learned judgement did not survive a reboot.** Sixty
+attempts establishing that a gait needs carpet, nineteen of them genuine
+tests, and the entity woke up knowing its success rate and nothing about
+why. That is §2.4's moat evaporating at every power cycle and at every
+export — including in the vendor migration, whose tests passed because
+they counted skills rather than asking what the skills knew.
+
+**6. An entity's age was whatever number the host passed to `wake()`.**
+§2.4 makes age the x-axis of the curve the moat becomes visible on, and
+it was settable by the one party with an interest in setting it.
+
+Everything below is the detail. The critical-path item is unchanged and
+is not software: **Mini-Blur has never been powered on.** Stages 1–2 and the Phase 0 work are exactly as they were and
 still pass. `os/bodyd` *links* `miniblur/core`, so the hexapod's
 geometry, tripod gait, tip-over check, servo table and rail budget in
 the new stack are the ones the ESP32-S3 firmware already uses rather
