@@ -164,7 +164,12 @@ impl Channel {
 const CHANNELS: usize = 8;
 
 /// A pre-authorized region of behaviour.
-#[derive(Clone, Copy)]
+///
+/// `PartialEq` because an envelope is a value that gets compared —
+/// "is the intersection the same as what the body already had" is a real
+/// question and comparing field by field at call sites would be a place
+/// for a missed channel to hide.
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Envelope {
     pub id: EnvelopeId,
     limits: [Limit; CHANNELS],

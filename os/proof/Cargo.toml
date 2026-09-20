@@ -12,5 +12,7 @@ doctest = false
 brainos-abi = { workspace = true }
 brainos-crypto = { workspace = true }
 brainos-body = { workspace = true }
+brainos-bodyd = { workspace = true }
+miniblur-core = { path = "../../miniblur/core" }
 brainos-kira = { workspace = true }
 brainos-rt = { workspace = true }

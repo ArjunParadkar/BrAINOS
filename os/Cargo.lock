@@ -162,9 +162,11 @@ version = "0.3.0"
 dependencies = [
  "brainos-abi",
  "brainos-body",
+ "brainos-bodyd",
  "brainos-crypto",
  "brainos-kira",
  "brainos-rt",
+ "miniblur-core",
 ]
 
 [[package]]

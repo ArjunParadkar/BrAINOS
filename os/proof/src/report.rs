@@ -50,6 +50,8 @@ pub struct Report {
     pub coverage: Coverage,
     pub results: Vec<PropertyResult>,
     pub verdict: Verdict,
+    /// the second domain: the two-envelope property on the body side
+    pub envelopes: Option<crate::envelopes::EnvelopeReport>,
 }
 
 impl Report {
@@ -66,7 +68,16 @@ impl Report {
             coverage,
             results,
             verdict,
+            envelopes: None,
         }
+    }
+
+    pub fn with_envelopes(mut self, e: crate::envelopes::EnvelopeReport) -> Report {
+        if !e.holds() {
+            self.verdict = Verdict::Violated;
+        }
+        self.envelopes = Some(e);
+        self
     }
 
     pub fn holds(&self) -> bool {
@@ -130,30 +141,86 @@ impl Report {
         }
         s.push('\n');
 
+        if let Some(e) = &self.envelopes {
+            s.push_str("Second domain — the two envelopes\n");
+            s.push_str("---------------------------------\n");
+            s.push_str("  The property the body path rests on: a body never applies a\n");
+            s.push_str("  command outside the intersection of what the seat granted and what\n");
+            s.push_str("  its own mechanism permits. Run against the real BodyRuntime, the\n");
+            s.push_str("  real Hexapod, and the real miniblur-core geometry.\n\n");
+            push_field(&mut s, "cases enumerated", e.cases as u64);
+            push_field(&mut s, "accepted by the body", e.accepted as u64);
+            push_field(&mut s, "distinct refusals produced", e.distinct_refusals as u64);
+            s.push_str("  verdict: ");
+            if e.holds() {
+                s.push_str("holds\n");
+            } else if e.failures.is_empty() {
+                s.push_str("VACUOUS — the domain did not exercise the body\n");
+            } else {
+                s.push_str("VIOLATED\n");
+                for (i, why) in &e.failures {
+                    s.push_str("    case ");
+                    push_u64(&mut s, *i as u64);
+                    s.push_str(": ");
+                    s.push_str(why);
+                    s.push('\n');
+                }
+            }
+            s.push('\n');
+            for line in [
+                "  Checked, for every one of those cases:",
+                "    - nothing is applied outside the intersection",
+                "    - the intersection is never wider than either input",
+                "    - a refused command moves nothing",
+                "    - an uncalibrated body never moves",
+                "    - a stopped body never moves",
+                "    - a body whose geometry would tip never walks",
+                "    - an independently written oracle agrees, case by case",
+            ] {
+                s.push_str(line);
+                s.push('\n');
+            }
+            s.push('\n');
+        }
+
         s.push_str("What this is\n------------\n");
-        s.push_str(
-            "  Bounded exhaustive model checking. Every case in the domain above was run\n\
-             through the real gate — not a model of it — and every property was asserted\n\
-             over every resulting trace. Within that domain the properties hold for all\n\
-             inputs, not for the ones a test author thought of.\n\n",
-        );
+        for line in [
+            "  Bounded exhaustive model checking. Every case in the domains above was",
+            "  run through the real code — not a model of it — and every property was",
+            "  asserted over every resulting trace. Within those domains the properties",
+            "  hold for all inputs, not for the ones a test author thought of.",
+        ] {
+            s.push_str(line);
+            s.push('\n');
+        }
+        s.push('\n');
 
         s.push_str("What this is not\n----------------\n");
-        s.push_str(
-            "  Not a machine-checked proof. The following are outside what this harness\n\
-             can establish, and remain so until the Stage 6 work dated 2028-29:\n\n\
-               - that the properties hold outside the bounded domain\n\
-               - that a body policy's simulate() is a sound forward model of a physical\n\
-                 system; that is a claim about physics, and no amount of enumeration\n\
-                 touches it\n\
-               - that the ed25519 implementation, the allocator, or the compiler are\n\
-                 correct\n\n\
-             One property is stronger than anything here and needs no harness: Granted\n\
-             has a private field of a private type, so no code outside brainos-kira can\n\
-             construct one. The evidence is that this crate cannot write the\n\
-             counterexample.\n",
-        );
+        for line in [
+            "  Not a machine-checked proof. The following are outside what this harness",
+            "  can establish, and remain so until the Stage 6 work dated 2028-29:",
+            "",
+            "    - that the properties hold outside the bounded domains",
+            "    - that a body policy's simulate() is a sound forward model of a",
+            "      physical system; that is a claim about physics, and no amount of",
+            "      enumeration touches it",
+            "    - that the ed25519 implementation, the allocator, or the compiler",
+            "      are correct",
+            "",
+            "  One property is stronger than anything here and needs no harness:",
+            "  Granted has a private field of a private type, so no code outside",
+            "  brainos-kira can construct one. The evidence is that this crate cannot",
+            "  write the counterexample.",
+        ] {
+            s.push_str(line);
+            s.push('\n');
+        }
         s
+    }
+
+    /// Everything, both domains.
+    pub fn full() -> Report {
+        crate::harness::verify().with_envelopes(crate::envelopes::verify_envelopes())
     }
 }
 

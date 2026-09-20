@@ -254,3 +254,159 @@ fn every_property_has_a_statement_and_a_reason() {
     ids.dedup();
     assert_eq!(before, ids.len());
 }
+
+// =====================================================================
+// the second domain: two envelopes
+// =====================================================================
+
+use brainos_proof::envelopes::{
+    run_envelope_case, verify_envelopes, Ask, Calibrated, EnvelopeCase, EnvelopeDomain, Geometry,
+    Posture, Power, SeatBound,
+};
+
+#[test]
+fn the_envelope_domain_is_exactly_the_size_it_claims() {
+    let cases = EnvelopeDomain::enumerate();
+    assert_eq!(cases.len(), EnvelopeDomain::SIZE);
+    assert_eq!(EnvelopeDomain::SIZE, 400);
+
+    let mut seen = cases.clone();
+    seen.sort_by_key(|c| {
+        (
+            c.seat as u8 as u32,
+            c.calibrated as u8 as u32,
+            c.geometry as u8 as u32,
+            c.posture as u8 as u32,
+            c.ask as u8 as u32,
+            c.power as u8 as u32,
+        )
+    });
+    let before = seen.len();
+    seen.dedup();
+    assert_eq!(before, seen.len());
+}
+
+#[test]
+fn a_body_never_applies_a_command_outside_the_intersection() {
+    // The property the whole body path rests on, over every combination
+    // of seat bound, calibration, geometry, posture, ask and power.
+    let report = verify_envelopes();
+    assert!(
+        report.failures.is_empty(),
+        "{} failures, first few: {:?}",
+        report.failures.len(),
+        &report.failures[..report.failures.len().min(5)]
+    );
+    assert_eq!(report.cases, EnvelopeDomain::SIZE);
+    assert!(report.holds());
+}
+
+#[test]
+fn the_envelope_domain_actually_exercised_the_body() {
+    let report = verify_envelopes();
+    assert!(
+        report.is_meaningful(),
+        "accepted {} of {} cases with {} distinct refusals",
+        report.accepted,
+        report.cases,
+        report.distinct_refusals
+    );
+    assert!(report.accepted > 0, "nothing was ever accepted");
+    assert!(
+        report.accepted < report.cases,
+        "everything was accepted, which checks nothing"
+    );
+    assert!(report.distinct_refusals >= 4);
+}
+
+#[test]
+fn a_disjoint_seat_envelope_leaves_nothing_authorized() {
+    let case = EnvelopeCase {
+        seat: SeatBound::Disjoint,
+        calibrated: Calibrated::Yes,
+        geometry: Geometry::Balanced,
+        posture: Posture::Ready,
+        ask: Ask::GoodWalk,
+        power: Power::Good,
+    };
+    let out = run_envelope_case(&case);
+    assert!(!out.accepted);
+    assert!(out.applied.is_empty());
+    // the intersection is empty, which is unstated, which refuses
+    assert!(out
+        .effective
+        .and_then(|e| e.limit(brainos_rt::envelope::Channel::Angle))
+        .is_none());
+}
+
+#[test]
+fn a_seat_that_grants_more_than_the_body_can_do_still_only_gets_the_body() {
+    let wider = run_envelope_case(&EnvelopeCase {
+        seat: SeatBound::Wider,
+        calibrated: Calibrated::Yes,
+        geometry: Geometry::Balanced,
+        posture: Posture::Ready,
+        ask: Ask::GoodWalk,
+        power: Power::Good,
+    });
+    let exact = run_envelope_case(&EnvelopeCase {
+        seat: SeatBound::Exact,
+        ..EnvelopeCase {
+            seat: SeatBound::Exact,
+            calibrated: Calibrated::Yes,
+            geometry: Geometry::Balanced,
+            posture: Posture::Ready,
+            ask: Ask::GoodWalk,
+            power: Power::Good,
+        }
+    });
+    assert!(wider.accepted && exact.accepted);
+    assert_eq!(
+        wider.effective, exact.effective,
+        "granting more than the body can do is the same as granting exactly what it can"
+    );
+}
+
+#[test]
+fn every_dimension_of_the_envelope_domain_changes_something() {
+    // A dimension that never changes an outcome is a dimension that is
+    // multiplying the domain for nothing.
+    let base = EnvelopeCase {
+        seat: SeatBound::Exact,
+        calibrated: Calibrated::Yes,
+        geometry: Geometry::Balanced,
+        posture: Posture::Ready,
+        ask: Ask::GoodWalk,
+        power: Power::Good,
+    };
+    assert!(run_envelope_case(&base).accepted);
+
+    let variants: Vec<(&str, EnvelopeCase)> = vec![
+        ("seat", EnvelopeCase { seat: SeatBound::Narrower, ..base }),
+        ("calibrated", EnvelopeCase { calibrated: Calibrated::No, ..base }),
+        ("geometry", EnvelopeCase { geometry: Geometry::TailHeavy, ..base }),
+        ("posture", EnvelopeCase { posture: Posture::Stopped, ..base }),
+        ("ask", EnvelopeCase { ask: Ask::Creep, ..base }),
+        ("power", EnvelopeCase { power: Power::Flat, ..base }),
+    ];
+    for (name, c) in variants {
+        assert!(
+            !run_envelope_case(&c).accepted,
+            "changing {name} alone did not change the outcome, so the dimension earns nothing"
+        );
+    }
+}
+
+#[test]
+fn the_envelope_oracle_and_the_runtime_agree_case_by_case() {
+    for (i, case) in EnvelopeDomain::enumerate().iter().enumerate() {
+        let out = run_envelope_case(case);
+        assert_eq!(
+            out.accepted,
+            case.should_accept(),
+            "case {i} {case:?}: runtime says {}, oracle says {}",
+            out.accepted,
+            case.should_accept()
+        );
+    }
+}

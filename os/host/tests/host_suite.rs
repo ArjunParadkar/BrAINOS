@@ -362,7 +362,9 @@ fn the_property_report_holds_in_this_build() {
     // Note for anyone watching the clock: this is ~26,000 ed25519
     // operations and takes minutes in a debug build. `cargo test
     // --release -p brainos-host` is the intended way to run it.
-    let report = brainos_proof::verify();
+    let report = brainos_proof::report::Report::full();
     assert!(report.holds(), "\n{}", report.render());
     assert!(report.coverage.is_meaningful());
+    let envelopes = report.envelopes.expect("both domains run");
+    assert!(envelopes.holds());
 }

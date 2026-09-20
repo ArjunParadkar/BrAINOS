@@ -98,7 +98,7 @@ fn demo() -> ExitCode {
 
 fn verify() -> ExitCode {
     rule("BrAInOS — KIRA property verification");
-    let report = brainos_proof::verify();
+    let report = brainos_proof::report::Report::full();
     println!("{}", report.render());
     if report.holds() {
         ExitCode::SUCCESS

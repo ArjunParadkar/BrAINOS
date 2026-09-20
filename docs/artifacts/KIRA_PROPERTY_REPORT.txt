@@ -33,27 +33,48 @@ Properties
   [ok]   P16  every refusal carries a named code and a detail
   [ok]   P17  every deny code in the ABI is labelled with its own stage
 
+Second domain — the two envelopes
+---------------------------------
+  The property the body path rests on: a body never applies a
+  command outside the intersection of what the seat granted and what
+  its own mechanism permits. Run against the real BodyRuntime, the
+  real Hexapod, and the real miniblur-core geometry.
+
+  cases enumerated: 400
+  accepted by the body: 19
+  distinct refusals produced: 6
+  verdict: holds
+
+  Checked, for every one of those cases:
+    - nothing is applied outside the intersection
+    - the intersection is never wider than either input
+    - a refused command moves nothing
+    - an uncalibrated body never moves
+    - a stopped body never moves
+    - a body whose geometry would tip never walks
+    - an independently written oracle agrees, case by case
+
 What this is
 ------------
-  Bounded exhaustive model checking. Every case in the domain above was run
-through the real gate — not a model of it — and every property was asserted
-over every resulting trace. Within that domain the properties hold for all
-inputs, not for the ones a test author thought of.
+  Bounded exhaustive model checking. Every case in the domains above was
+  run through the real code — not a model of it — and every property was
+  asserted over every resulting trace. Within those domains the properties
+  hold for all inputs, not for the ones a test author thought of.
 
 What this is not
 ----------------
   Not a machine-checked proof. The following are outside what this harness
-can establish, and remain so until the Stage 6 work dated 2028-29:
+  can establish, and remain so until the Stage 6 work dated 2028-29:
 
-- that the properties hold outside the bounded domain
-- that a body policy's simulate() is a sound forward model of a physical
-system; that is a claim about physics, and no amount of enumeration
-touches it
-- that the ed25519 implementation, the allocator, or the compiler are
-correct
+    - that the properties hold outside the bounded domains
+    - that a body policy's simulate() is a sound forward model of a
+      physical system; that is a claim about physics, and no amount of
+      enumeration touches it
+    - that the ed25519 implementation, the allocator, or the compiler
+      are correct
 
-One property is stronger than anything here and needs no harness: Granted
-has a private field of a private type, so no code outside brainos-kira can
-construct one. The evidence is that this crate cannot write the
-counterexample.
+  One property is stronger than anything here and needs no harness:
+  Granted has a private field of a private type, so no code outside
+  brainos-kira can construct one. The evidence is that this crate cannot
+  write the counterexample.
 
