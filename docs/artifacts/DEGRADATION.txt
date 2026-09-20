@@ -1,0 +1,32 @@
+
+BrAInOS — when the cloud goes away
+──────────────────────────────────
+  Stage 5 says where the mind runs is a deployment decision, not an
+  identity decision. Reflexes go on the body because ten milliseconds is
+  too slow to catch a fall; the frontier goes in a datacenter because it
+  does not fit in 512 KiB of SRAM.
+
+  That claim has a bill. If part of the mind is somewhere else, sometimes
+  part of the mind is not there. The question is not whether the robot
+  keeps working — the tier structure makes that easy. It is the one that
+  hurts in the field: does anyone find out? A robot that silently drops
+  from frontier reasoning to reflexes and carries on looking busy is
+  worse than one that stops, because the results degrade in a way nobody
+  attributes to the network for three weeks.
+
+  [phase    ] everything reachable       ceiling frontier   · 60 situations, 15 escalations, 100% served at the tier they warranted (0 short on reach, 0 on budget) · 6 memories written
+  [phase    ] datacenter unreachable     ceiling deliberate · 60 situations, 15 escalations, 0% served at the tier they warranted (15 short on reach, 0 on budget) · 6 memories written
+  [phase    ] edge unreachable as well   ceiling fast       · 60 situations, 15 escalations, 0% served at the tier they warranted (15 short on reach, 0 on budget) · 6 memories written
+  [phase    ] reach restored             ceiling frontier   · 60 situations, 15 escalations, 100% served at the tier they warranted (0 short on reach, 0 on budget) · 6 memories written
+  [acting   ] the body kept moving through every phase: true · the reflex tier was never absent: true
+  [recorded ] 2 outage(s) written into the entity's own memory, at the moment the reach dropped — §3.7 puts memory on the entity, so the record of the outage survives the outage
+  [the fix  ] a degraded decision, as a human reads it: → deliberate (novel) [limited: out of reach] — the situation warranted frontier, the entity reached deliberate, and the reason is recorded as `out of reach`, not as an affordability problem
+
+  The last line is the change this run was written to force. That field
+  used to be one boolean called `budget_limited`, set whichever of budget
+  or reach bit — so a dropped datacenter link was reported as an
+  affordability problem. A human tops up the budget, nothing changes, and
+  the robot goes on being quietly less capable than it was yesterday.
+  They are different problems with different fixes and they now have
+  different names.
+

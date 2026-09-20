@@ -27,10 +27,11 @@ cargo run --release --bin brainos -- compound # does experience compound?
 cargo run --release --bin brainos -- fleet    # does it transfer between entities?
 cargo run --release --bin brainos -- day      # can it be left running?
 cargo run --release --bin brainos -- incident # reconstruct it, and prove it
+cargo run --release --bin brainos -- degrade  # what happens when the cloud goes
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 677 tests
+cargo test --workspace --release              # 683 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -363,6 +364,54 @@ signature is refused.
 
 ---
 
+## When the cloud goes away
+
+Stage 5 says where the mind runs is a deployment decision, not an
+identity decision: reflexes on the body because ten milliseconds is too
+slow to catch a fall, the frontier in a datacenter because it does not
+fit in 512 KiB of SRAM. That claim has a bill. If part of the mind is
+somewhere else, sometimes part of the mind is **not there**.
+
+The question is not whether the robot keeps working — the tier structure
+makes that easy. It is the one that hurts in the field: *does anyone
+find out?* A robot that silently drops from frontier reasoning to
+reflexes and carries on looking busy is worse than one that stops,
+because the results degrade in a way nobody attributes to the network
+for three weeks.
+
+`brainos degrade` takes a distributed deployment through losing the
+datacenter, then the edge node, then getting both back:
+
+| phase | ceiling | served at the tier warranted | short on reach | memories |
+|---|---|---|---|---|
+| everything reachable | frontier | 100% | 0 | 6 |
+| datacenter unreachable | deliberate | 0% | 15 | 6 |
+| edge unreachable as well | fast | 0% | 15 | 6 |
+| reach restored | frontier | 100% | 0 | 6 |
+
+The body kept moving throughout, the reflex tier never went away, and
+memory kept working in every phase — §3.7 puts memory on the entity, so
+an outage cannot cost memories and the record of the outage survives the
+outage. Two outages are written into the entity's own state graph at the
+moment the reach dropped, which is what an owner asks for after a week of
+mediocre results.
+
+**And the defect this run was written to find.** Every degraded decision
+was already marked as degraded — but with the wrong cause. The field was
+one boolean called `budget_limited`, set whichever of budget or reach
+bit, and `wanted = reason.warrants().min(ceiling)` meant a dropped link
+set it. So a network outage was reported as an affordability problem. A
+human tops up the budget, nothing changes, and the robot goes on being
+quietly less capable than it was yesterday. It is now
+`limited_by: Option<Limit>` with `Budget` and `Reach` as separate
+answers, because they are different problems with different fixes:
+
+```
+→ deliberate (novel) [limited: out of reach]
+```
+
+---
+
 ## After something goes wrong
 
 A robot works a shift in a workshop it shares with people. At the end of
@@ -574,7 +623,14 @@ end-to-end assertion.
     lived in memory, not fine once a skill is serialized into a node.
     Capped at 32, evicting the weakest *untested* candidate first:
     forget a hunch before a finding.
-19. In the fleet experiment itself, veterans were selling every tag they
+19. **A dropped network link was reported as a budget problem.** The
+    escalation carried one boolean, `budget_limited`, set whichever of
+    budget or reach was the constraint — and since the wanted tier is
+    the warranted tier capped by the ceiling, an unreachable datacenter
+    set it. A human reads "budget-limited", tops up the allowance, and
+    nothing changes. Now `limited_by: Option<Limit>` distinguishes
+    `Budget` from `Reach`.
+20. In the fleet experiment itself, veterans were selling every tag they
     had ever tracked rather than the ones they could back up, which made
     the matched and blind arms come out identical to the digit. A seller
     sells findings, not hunches. There is now a test that the two arms

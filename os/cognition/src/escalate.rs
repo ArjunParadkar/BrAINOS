@@ -58,6 +58,33 @@ impl Reason {
     }
 }
 
+/// Why the entity thought less hard than the situation warranted.
+///
+/// These used to be one boolean called `budget_limited`, which was set
+/// whichever of the two bit — including when the *reach* was the
+/// constraint, because a link had dropped and the tier was simply not
+/// there. A human reading "budget-limited" tops up the budget, and
+/// nothing changes, and the robot goes on being quietly less capable
+/// than it was yesterday. They are different problems with different
+/// fixes and they now have different names.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Limit {
+    /// the tier was affordable and reachable, but the allowance ran out
+    Budget,
+    /// the tier was not reachable at all: the link to wherever it runs
+    /// is down, so no amount of allowance would have helped
+    Reach,
+}
+
+impl Limit {
+    pub const fn name(self) -> &'static str {
+        match self {
+            Limit::Budget => "budget",
+            Limit::Reach => "out of reach",
+        }
+    }
+}
+
 /// A decision to escalate, or not to.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Escalation {
@@ -65,8 +92,8 @@ pub struct Escalation {
     pub reason: Option<Reason>,
     /// what it will cost, against the budget
     pub cost: u32,
-    /// true when the entity wanted to go higher and could not afford to
-    pub budget_limited: bool,
+    /// what stopped it thinking as hard as the situation warranted
+    pub limited_by: Option<Limit>,
 }
 
 impl Escalation {
@@ -75,12 +102,17 @@ impl Escalation {
             to: Tier::Autonomic,
             reason: None,
             cost: 0,
-            budget_limited: false,
+            limited_by: None,
         }
     }
 
     pub fn happened(&self) -> bool {
         self.reason.is_some()
+    }
+
+    /// Did the entity think less hard than the situation warranted?
+    pub fn was_limited(&self) -> bool {
+        self.limited_by.is_some()
     }
 
     pub fn describe(&self) -> Text<96> {
@@ -93,8 +125,10 @@ impl Escalation {
                 t.push_str(" (");
                 t.push_str(r.name());
                 t.push(')');
-                if self.budget_limited {
-                    t.push_str(" [budget-limited]");
+                if let Some(l) = self.limited_by {
+                    t.push_str(" [limited: ");
+                    t.push_str(l.name());
+                    t.push(']');
                 }
             }
         }
@@ -202,15 +236,20 @@ pub fn decide(
         return Escalation::none();
     };
 
-    let wanted = reason.warrants().min(ceiling);
+    let warranted = reason.warrants();
+    let wanted = warranted.min(ceiling);
     let cost = cost_of(wanted);
+
+    // reach is the outer constraint: if the tier is not there, no
+    // allowance buys it
+    let reach_limited = wanted < warranted;
 
     if budget.spend(cost) {
         return Escalation {
             to: wanted,
             reason: Some(reason),
             cost,
-            budget_limited: wanted < reason.warrants(),
+            limited_by: reach_limited.then_some(Limit::Reach),
         };
     }
 
@@ -221,11 +260,13 @@ pub fn decide(
     while let Some(lower) = step_down(tier) {
         let c = cost_of(lower);
         if budget.spend(c) {
+            // it ended below what reach allowed, so the allowance is
+            // what bound here even if reach was also short
             return Escalation {
                 to: lower,
                 reason: Some(reason),
                 cost: c,
-                budget_limited: true,
+                limited_by: Some(Limit::Budget),
             };
         }
         tier = lower;
@@ -234,7 +275,7 @@ pub fn decide(
         to: Tier::Autonomic,
         reason: Some(reason),
         cost: 0,
-        budget_limited: true,
+        limited_by: Some(Limit::Budget),
     }
 }
 

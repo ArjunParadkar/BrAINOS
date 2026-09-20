@@ -31,7 +31,7 @@ use brainos_body::region::{BodyMap, RegionClass};
 use brainos_body::schema::CapabilitySchema;
 use brainos_cognition::ambient::{Ambient, Intent, SenseFrame};
 use brainos_cognition::escalate::Budget;
-use brainos_cognition::placement::Plan;
+use brainos_cognition::placement::{Plan, Site};
 use brainos_cognition::resource::{ResourcePool, Tier};
 use brainos_crypto::key::BrainKey;
 use brainos_crypto::rng::Drbg;
@@ -660,6 +660,68 @@ impl Entity {
     /// The highest tier it can currently reach.
     pub fn ceiling(&self) -> Tier {
         self.resources.ceiling()
+    }
+
+    /// A place the entity's cognition runs has become unreachable.
+    ///
+    /// Returns the ceiling before and after. The entity *records* it,
+    /// which is the point: a robot whose datacenter link drops does not
+    /// stop, it becomes less capable, and an entity that became less
+    /// capable without anything being written down is one whose owner
+    /// finds out from the results. §3.7 puts memory on the entity, so
+    /// the record of the outage survives the outage.
+    pub fn lose_site(&mut self, site: Site) -> (Tier, Tier) {
+        let before = self.resources.ceiling();
+        let n = self.resources.site_lost(site);
+        let after = self.resources.ceiling();
+        if n > 0 {
+            let mut what = Text::<160>::new();
+            what.push_str("lost reach to ");
+            what.push_str(site.name());
+            what.push_str(": ");
+            what.push_u64(n as u64);
+            what.push_str(" resource(s), ceiling ");
+            what.push_str(before.name());
+            what.push_str(" → ");
+            what.push_str(after.name());
+            Episode::observed(what.as_str(), self.tick).record(
+                &self.handle,
+                &mut self.graph,
+                Provenance::own(self.tick),
+            );
+        }
+        (before, after)
+    }
+
+    /// And it came back.
+    pub fn regain_site(&mut self, site: Site) -> (Tier, Tier) {
+        let before = self.resources.ceiling();
+        let n = self.resources.site_returned(site);
+        let after = self.resources.ceiling();
+        if n > 0 {
+            let mut what = Text::<160>::new();
+            what.push_str("reach to ");
+            what.push_str(site.name());
+            what.push_str(" restored: ceiling ");
+            what.push_str(before.name());
+            what.push_str(" → ");
+            what.push_str(after.name());
+            Episode::observed(what.as_str(), self.tick).record(
+                &self.handle,
+                &mut self.graph,
+                Provenance::own(self.tick),
+            );
+        }
+        (before, after)
+    }
+
+    /// Everything the entity remembers about its own reach dropping.
+    /// What an owner asks for after a week of mediocre results.
+    pub fn outages(&self) -> usize {
+        self.graph
+            .of_kind(brainos_memory::graph::NodeKind::Episode)
+            .filter(|n| n.content.starts_with("lost reach to "))
+            .count()
     }
 }
 

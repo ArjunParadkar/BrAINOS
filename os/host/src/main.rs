@@ -27,6 +27,7 @@ fn main() -> ExitCode {
         "leave" => leave(),
         "fleet" => fleet(),
         "incident" => incident(),
+        "degrade" => degrade(),
         "help" | "-h" | "--help" => {
             usage();
             ExitCode::SUCCESS
@@ -60,6 +61,8 @@ usage: brainos <command>
   day      a working day of ambient operation: can it be left running?
   fleet    does experience transfer between entities, or only within
            one? The measurement behind the skill marketplace.
+  degrade  what happens when the part of the mind that runs elsewhere
+           stops being reachable
   incident after something goes wrong: reconstruct it from the audit log
            and prove it to someone who assumes you are lying
   leave    the freedom principle, exercised: an entity that lived its
@@ -110,6 +113,44 @@ fn demo() -> ExitCode {
     if r.memory_survived {
         ExitCode::SUCCESS
     } else {
+        ExitCode::FAILURE
+    }
+}
+
+fn degrade() -> ExitCode {
+    rule("BrAInOS — when the cloud goes away");
+    println!(
+        "  Stage 5 says where the mind runs is a deployment decision, not an
+  identity decision. Reflexes go on the body because ten milliseconds is
+  too slow to catch a fall; the frontier goes in a datacenter because it
+  does not fit in 512 KiB of SRAM.
+
+  That claim has a bill. If part of the mind is somewhere else, sometimes
+  part of the mind is not there. The question is not whether the robot
+  keeps working — the tier structure makes that easy. It is the one that
+  hurts in the field: does anyone find out? A robot that silently drops
+  from frontier reasoning to reflexes and carries on looking busy is
+  worse than one that stops, because the results degrade in a way nobody
+  attributes to the network for three weeks.\n"
+    );
+
+    let d = brainos_host::degrade::degrade();
+    for (step, text) in brainos_host::degrade::narrate(&d) {
+        println!("  [{:<9}] {}", step, text);
+    }
+    println!(
+        "\n  The last line is the change this run was written to force. That field
+  used to be one boolean called `budget_limited`, set whichever of budget
+  or reach bit — so a dropped datacenter link was reported as an
+  affordability problem. A human tops up the budget, nothing changes, and
+  the robot goes on being quietly less capable than it was yesterday.
+  They are different problems with different fixes and they now have
+  different names.\n"
+    );
+    if d.is_honest() {
+        ExitCode::SUCCESS
+    } else {
+        eprintln!("  the entity degraded without saying so\n");
         ExitCode::FAILURE
     }
 }

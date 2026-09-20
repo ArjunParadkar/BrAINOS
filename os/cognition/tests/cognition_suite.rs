@@ -10,7 +10,7 @@ use brainos_abi::ids::BodyId;
 use brainos_abi::time::{Duration, Instant, Tick};
 use brainos_abi::verb::{Namespace, Verb};
 use brainos_cognition::ambient::{Ambient, Intent, SenseFrame};
-use brainos_cognition::escalate::{cost_of, decide, Budget, Reason};
+use brainos_cognition::escalate::{cost_of, decide, Budget, Limit, Reason};
 use brainos_cognition::placement::{Placement, Plan, Site};
 use brainos_cognition::predict::{Forward, Surprise};
 use brainos_cognition::resource::{Resource, ResourcePool, Tier};
@@ -487,7 +487,13 @@ fn a_ceiling_caps_escalation_without_stopping_it() {
     // the datacenter is unreachable
     let e = decide(&surprise(0.0, true), 0, true, 0, false, &mut b, Tier::Deliberate);
     assert_eq!(e.to, Tier::Deliberate);
-    assert!(e.budget_limited, "the entity should know it wanted more");
+    assert_eq!(
+        e.limited_by,
+        Some(Limit::Reach),
+        "the datacenter being unreachable was reported as a budget problem, which \
+         a human fixes by topping up the budget while the robot goes on being \
+         quietly less capable"
+    );
 }
 
 #[test]
@@ -495,7 +501,7 @@ fn an_exhausted_budget_steps_down_rather_than_refusing_to_think() {
     let mut b = Budget::new(15, 0); // enough for Deliberate, not Frontier
     let e = decide(&surprise(0.0, true), 0, true, 0, false, &mut b, Tier::Frontier);
     assert_eq!(e.to, Tier::Deliberate);
-    assert!(e.budget_limited);
+    assert_eq!(e.limited_by, Some(Limit::Budget));
 
     // and once even that is gone, it thinks locally
     let e = decide(&surprise(0.0, true), 0, true, 0, false, &mut b, Tier::Frontier);

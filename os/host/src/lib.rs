@@ -18,6 +18,7 @@ pub mod store;
 pub mod bench;
 pub mod compound;
 pub mod day;
+pub mod degrade;
 pub mod demo;
 pub mod fleet_experiment;
 pub mod fullstack;
