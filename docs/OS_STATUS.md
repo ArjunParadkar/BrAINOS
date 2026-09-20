@@ -87,11 +87,12 @@ cargo run --release --bin brainos -- fleet    # does it transfer between entitie
 cargo run --release --bin brainos -- day      # can it be left running?
 cargo run --release --bin brainos -- incident # reconstruct it, and prove it
 cargo run --release --bin brainos -- degrade  # what happens when the cloud goes
+cargo run --release --bin brainos -- life     # one entity through all of it
 cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 725 tests
+cargo test --workspace --release              # 731 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -321,6 +322,47 @@ ability to *produce* a proof for a forgotten decision — and a proof
 issued before it was forgotten still verifies, because a proof is
 checked against a root rather than against a log. The board keeps
 minutes of leaves and hands the rest to flash.
+
+---
+
+## One life
+
+Every other scenario here builds a fresh entity, does one thing to it
+and throws it away. That is the right shape for showing a property and
+the wrong shape for finding the bugs that reach customers, which live in
+the seams: what an outage does to a skill learned before it, whether an
+audit chain survives an export, whether an entity that has changed
+bodies twice can still be proven to have refused something on the first
+one.
+
+`brainos life` is one entity, born once, carried through the whole
+product: it wakes on a workstation, takes on a hexapod and learns by
+trying that its gait needs carpet, loses its datacenter link and keeps
+working, is put away and woken in a different process, survives a
+journal write that tears halfway, buys a skill from the marketplace,
+watches its vendor be destroyed, is adopted by a competitor's six-axis
+arm, acts on it, and is exported again.
+
+Ten transitions. At each one, four things are checked, because they are
+what the product is:
+
+* **the identity never changes** — `d04ab232..8737` from the first tick
+  to the last, across a reboot, a torn write, a destroyed vendor and a
+  change of body;
+* **the age never goes backwards** — including at the two transitions
+  where the host passes an arbitrary tick, which it does on purpose;
+* **what it worked out by trying is still there** — `carpet 100%`,
+  established on the first body, still held at the end on a body with no
+  legs;
+* **a proof issued early still proves** — a decision recorded on the
+  hexapod, two owners and three processes later, still verifies against
+  the root it was issued against.
+
+That last one is why the audit log belongs to the machine of record
+rather than travelling with the entity: the entity's own trail resets at
+every reboot and is deliberately not in the export, and the proof still
+holds anyway, because a proof is checked against a root rather than
+against a log.
 
 ---
 

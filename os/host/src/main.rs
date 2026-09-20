@@ -29,6 +29,7 @@ fn main() -> ExitCode {
         "incident" => incident(),
         "degrade" => degrade(),
         "limits" => limits(),
+        "life" => life(),
         "help" | "-h" | "--help" => {
             usage();
             ExitCode::SUCCESS
@@ -62,6 +63,7 @@ usage: brainos <command>
   day      a working day of ambient operation: can it be left running?
   fleet    does experience transfer between entities, or only within
            one? The measurement behind the skill marketplace.
+  life     one entity through the whole product, in one history
   limits   where this breaks: every claim's implied scale, measured
   degrade  what happens when the part of the mind that runs elsewhere
            stops being reachable
@@ -115,6 +117,44 @@ fn demo() -> ExitCode {
     if r.memory_survived {
         ExitCode::SUCCESS
     } else {
+        ExitCode::FAILURE
+    }
+}
+
+fn life() -> ExitCode {
+    rule("BrAInOS — one life");
+    println!(
+        "  Every other scenario here builds a fresh entity, does one thing to it
+  and throws it away. That is the right shape for showing a property and
+  the wrong shape for finding the bugs that reach customers, which live
+  in the seams: what an outage does to a skill learned before it,
+  whether an audit chain survives an export, whether an entity that has
+  changed bodies twice can still be proven to have refused something on
+  the first one.
+
+  So: one entity, born once, carried through the whole product. At every
+  step the same four things are checked, because they are what the
+  product is — the identity never changes, the age never goes backwards,
+  what it learned by trying is still there, and a proof issued early
+  still proves.\n"
+    );
+    let l = brainos_host::life::live();
+    for (step, text) in brainos_host::life::narrate(&l) {
+        println!("  [{:<12}] {}", step, text);
+    }
+    if l.violations.is_empty() {
+        println!(
+            "\n  Ten transitions, including a destroyed vendor and a change of body,
+  with the identity, the age, the tested judgement and an early proof
+  all intact.\n"
+        );
+        ExitCode::SUCCESS
+    } else {
+        println!("\n  {} invariant(s) broken:", l.violations.len());
+        for v in &l.violations {
+            println!("    - {v}");
+        }
+        println!();
         ExitCode::FAILURE
     }
 }

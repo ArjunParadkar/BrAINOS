@@ -1,0 +1,32 @@
+
+BrAInOS — one life
+────────────────────
+  Every other scenario here builds a fresh entity, does one thing to it
+  and throws it away. That is the right shape for showing a property and
+  the wrong shape for finding the bugs that reach customers, which live
+  in the seams: what an outage does to a skill learned before it,
+  whether an audit chain survives an export, whether an entity that has
+  changed bodies twice can still be proven to have refused something on
+  the first one.
+
+  So: one entity, born once, carried through the whole product. At every
+  step the same four things are checked, because they are what the
+  product is — the identity never changes, the age never goes backwards,
+  what it learned by trying is still there, and a proof issued early
+  still proves.
+
+  [born        ] wakes on a workstation with nothing behind it · d04ab232..8737 · age 1 · 1 memories · 0 decisions · knows: nothing it has tested
+  [works       ] takes on a hexapod and finds out by trying that the gait needs carpet · d04ab232..8737 · age 91 · 94 memories · 90 decisions · knows: carpet 100%
+  [outage      ] loses its datacenter link (ceiling frontier → autonomic) and keeps working · d04ab232..8737 · age 111 · 96 memories · 90 decisions · knows: carpet 100%
+  [reboot      ] put away, and woken in a different process on the same Key · d04ab232..8737 · age 112 · 99 memories · 0 decisions · knows: carpet 100%
+  [power lost  ] the journal write tears halfway; it wakes from the previous good record · d04ab232..8737 · age 112 · 99 memories · 0 decisions · knows: carpet 100%
+  [buys        ] buys a skill learned in a carpeted workshop; 1 condition taken on trust · d04ab232..8737 · age 112 · 100 memories · 0 decisions · knows: carpet 100%
+  [new vendor  ] the first vendor is destroyed; a competitor's six-axis arm adopts the file · d04ab232..8737 · age 113 · 103 memories · 0 decisions · knows: carpet 100%
+  [acts        ] moves the arm on the first try (true); asking it to walk is refused (true) · d04ab232..8737 · age 113 · 103 memories · 2 decisions · knows: carpet 100%
+  [leaves again] exported a second time: 19932 bytes · d04ab232..8737 · age 113 · 103 memories · 2 decisions · knows: carpet 100%
+  [checkable   ] the second export verifies against the entity's own Key (true); a              decision recorded on the first body, two owners and three processes ago,              still proves against the root it was issued against (true) · d04ab232..8737 · age 113 · 103 memories · 2 decisions · knows: carpet 100%
+
+  Ten transitions, including a destroyed vendor and a change of body,
+  with the identity, the age, the tested judgement and an early proof
+  all intact.
+

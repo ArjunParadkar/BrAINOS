@@ -24,6 +24,7 @@ pub mod demo;
 pub mod fleet_experiment;
 pub mod fullstack;
 pub mod incident;
+pub mod life;
 pub mod limits;
 pub mod migrate;
 
