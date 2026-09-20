@@ -482,3 +482,118 @@ fn the_manufacturer_narration_says_what_happened() {
         "the seat should have granted every one of these"
     );
 }
+
+// =====================================================================
+// Stage 4: one self, two bodies that share nothing but the self
+// =====================================================================
+
+use brainos_host::fullstack::{two_bodies, two_bodies_demo, TwoBodies};
+
+#[test]
+fn one_entity_drives_two_consequential_bodies_at_once() {
+    let r = two_bodies();
+    assert_eq!(r.bodies, 2);
+    assert!(r.hexapod_moved, "the hexapod did not walk");
+    assert!(r.arm_moved, "the arm did not move");
+    // one repertoire spanning both
+    assert!(r.verbs.iter().any(|v| v.starts_with("legs.")));
+    assert!(r.verbs.iter().any(|v| v.starts_with("arm.")));
+}
+
+#[test]
+fn the_two_bodies_share_nothing_but_the_self() {
+    // Same runtime, same wire, same envelope model, same watchdogs. A
+    // convex hull of feet and a static torque budget. If any of that had
+    // to be special-cased, `Mechanism` would be the wrong abstraction.
+    let mut s = TwoBodies::assemble();
+    let (granted_walk, walk) = s.walk(0.08);
+    let (granted_move, mv) = s.move_joint(1.0, 45.0, 30.0);
+    assert!(granted_walk && granted_move);
+    assert!(matches!(walk, Some(Report::Accepted { .. })));
+    assert!(matches!(mv, Some(Report::Accepted { .. })));
+
+    let (hex, arm) = s.run_both(Duration::from_millis(40), 200);
+    assert!(hex > 0 && arm > 0, "both played samples: {hex}, {arm}");
+}
+
+#[test]
+fn both_bodies_write_into_one_graph_and_either_can_recall_the_other() {
+    let r = two_bodies();
+    assert!(r.memories_after >= 4);
+    assert!(
+        r.shared_context_worked,
+        "a query about the workbench should find what both bodies did there"
+    );
+}
+
+#[test]
+fn one_gate_audits_both_bodies_under_one_key() {
+    let r = two_bodies();
+    assert!(r.audit_entries >= 2, "{} entries", r.audit_entries);
+}
+
+#[test]
+fn the_arbiter_gives_the_workbench_to_the_body_that_would_drop_something() {
+    let r = two_bodies();
+    assert!(
+        r.conflict.is_some(),
+        "both wanted the workbench; that is a conflict"
+    );
+    assert!(
+        r.winner_is_the_arm,
+        "the arm is mid-lift and interrupting that is a drop; the hexapod is \
+         mid-stride and interrupting that is a stumble"
+    );
+    assert!(r.conflict.unwrap().contains("drop"));
+}
+
+#[test]
+fn a_body_that_stops_answering_loses_its_claim() {
+    let r = two_bodies();
+    assert_eq!(
+        r.lapsed, 1,
+        "a claim held by something that will never release it is a deadlock \
+         with an entity in it"
+    );
+}
+
+#[test]
+fn the_two_body_narration_covers_the_stage_four_claim() {
+    let lines = two_bodies_demo();
+    let steps: Vec<&str> = lines.iter().map(|l| l.step).collect();
+    for expected in ["stage 4", "both act", "one memory", "one gate", "arbiter", "silence"] {
+        assert!(steps.contains(&expected), "{expected} is missing");
+    }
+    let all: String = lines
+        .iter()
+        .map(|l| l.text.clone())
+        .collect::<Vec<_>>()
+        .join(" ");
+    assert!(all.contains("one repertoire"));
+    assert!(all.contains("one graph"));
+    assert!(all.contains("one audit log"));
+}
+
+#[test]
+fn the_two_body_run_is_reproducible() {
+    assert_eq!(two_bodies(), two_bodies());
+}
+
+#[test]
+fn a_verb_for_the_other_body_is_refused_at_the_gate() {
+    let mut s = TwoBodies::assemble();
+    // asking the hexapod to move a joint
+    let out = s.entity.attempt(
+        v("arm.move_joint"),
+        s.hexapod_id,
+        &[("joint", 1.0), ("angle", 45.0), ("speed", 30.0)],
+    );
+    assert!(!out.verdict.is_granted());
+    let (_, d) = out.trace.refusal().unwrap();
+    assert_eq!(d.code, brainos_abi::error::DenyCode::BodyLacksVerb);
+    assert!(
+        d.detail.contains("another body"),
+        "the entity should know a different body can: {}",
+        d.detail
+    );
+}

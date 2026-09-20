@@ -10,6 +10,15 @@ BrAInOS — the whole stack
   [subverted ] the token was genuine and the wire was authentic. The body refused because its own geometry said the motion was a fall — the same envelope, checked twice.
   [bad link  ] 40 commands over a link that drops, corrupts, duplicates and reorders: the body heard 39, refused 1 as forged or replayed, and never acted on a wrong one
 
+One self, two bodies
+────────────────────
+  [stage 4   ] 2 consequential bodies at once — a hexapod we built and an arm we did not — with 7 verbs in one repertoire
+  [both act  ] both moved in the same loop: the hexapod walked and the arm moved a joint. Same runtime, same wire, same envelope model; a convex hull of feet and a torque budget
+  [one memory] 7 memories in one graph, written by both bodies; a query about the workbench finds what each of them did: true
+  [one gate  ] 2 decisions in one audit log, covering both bodies under one Key
+  [arbiter   ] both wanted the workbench. The arm kept it: interrupting the incumbent would drop or break something. The hexapod is mid-stride and interrupting that is a stumble; the arm is mid-lift and interrupting that is a drop
+  [silence   ] 1 claim(s) lapsed when a body stopped answering — not immediately, because a link hiccup must not make a robot let go, but a claim held by something that will never release it is a deadlock with an entity in it
+
 A body we did not build
 ───────────────────────
   [§8 1-3    ] the MHS adapter read the manufacturer's description: 2 verbs (arm.home, arm.move_joint), 100% of them actionable because the device declared its bounds

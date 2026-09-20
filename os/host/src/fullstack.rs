@@ -703,3 +703,374 @@ fn body_word(granted: bool, r: Option<Refusal>) -> &'static str {
     }
     refusal_word(r)
 }
+
+// =====================================================================
+// Stage 4: one self, two bodies that share nothing but the self
+// =====================================================================
+
+/// The entity holding a hexapod and an arm at once, over two wires,
+/// with one memory and one gate.
+///
+/// The Phase 0 demo is a laptop and a hexapod, which is two bodies but
+/// only one of them has consequences. This is two *consequential*
+/// bodies with entirely different physics, running the same runtime at
+/// the same time, arbitrating over something only one of them can have.
+///
+/// What is the same for both: the Key, the state graph, the gate, the
+/// skill graph, the audit log. What is different: everything else.
+pub struct TwoBodies {
+    pub entity: Entity,
+    pub hexapod_id: BodyId,
+    pub arm_id: BodyId,
+    hexapod: BodyRuntime<Hexapod>,
+    arm: BodyRuntime<brainos_bodyd::arm::Arm>,
+    hexapod_wire: (Wire, Wire, Loopback),
+    arm_wire: (Wire, Wire, Loopback),
+}
+
+/// What happened in the two-body run.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TwoBodyResult {
+    pub bodies: usize,
+    /// one repertoire spanning both
+    pub verbs: Vec<String>,
+    /// the hexapod walked
+    pub hexapod_moved: bool,
+    /// the arm moved
+    pub arm_moved: bool,
+    /// both wrote into one graph
+    pub memories_after: usize,
+    /// what the arbiter did when both wanted the workbench
+    pub conflict: Option<String>,
+    /// which body kept it
+    pub winner_is_the_arm: bool,
+    /// a body went silent and its claim lapsed
+    pub lapsed: usize,
+    /// one audit log covering both bodies
+    pub audit_entries: usize,
+    /// a skill learned on one body, applied to the other
+    pub shared_context_worked: bool,
+}
+
+impl TwoBodies {
+    pub fn assemble() -> TwoBodies {
+        use brainos_adapters::mhs::from_mhs;
+        use brainos_bodyd::arm::{Arm, ArmConfig, MAX_JOINTS};
+
+        let entity_key = BrainKey::from_seed(&[0x5A; 32]);
+        let mut entity = Entity::new(BrainKey::from_seed(&[0x5A; 32]), Tick(0));
+        entity.wake(None, None, Tick(1)).expect("a fresh entity wakes");
+
+        // --- the hexapod: a body we built ---
+        let hexapod_key = BrainKey::from_seed(&[0xB2; 32]);
+        let hexapod_id = entity
+            .acquire(&hexapod_key, mini_blur(), entity_calibration(), 10)
+            .expect("mini-blur joins");
+        entity.observe_body(&hexapod_id, &fit());
+
+        // --- the arm: a body we did not ---
+        let arm_key = BrainKey::from_seed(&[0xC3; 32]);
+        let arm_schema = from_mhs(MANUFACTURER_DESCRIPTION).expect("a well-formed description");
+        let arm_id = entity
+            .acquire(
+                &arm_key,
+                arm_schema,
+                Calibration::new(BodyId::ZERO, Tick(1)),
+                0,
+            )
+            .expect("the arm joins");
+        entity.observe_body(&arm_id, &fit());
+
+        // --- two wires ---
+        let mut rng = Drbg::deterministic(b"two bodies");
+        let make_wire = |body: BodyId, rng: &mut Drbg| {
+            let (mut seat, nonce) = Wire::initiate(&entity_key, body, rng, Instant(0));
+            let subkey = entity_key.derive_subkey(&body, 32);
+            let mut limb = Wire::accept(&subkey, body, nonce, Instant(0));
+            let peer = Peer {
+                entity: Some(entity_key.entity_id()),
+                body: Some(body),
+                key: entity_key.public(),
+            };
+            seat.attested(peer);
+            limb.attested(peer);
+            (seat, limb, Loopback::perfect())
+        };
+        let hexapod_wire = make_wire(hexapod_id, &mut rng);
+        let arm_wire = make_wire(arm_id, &mut rng);
+
+        // --- two runtimes, same code ---
+        let mut hex_mech = Hexapod::new(HexapodConfig::default());
+        hex_mech.calibrate(ServoTable::bom_10_servo());
+        let mut hexapod = BodyRuntime::new(hex_mech, Instant(0));
+        hexapod.narrow_to(granted_envelope());
+        hexapod.ready();
+
+        let mut arm_mech = Arm::new(ArmConfig::collaborative_six_axis());
+        arm_mech.calibrate([0.0; MAX_JOINTS]);
+        let mut arm = BodyRuntime::new(arm_mech, Instant(0));
+        let mut arm_granted = Envelope::new(
+            3,
+            Duration::from_millis(10),
+            Duration::from_millis(200),
+        );
+        arm_granted.bound(Channel::Angle, Limit::new(-360.0, 360.0));
+        arm_granted.bound(Channel::Rate, Limit::new(0.0, 180.0));
+        arm.narrow_to(arm_granted);
+        arm.ready();
+
+        TwoBodies {
+            entity,
+            hexapod_id,
+            arm_id,
+            hexapod,
+            arm,
+            hexapod_wire,
+            arm_wire,
+        }
+    }
+
+    fn send(
+        wire: &mut (Wire, Wire, Loopback),
+        runtime_accept: &mut dyn FnMut(&Command) -> Report,
+        cmd: &Command,
+    ) -> Option<Report> {
+        let payload = Protocol::encode_command(cmd).ok()?;
+        let framed = wire.0.send(Kind::Command, &payload).ok()?;
+        wire.2.a_sends(framed);
+        wire.2.settle();
+        while let Some(raw) = wire.2.b_receives() {
+            let Ok(frame) = wire.1.receive(&raw) else {
+                continue;
+            };
+            let Ok(decoded) = Protocol::decode_command(&frame.payload) else {
+                continue;
+            };
+            return Some(runtime_accept(&decoded));
+        }
+        None
+    }
+
+    /// Ask the hexapod to walk, through the gate and the wire.
+    pub fn walk(&mut self, speed: f64) -> (bool, Option<Report>) {
+        let out = self.entity.attempt(
+            v("legs.walk"),
+            self.hexapod_id,
+            &[("speed", speed), ("heading", 0.0)],
+        );
+        if !out.verdict.is_granted() {
+            return (false, None);
+        }
+        let cmd = Command::new(v("legs.walk"))
+            .arg("speed", speed as f32)
+            .arg("heading", 0.0);
+        let body = &mut self.hexapod;
+        let report = TwoBodies::send(
+            &mut self.hexapod_wire,
+            &mut |c| body.accept(c, Instant(0)),
+            &cmd,
+        );
+        (true, report)
+    }
+
+    /// Ask the arm to move a joint, through the gate and the wire.
+    pub fn move_joint(&mut self, joint: f64, angle: f64, speed: f64) -> (bool, Option<Report>) {
+        let out = self.entity.attempt(
+            v("arm.move_joint"),
+            self.arm_id,
+            &[("joint", joint), ("angle", angle), ("speed", speed)],
+        );
+        if !out.verdict.is_granted() {
+            return (false, None);
+        }
+        let cmd = Command::new(v("arm.move_joint"))
+            .arg("joint", joint as f32)
+            .arg("angle", angle as f32)
+            .arg("speed", speed as f32);
+        let body = &mut self.arm;
+        let report = TwoBodies::send(
+            &mut self.arm_wire,
+            &mut |c| body.accept(c, Instant(0)),
+            &cmd,
+        );
+        (true, report)
+    }
+
+    /// Run both bodies forward together. This is the part that is
+    /// genuinely simultaneous: one loop, two bodies, each on its own
+    /// schedule.
+    pub fn run_both(&mut self, step: Duration, passes: usize) -> (u32, u32) {
+        let mut hex = 0;
+        let mut arm = 0;
+        let mut t = 0u64;
+        for _ in 0..passes {
+            self.hexapod.heard_from_seat(Instant(t));
+            self.arm.heard_from_seat(Instant(t));
+            if self.hexapod.tick(Instant(t), measured()).applied.is_some() {
+                hex += 1;
+            }
+            if self.arm.tick(Instant(t), measured()).applied.is_some() {
+                arm += 1;
+            }
+            t += step.as_micros();
+        }
+        (hex, arm)
+    }
+}
+
+/// Run the Stage 4 story.
+pub fn two_bodies() -> TwoBodyResult {
+    use brainos_entity::simultaneity::{Claim, Resource};
+    use brainos_memory::episode::Outcome;
+
+    let mut s = TwoBodies::assemble();
+    let verbs: Vec<String> = s
+        .entity
+        .repertoire()
+        .iter()
+        .map(|v| v.as_str().to_string())
+        .collect();
+
+    // --- both act ---
+    let (_, hex_report) = s.walk(0.08);
+    let (_, arm_report) = s.move_joint(1.0, 45.0, 30.0);
+    let hexapod_accepted = matches!(hex_report, Some(Report::Accepted { .. }));
+    let arm_accepted = matches!(arm_report, Some(Report::Accepted { .. }));
+    let (hex_samples, arm_samples) = s.run_both(Duration::from_millis(40), 200);
+
+    // --- both remember, into one graph ---
+    s.entity.outcome(
+        v("legs.walk"),
+        Some(s.hexapod_id),
+        Outcome::Succeeded,
+        "walked to the workbench",
+        &["workshop", "carpet"],
+    );
+    s.entity.outcome(
+        v("arm.move_joint"),
+        Some(s.arm_id),
+        Outcome::Succeeded,
+        "reached for the thing on the workbench",
+        &["workshop", "carpet"],
+    );
+    let memories_after = s.entity.graph.len();
+
+    // --- one memory, reachable from either body's context ---
+    let shared_context_worked = s
+        .entity
+        .recall("what happened at the workbench", 5)
+        .iter()
+        .filter(|(n, _)| n.content.contains("workbench"))
+        .count()
+        >= 2;
+
+    // --- they want the same thing ---
+    let workbench = Resource::named("the workbench");
+    let arm_claim = Claim {
+        body: s.arm_id,
+        resource: workbench.clone(),
+        verb: v("arm.move_joint"),
+        // mid-lift: interrupting drops whatever is in the gripper
+        interruption_cost: 85,
+        claimed_at: s.entity.tick,
+        last_heard: Instant(0),
+    };
+    let hexapod_claim = Claim {
+        body: s.hexapod_id,
+        resource: workbench.clone(),
+        verb: v("legs.walk"),
+        // mid-stride: interrupting is a stumble
+        interruption_cost: 25,
+        claimed_at: s.entity.tick,
+        last_heard: Instant(0),
+    };
+
+    s.entity.arbiter.claim(arm_claim.clone()).ok();
+    let conflict = match s.entity.arbiter.claim(hexapod_claim) {
+        Ok(()) => None,
+        Err((_, resolution)) => Some(resolution.because().to_string()),
+    };
+    let winner_is_the_arm = s
+        .entity
+        .arbiter
+        .holder_of(&workbench)
+        .map(|c| c.body == s.arm_id)
+        .unwrap_or(false);
+
+    // --- one of them goes silent ---
+    let lapsed = s
+        .entity
+        .arbiter
+        .lapse_silent(Instant(
+            brainos_entity::simultaneity::SILENCE_GRACE.as_micros() + 1_000,
+        ))
+        .len();
+
+    TwoBodyResult {
+        bodies: s.entity.bodies.body_count(),
+        verbs,
+        hexapod_moved: hexapod_accepted && hex_samples > 0,
+        arm_moved: arm_accepted && arm_samples > 0,
+        memories_after,
+        conflict,
+        winner_is_the_arm,
+        lapsed,
+        audit_entries: s.entity.kira.trail.len(),
+        shared_context_worked,
+    }
+}
+
+/// The narrated version.
+pub fn two_bodies_demo() -> Vec<Line> {
+    let r = two_bodies();
+    let mut out = Vec::new();
+
+    out.push(line(
+        "stage 4",
+        format!(
+            "{} consequential bodies at once — a hexapod we built and an arm we did not — with {} verbs in one repertoire",
+            r.bodies,
+            r.verbs.len()
+        ),
+    ));
+    out.push(line(
+        "both act",
+        format!(
+            "both moved in the same loop: the hexapod {} and the arm {}. Same runtime, same wire, same envelope model; a convex hull of feet and a torque budget",
+            if r.hexapod_moved { "walked" } else { "did not move" },
+            if r.arm_moved { "moved a joint" } else { "did not move" }
+        ),
+    ));
+    out.push(line(
+        "one memory",
+        format!(
+            "{} memories in one graph, written by both bodies; a query about the workbench finds what each of them did: {}",
+            r.memories_after, r.shared_context_worked
+        ),
+    ));
+    out.push(line(
+        "one gate",
+        format!(
+            "{} decisions in one audit log, covering both bodies under one Key",
+            r.audit_entries
+        ),
+    ));
+    match &r.conflict {
+        None => out.push(line("arbiter", "no conflict arose")),
+        Some(why) => out.push(line(
+            "arbiter",
+            format!(
+                "both wanted the workbench. The arm kept it: {why}. The hexapod is mid-stride and interrupting that is a stumble; the arm is mid-lift and interrupting that is a drop"
+            ),
+        )),
+    }
+    out.push(line(
+        "silence",
+        format!(
+            "{} claim(s) lapsed when a body stopped answering — not immediately, because a link hiccup must not make a robot let go, but a claim held by something that will never release it is a deadlock with an entity in it",
+            r.lapsed
+        ),
+    ));
+
+    out
+}

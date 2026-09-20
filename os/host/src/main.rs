@@ -125,6 +125,11 @@ fn stack() -> ExitCode {
         println!("  [{:<10}] {}", line.step, line.text);
     }
 
+    rule("One self, two bodies");
+    for line in brainos_host::fullstack::two_bodies_demo() {
+        println!("  [{:<10}] {}", line.step, line.text);
+    }
+
     rule("A body we did not build");
     for line in brainos_host::fullstack::manufacturer_demo() {
         println!("  [{:<10}] {}", line.step, line.text);
