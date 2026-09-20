@@ -22,11 +22,14 @@ tree. Stages 1–2 and Phase 0 live in `../mind`, `../core`, `../miniblur`,
 
 ```sh
 cargo run --release --bin brainos -- demo     # Phase 0, in simulation
+cargo run --release --bin brainos -- stack    # the whole path, intent to servo
 cargo run --release --bin brainos -- verify   # the Stage 6 property report
+cargo run --release --bin brainos -- bench    # measured latencies and footprint
 cargo run --release --bin brainos -- wire     # the transport under a bad link
 cargo run --release --bin brainos -- stat     # what this build contains
 
-cargo test --workspace --release              # 464 tests
+cargo test --workspace --release              # 529 tests
+tools/check-no-std.sh                         # the bare-metal build, when a target exists
 ```
 
 `--release` matters for `verify` and for the full suite: the property
@@ -51,6 +54,8 @@ minutes.
 | `proof` | the properties KIRA must have, checked exhaustively over a bounded domain | Stage 6 (part) |
 | `fleet` | a directory that cannot command, a marketplace that cannot push, hosts that hold nothing | Stage 7 |
 | `export` | entity export v1.0 — complete, documented, signed, round-tripped | freedom principle |
+| `bodyd` | what runs on the machine with the motors; links `miniblur-core` | Domain 2 |
+| `nostd` | a canary that depends on everything and is unconditionally `#![no_std]` | — |
 | `host` | the only crate allowed an operating system underneath it | — |
 
 ## Discipline
@@ -112,6 +117,43 @@ whether an irreversible act on an unfit body refuses at *simulate* or at
 *policy* (the gate was right), and on its second it caught a domain
 dimension that silently changed the request's shape and made half the
 other dimensions inapplicable.
+
+## Measured
+
+`brainos bench` times the operations the architecture makes claims
+about, in batches, and reports the minimum as the number to believe —
+the noise on a timing is one-sided, so the minimum over many batches is
+the closest thing to the uncontended cost. Representative figures from
+this machine:
+
+| operation | uncontended | budget |
+|---|---|---|
+| one reflex pass (Domain 2) | ~60 ns | 10 ms (Tier 0) |
+| the tip-over check on one pose | ~220 ns | 10 ms |
+| sealing one wire frame | ~1.8 µs | — |
+| a whole gait cycle planned and verified | ~40 µs | 1 s (Tier 2) |
+| one full eight-stage gate evaluation | ~160 µs | 100 ms (Tier 1) |
+| recall over a graph at its episodic bound | ~1.3 ms | 100 ms |
+| sealing the state graph into a journal record | ~2.1 ms | — |
+
+Two findings fell out of measuring rather than being designed in, and
+both are reported by `bench` as derived sentences rather than as a
+paragraph that can go stale:
+
+**The gate is dominated by ed25519.** Signing the proposal and verifying
+it are most of an evaluation. On an Xtensa core at 240 MHz the same
+evaluation is of order ten milliseconds, so a body cannot gate at its own
+loop rate. That is not a performance problem to optimise away — it is the
+reason Tier 0 runs inside a pre-authorized envelope instead of asking per
+step, and the measurement agreeing with the architecture is the useful
+direction for it to agree in.
+
+**An entity at default bounds does not fit on the board.** A memory
+encodes to about 120 bytes; 4,096 episodes is roughly 490 KiB, and an
+ESP32-S3 has 512 KiB of SRAM in total. `Bounds::EMBEDDED` is 256
+episodes — about 30 KiB — and that is why it exists. The same entity
+remembers less in a small body and more in a large one; the bound is a
+property of the body it is currently thinking in, not of who it is.
 
 ## What none of this shows
 

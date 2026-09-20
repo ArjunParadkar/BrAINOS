@@ -19,6 +19,7 @@ fn main() -> ExitCode {
         "verify" => verify(),
         "wire" => wire(),
         "stack" => stack(),
+        "bench" => bench(),
         "stat" => stat(),
         "help" | "-h" | "--help" => {
             usage();
@@ -46,6 +47,8 @@ usage: brainos <command>
   wire     the transport carrying commands over a deliberately bad link
   stack    the whole path: entity → gate → wire → body → the real gait,
            including a subverted seat that the body refuses anyway
+  bench    measured latencies and memory footprint, against the budgets
+           the architecture's tiers imply
   stat     what this build contains
 "
     );
@@ -125,6 +128,141 @@ fn stack() -> ExitCode {
   simulated is the servo.\n"
     );
     ExitCode::SUCCESS
+}
+
+fn bench() -> ExitCode {
+    rule("BrAInOS — measured");
+    println!(
+        "  Release build on this machine. These are NOT worst-case execution times
+  on an ESP32-S3: an x86 core is one to two orders of magnitude faster
+  than Xtensa at 240 MHz, so a number here is a lower bound on the board,
+  not a prediction for it. What it is good for is the shape.\n"
+    );
+
+    println!(
+        "  {:<52} {:>9} {:>9} {:>9} {:>6}  {}",
+        "operation", "min", "median", "budget", "spread", "fits"
+    );
+    println!("  {}", "─".repeat(104));
+
+    let mut all_fit = true;
+    let mut noisy = 0;
+    let measurements = brainos_host::bench::run();
+    for m in &measurements {
+        let fits = match m.fits() {
+            None => "—".to_string(),
+            Some(true) => format!("yes, {}% of budget", m.headroom_pct().unwrap_or(0)),
+            Some(false) => {
+                all_fit = false;
+                "NO".to_string()
+            }
+        };
+        if !m.measurement_is_clean() {
+            noisy += 1;
+        }
+        println!(
+            "  {:<52} {:>9} {:>9} {:>9} {:>5.1}x  {}",
+            m.what,
+            human_ns(m.min_ns),
+            human_ns(m.median_ns),
+            m.budget
+                .map(|b| human_ns(b.as_micros() * 1_000))
+                .unwrap_or_else(|| "—".into()),
+            m.spread(),
+            fits
+        );
+    }
+    if noisy > 0 {
+        println!(
+            "\n  {noisy} of {} measurements have a p99 more than 3x their min, which means
+  this machine was busy while they ran. The min is the number to believe;
+  the spread is a reading about the machine, not about the code.",
+            measurements.len()
+        );
+    }
+
+    rule("What the numbers mean");
+    for line in brainos_host::bench::implications(&measurements) {
+        // wrap at a comfortable width
+        let mut col = 0;
+        print!("  ");
+        for word in line.split_whitespace() {
+            if col + word.len() > 74 {
+                print!("\n  ");
+                col = 0;
+            }
+            print!("{word} ");
+            col += word.len() + 1;
+        }
+        println!("\n");
+    }
+
+    rule("What each one actually does");
+    for m in &measurements {
+        println!("  {}", m.what);
+        println!("      {}", m.note);
+    }
+
+    rule("Footprint");
+    for (what, bytes, note) in brainos_host::bench::footprint() {
+        println!("  {:<28} {:>5} B   {}", what, bytes, note);
+    }
+
+    rule("Does it fit on the board?");
+    println!(
+        "  An ESP32-S3 has 512 KiB of SRAM. Allowing 320 KiB for the firmware, the
+  gait loop's buffers and the wire, a state graph has about 192 KiB.\n"
+    );
+    for (what, needs, available, fits) in brainos_host::bench::fits_on_the_board() {
+        println!(
+            "  {:<36} needs {:>4} KiB of {:>4} KiB   {}",
+            what,
+            needs / 1024,
+            available / 1024,
+            if fits { "fits" } else { "DOES NOT FIT" }
+        );
+    }
+    println!(
+        "\n  This is why Bounds::EMBEDDED exists and is not a smaller number chosen
+  for tidiness. An entity on the board remembers less and consolidates
+  more often; the same entity on a workstation body remembers more. It is
+  the same entity either way — the bound is a property of the body it is
+  currently thinking in, not of who it is.\n"
+    );
+
+    let (empty, full, nodes) = brainos_host::bench::memory_per_episode();
+    let per = if nodes > 1 {
+        (full - empty) / (nodes - 1).max(1)
+    } else {
+        0
+    };
+    println!();
+    println!(
+        "  a state graph with {nodes} memories encodes to {full} bytes — about {per} B per memory,
+  so an entity at its default episodic bound of 4,096 episodes is roughly
+  {} KiB of durable state.",
+        (per * 4096) / 1024
+    );
+
+    println!();
+    if all_fit {
+        ExitCode::SUCCESS
+    } else {
+        eprintln!("  something did not fit its budget.");
+        ExitCode::FAILURE
+    }
+}
+
+fn human_ns(ns: u64) -> String {
+    if ns >= 1_000_000_000 {
+        format!("{:.2}s", ns as f64 / 1e9)
+    } else if ns >= 1_000_000 {
+        format!("{:.2}ms", ns as f64 / 1e6)
+    } else if ns >= 1_000 {
+        format!("{:.1}us", ns as f64 / 1e3)
+    } else {
+        format!("{ns}ns")
+    }
 }
 
 fn stat() -> ExitCode {

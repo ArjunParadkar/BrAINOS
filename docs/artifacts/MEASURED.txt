@@ -1,0 +1,123 @@
+
+BrAInOS — measured
+────────────────────
+  Release build on this machine. These are NOT worst-case execution times
+  on an ESP32-S3: an x86 core is one to two orders of magnitude faster
+  than Xtensa at 240 MHz, so a number here is a lower bound on the board,
+  not a prediction for it. What it is good for is the shape.
+
+  operation                                                  min    median    budget spread  fits
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────
+  KIRA: one full eight-stage evaluation (granted)        118.4us   121.3us  100.00ms   2.3x  yes, 0% of budget
+  KIRA: one evaluation refused at authorize               77.8us    79.9us  100.00ms   2.8x  yes, 0% of budget
+  ed25519: one signature                                  35.1us    62.0us         —   2.7x  —
+  ed25519: one verification                               35.8us    37.0us         —   2.9x  —
+  hexapod: plan and verify a whole gait cycle             32.7us    33.0us     1.00s   1.0x  yes, 0% of budget
+  hexapod: the tip-over check alone, over a whole cycle     9.1us     9.2us         —   1.0x  —
+  hexapod: the tip-over check on one pose                  179ns     182ns   10.00ms  46.9x  yes, 0% of budget
+  bodyd: one reflex pass                                    42ns      42ns   10.00ms 337.3x  yes, 0% of budget
+  memory: one recall over a full graph                    1.25ms    1.32ms  100.00ms   2.2x  yes, 1% of budget
+  memory: writing one episode                              1.7us     2.4us   10.00ms   1.8x  yes, 0% of budget
+  memory: one consolidation pass                         199.9us   860.3us    30.00s  20.3x  yes, 0% of budget
+  journal: seal one record                                1.59ms    1.68ms  100.00ms   3.8x  yes, 1% of budget
+  wire: seal one frame                                     1.4us     1.5us   10.00ms  12.6x  yes, 0% of budget
+  wire: open one frame                                     1.5us     1.5us   10.00ms  10.6x  yes, 0% of budget
+
+  6 of 14 measurements have a p99 more than 3x their min, which means
+  this machine was busy while they ran. The min is the number to believe;
+  the spread is a reading about the machine, not about the code.
+
+What the numbers mean
+─────────────────────
+  A gate evaluation is 118.4 us and 59% of it is the two ed25519 operations 
+  — one to sign the proposal, one to verify it. Everything else the eight 
+  stages do, including the body's forward model and the Merkle append, is 
+  the remaining 41%. 
+
+  That has a consequence for where the gate runs. ed25519 in software on an 
+  Xtensa core at 240 MHz is a few milliseconds per operation, so the same 
+  evaluation on the board is of order 10 ms — which means a body cannot 
+  gate at its own loop rate. This is not a performance problem to optimise 
+  away; it is the reason Tier 0 runs inside a pre-authorized envelope 
+  instead of asking per step. The measurement agrees with the architecture 
+  rather than the other way round, which is the useful direction. 
+
+  One reflex pass is 42 ns, and re-deriving the tip-over margin from scratch 
+  would add 179 ns. A 1 kHz servo loop has a millisecond; both together are 
+  under a percent of it, on this machine. Scaled by the hundred-fold an 
+  Xtensa core is slower, still under one percent. 
+
+  Retrieval over a graph at its episodic bound is 1.25 ms, about 721x the 
+  cost of writing one memory. That ratio is what makes rebuilding the index 
+  on read rather than maintaining it on write the right trade: reads are 
+  rare and thinking is what they feed, writes are constant and happen while 
+  something is moving. 
+
+  Sealing the whole state graph into a journal record is 1.59 ms. At that 
+  cost, committing on every episode would be wasteful and committing only at 
+  sleep would lose a session to a power cut — which is what the segmenting 
+  is for: episodes commit often and cheaply, the skill graph and the life 
+  record rarely. 
+
+
+What each one actually does
+───────────────────────────
+  KIRA: one full eight-stage evaluation (granted)
+      sign, verify, authorize against the body map, validate against the schema, simulate through the body policy, check the ruleset, mint a token, append to the Merkle log
+  KIRA: one evaluation refused at authorize
+      the cheap path: a verb no limb advertises never reaches validate or simulate
+  ed25519: one signature
+      what the gate pays per grant, and per journal record
+  ed25519: one verification
+      what the gate pays per proposal, and the body pays per session handshake
+  hexapod: plan and verify a whole gait cycle
+      48 poses, each through forward kinematics, a convex-hull support polygon, the servo table with its linked pairs, and the rail-current budget
+  hexapod: the tip-over check alone, over a whole cycle
+      how much of planning is the stability forward model
+  hexapod: the tip-over check on one pose
+      what the reflex layer would pay if it re-checked every sample from scratch
+  bodyd: one reflex pass
+      watchdogs, the link, every measured channel against the envelope, one sample applied, telemetry assembled
+  memory: one recall over a full graph
+      BM25 over a graph at its episodic bound, re-ranked by salience, confidence, origin and recency
+  memory: writing one episode
+      into a graph that is already at its bound, so the prune path runs
+  memory: one consolidation pass
+      crystallize, promote, chain and forget over a session's episodes
+  journal: seal one record
+      hash, sign and frame a whole state graph for the two-slot journal
+  wire: seal one frame
+      header, HMAC-SHA256 truncated to 128 bits
+  wire: open one frame
+      magic, length, constant-time MAC comparison
+
+Footprint
+────────────────────
+  Granted                        232 B   one authorization: id, verb, body, request digest, tick, ttl, signature
+  Denied                          24 B   a refusal, Copy and allocation-free so a servo loop can carry one
+  Envelope                        96 B   eight channels of limits plus timing — what Domain 2 runs inside
+  Sample                          88 B   one step of a motion, fixed width
+  Frame header + MAC              30 B   what the wire costs per command
+  Verb                            54 B   a validated namespace.action, no allocation
+  Tick / Instant / Duration        8 B   eight bytes each; time is never a float
+  Telemetry                       56 B   what a body reports about itself each pass
+
+Does it fit on the board?
+─────────────────────────
+  An ESP32-S3 has 512 KiB of SRAM. Allowing 320 KiB for the firmware, the
+  gait loop's buffers and the wire, a state graph has about 192 KiB.
+
+  default bounds (4,096 episodes)      needs  492 KiB of  192 KiB   DOES NOT FIT
+  embedded bounds (256 episodes)       needs   30 KiB of  192 KiB   fits
+
+  This is why Bounds::EMBEDDED exists and is not a smaller number chosen
+  for tidiness. An entity on the board remembers less and consolidates
+  more often; the same entity on a workstation body remembers more. It is
+  the same entity either way — the bound is a property of the body it is
+  currently thinking in, not of who it is.
+
+
+  a state graph with 1001 memories encodes to 123064 bytes — about 123 B per memory,
+  so an entity at its default episodic bound of 4,096 episodes is roughly
+  492 KiB of durable state.
+
