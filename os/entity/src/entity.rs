@@ -423,6 +423,25 @@ impl Entity {
         self.propose(r)
     }
 
+    /// The three things a skill needs in order to change: the handle
+    /// that authorizes the write, the graph the skill lives in, and the
+    /// skill graph itself.
+    ///
+    /// Handed out together because they are only useful together, and
+    /// because the borrow checker will not let a caller assemble them
+    /// from the public fields. This is the seam a marketplace install
+    /// goes through — the entity taking on what somebody else worked
+    /// out — and it is narrow on purpose.
+    pub fn memory_mut(
+        &mut self,
+    ) -> (
+        &MemoryHandle,
+        &mut brainos_memory::graph::StateGraph,
+        &mut brainos_memory::skill::SkillGraph,
+    ) {
+        (&self.handle, &mut self.graph, &mut self.skills)
+    }
+
     /// Name a way of doing something.
     ///
     /// The entity declaring that it *has* an approach, separately from

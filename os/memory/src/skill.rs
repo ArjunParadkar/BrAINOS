@@ -654,6 +654,58 @@ impl SkillGraph {
         Some(id)
     }
 
+    /// Take on what another entity worked out.
+    ///
+    /// This is the mechanism a skill marketplace needs and the one
+    /// §2.4's "the fleet learns together" rests on. What is transferred
+    /// is the *evidence* — how many times the seller attempted without
+    /// each condition and how often that failed — not a verdict. The
+    /// buyer's own attempts accumulate on top of it, so a claim that is
+    /// wrong here gets contradicted here, by this entity, in this place.
+    ///
+    /// Note what that implies and what this crate deliberately does not
+    /// decide: an entity that adopts a precondition learned in a
+    /// different world starts out confidently wrong, and how long it
+    /// takes to stop being wrong is a question for measurement rather
+    /// than for a comment. `host::fleet` measures it.
+    ///
+    /// Only conditions the receiver does not already have evidence about
+    /// are taken. Somebody else's numbers do not overwrite your own.
+    pub fn adopt(
+        &mut self,
+        h: &MemoryHandle,
+        graph: &mut StateGraph,
+        verb: &Verb,
+        taught: &[Precondition],
+        at: Tick,
+    ) -> usize {
+        let Some(skill) = self.skills.iter_mut().find(|s| &s.verb == verb) else {
+            return 0;
+        };
+        let mut taken = 0;
+        for p in taught {
+            if skill.preconditions.iter().any(|q| q.tag == p.tag) {
+                continue;
+            }
+            if skill.preconditions.len() >= MAX_PRECONDITIONS {
+                break;
+            }
+            skill.preconditions.push(Precondition {
+                // the clock is the receiver's; a claim adopted today is
+                // as fresh as today, and goes stale on this entity's
+                // schedule rather than the seller's
+                last_tested: at,
+                tag: p.tag.clone(),
+                ..*p
+            });
+            taken += 1;
+        }
+        let (id, text, state) = (skill.id, skill.render(), skill.to_bytes());
+        rewrite_node(h, graph, id, &text);
+        graph.set_skill_state(h, id, &state);
+        taken
+    }
+
     /// Compose a skill out of steps that are themselves skills.
     pub fn compose(
         &mut self,

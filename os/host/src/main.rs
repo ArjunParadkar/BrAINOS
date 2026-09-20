@@ -25,6 +25,7 @@ fn main() -> ExitCode {
         "stat" => stat(),
         "export" => export(args.get(2).map(|s| s.as_str())),
         "leave" => leave(),
+        "fleet" => fleet(),
         "help" | "-h" | "--help" => {
             usage();
             ExitCode::SUCCESS
@@ -56,6 +57,8 @@ usage: brainos <command>
   compound the experiment behind the moat claim: does an entity with
            experience make better decisions than one without?
   day      a working day of ambient operation: can it be left running?
+  fleet    does experience transfer between entities, or only within
+           one? The measurement behind the skill marketplace.
   leave    the freedom principle, exercised: an entity that lived its
            whole life on one vendor's hexapod is moved to a competitor's
            arm, after the first vendor has ceased to exist
@@ -106,6 +109,101 @@ fn demo() -> ExitCode {
     } else {
         ExitCode::FAILURE
     }
+}
+
+fn fleet() -> ExitCode {
+    use brainos_host::fleet_experiment::{fleet as run_fleet, Arm, Deployment};
+
+    rule("BrAInOS — does experience transfer between entities?");
+    println!(
+        "  `compound` showed that one entity gets better with experience. §2.4
+  says the fleet gets better together and §6 sells a skill marketplace;
+  both assume what one entity worked out is worth something to another.
+
+  It has an obvious failure mode. What an entity learns is not \"walking
+  needs carpet\", it is \"walking needs carpet HERE\" — and nothing in the
+  claim says where here is. A robot in a carpeted workshop and one in a
+  tiled kitchen learn opposite rules and both are right. Sell one to the
+  other and you have sold a confident error.
+
+  Pre-registered before the run: matched > alone > blind, and blind
+  recovers eventually, because what is adopted is evidence rather than a
+  verdict. The number that matters is how long the recovery takes.\n"
+    );
+
+    let r = run_fleet(12, 1_200, 6);
+
+    println!("  {} entities across {} deployments, {} episodes each\n",
+        r.fleet_size, Deployment::ALL.len(), r.episodes);
+
+    println!("  What each deployment's veteran had to sell, after 600 attempts:");
+    for (d, ps) in &r.veterans {
+        let text = if ps.is_empty() {
+            String::from("nothing it could back up")
+        } else {
+            ps.iter()
+                .map(|(t, s, n)| format!("{t} {s}% over {n} tests"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        println!("    {:<20} {}  (the true rule here is `{}`)", d.name(), text, d.true_condition());
+    }
+
+    println!("\n  Judgement by arm, over the entity's life (% of situations handled well):");
+    print!("    {:<34}", "");
+    for i in 0..r.slices() {
+        print!("{:>8}", format!("{}-{}", i * (r.episodes / r.slices()), (i + 1) * (r.episodes / r.slices())));
+    }
+    println!();
+    for arm in Arm::ALL {
+        print!("    {:<34}", arm.name());
+        for i in 0..r.slices() {
+            print!("{:>7}%", r.mean_judgement(arm, i));
+        }
+        println!();
+    }
+
+    println!("\n  Cost of a wrong belief — how often it refused something that would");
+    println!("  have worked (% of declines):");
+    print!("    {:<34}", "");
+    for i in 0..r.slices() {
+        print!("{:>8}", format!("{}", i + 1));
+    }
+    println!();
+    for arm in [Arm::Alone, Arm::Matched, Arm::Blind] {
+        print!("    {:<34}", arm.name());
+        for i in 0..r.slices() {
+            print!("{:>7}%", r.mean_missed(arm, i));
+        }
+        println!();
+    }
+
+    let last = r.slices().saturating_sub(1);
+    let alone = r.mean_judgement(Arm::Alone, last);
+    let matched = r.mean_judgement(Arm::Matched, last);
+    let blind = r.mean_judgement(Arm::Blind, last);
+    let oracle = r.mean_judgement(Arm::Oracle, last);
+
+    rule("Result");
+    println!("  final judgement   alone {alone}%  ·  matched {matched}%  ·  blind {blind}%  ·  ceiling {oracle}%");
+    println!(
+        "  first slice       matched {}%  ·  blind {}%  ·  alone {}%",
+        r.mean_judgement(Arm::Matched, 0),
+        r.mean_judgement(Arm::Blind, 0),
+        r.mean_judgement(Arm::Alone, 0)
+    );
+    match r.catches_up_at(Arm::Blind) {
+        Some(i) => println!(
+            "  a badly-sourced skill costs {} episodes before the entity is back where\n  it would have been learning alone",
+            i * (r.episodes / r.slices())
+        ),
+        None => println!(
+            "  a badly-sourced skill never recovers within {} episodes — the entity's own\n  caution stops it generating the evidence that would contradict it",
+            r.episodes
+        ),
+    }
+    println!();
+    ExitCode::SUCCESS
 }
 
 fn leave() -> ExitCode {

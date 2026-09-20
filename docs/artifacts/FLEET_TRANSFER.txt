@@ -1,0 +1,45 @@
+
+BrAInOS — does experience transfer between entities?
+────────────────────────────────────────────────────
+  `compound` showed that one entity gets better with experience. §2.4
+  says the fleet gets better together and §6 sells a skill marketplace;
+  both assume what one entity worked out is worth something to another.
+
+  It has an obvious failure mode. What an entity learns is not "walking
+  needs carpet", it is "walking needs carpet HERE" — and nothing in the
+  claim says where here is. A robot in a carpeted workshop and one in a
+  tiled kitchen learn opposite rules and both are right. Sell one to the
+  other and you have sold a confident error.
+
+  Pre-registered before the run: matched > alone > blind, and blind
+  recovers eventually, because what is adopted is evidence rather than a
+  verdict. The number that matters is how long the recovery takes.
+
+  36 entities across 3 deployments, 1200 episodes each
+
+  What each deployment's veteran had to sell, after 600 attempts:
+    carpeted workshop    carpet 90% over 52 tests, battery_ok 88% over 51 tests  (the true rule here is `carpet`)
+    tiled kitchen        tile 87% over 57 tests, battery_ok 84% over 64 tests  (the true rule here is `tile`)
+    loading bay          battery_ok 89% over 37 tests, unloaded 90% over 63 tests  (the true rule here is `unloaded`)
+
+  Judgement by arm, over the entity's life (% of situations handled well):
+                                         0-200 200-400 400-600 600-800800-10001000-1200
+    alone                                  80%     84%     85%     86%     86%     87%
+    adopts from the same deployment        89%     89%     88%     89%     88%     90%
+    adopts from a random deployment        73%     78%     78%     79%     79%     80%
+    handed the true rule (ceiling)         89%     89%     89%     89%     89%     90%
+
+  Cost of a wrong belief — how often it refused something that would
+  have worked (% of declines):
+                                             1       2       3       4       5       6
+    alone                                  15%     14%     13%     13%     12%     12%
+    adopts from the same deployment         9%      9%     10%     10%      9%      9%
+    adopts from a random deployment        21%     20%     20%     19%     20%     19%
+
+Result
+────────────────────
+  final judgement   alone 87%  ·  matched 90%  ·  blind 80%  ·  ceiling 90%
+  first slice       matched 89%  ·  blind 73%  ·  alone 80%
+  a badly-sourced skill never recovers within 1200 episodes — the entity's own
+  caution stops it generating the evidence that would contradict it
+

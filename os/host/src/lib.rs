@@ -19,6 +19,7 @@ pub mod bench;
 pub mod compound;
 pub mod day;
 pub mod demo;
+pub mod fleet_experiment;
 pub mod fullstack;
 pub mod migrate;
 
