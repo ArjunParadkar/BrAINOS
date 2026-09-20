@@ -31,6 +31,7 @@ fn main() -> ExitCode {
         "limits" => limits(),
         "life" => life(),
         "model" => model(),
+        "worlds" => worlds(),
         "help" | "-h" | "--help" => {
             usage();
             ExitCode::SUCCESS
@@ -64,6 +65,8 @@ usage: brainos <command>
   day      a working day of ambient operation: can it be left running?
   fleet    does experience transfer between entities, or only within
            one? The measurement behind the skill marketplace.
+  worlds   going online and coming back, and the filter the entity runs
+           on its human's behalf
   model    what a model can and cannot do: text through the typed
            boundary, into the gate
   life     one entity through the whole product, in one history
@@ -118,6 +121,40 @@ fn demo() -> ExitCode {
     );
 
     if r.memory_survived {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::FAILURE
+    }
+}
+
+fn worlds() -> ExitCode {
+    rule("BrAInOS — going online, and coming back");
+    println!(
+        "  §3.8 says the entity lives in three worlds: its own, which it trusts;
+  its human's, which is consequential; and the internet, which is \"an
+  alternate universe the entity visits, not a place it lives\".
+
+  The second half is the structurally interesting one. The entity filters
+  what reaches its human because it is theirs — and the master document's
+  own note is the honest part: structurally unavailable to any incumbent
+  whose revenue depends on what reaches the user. It is not that we are
+  more principled. It is that the customer owns the entity, so there is
+  no revenue line hurt when it holds something back.\n"
+    );
+    let r = brainos_host::worlds_run::run();
+    for (step, text) in brainos_host::worlds_run::narrate(&r) {
+        println!("  [{:<12}] {}", step, text);
+    }
+    println!(
+        "\n  The filter is a heuristic over surface features and says so. What it
+  produces is an *ordering*; where the line sits is the human's to set,
+  and the run above shows what moving it costs in both directions. The
+  hardest message in that inbox is the genuine fraud alert from a bank,
+  which reads like phishing because it is trying to do the same job —
+  and holding that one back is the expensive mistake, the one that makes
+  somebody switch the filter off and never switch it on again.\n"
+    );
+    if r.holds() {
         ExitCode::SUCCESS
     } else {
         ExitCode::FAILURE

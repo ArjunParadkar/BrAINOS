@@ -28,6 +28,7 @@ cargo run --release --bin brainos -- bench    # measured latencies and footprint
 cargo run --release --bin brainos -- wire     # the transport under a bad link
 cargo run --release --bin brainos -- compound # does experience compound?
 cargo run --release --bin brainos -- fleet    # does it transfer between entities?
+cargo run --release --bin brainos -- worlds   # going online, and the advocate
 cargo run --release --bin brainos -- model    # what a model can and cannot do
 cargo run --release --bin brainos -- life     # one entity through all of it
 cargo run --release --bin brainos -- day      # can it be left running?
@@ -39,7 +40,7 @@ cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # and read it with none of our code
 cargo run --release --bin brainos -- stat     # what this build contains
 
-cargo test --workspace --release              # 755 tests
+cargo test --workspace --release              # 762 tests
 tools/check-no-std.sh                         # the bare-metal build: aarch64-unknown-uefi
 ```
 

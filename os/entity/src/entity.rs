@@ -758,12 +758,31 @@ impl Entity {
     /// Open a visit to an untrusted world. Off by default; this is the
     /// only thing that turns it on, and it is bounded three ways.
     pub fn open_world(&mut self, ttl: u64, purpose: &str) -> SessionId {
+        self.open_world_bounded(ttl, purpose, 64, 8 * 1024 * 1024)
+    }
+
+    /// Open a visit to an untrusted world with explicit bounds.
+    ///
+    /// §3.8 calls the internet "an alternate universe the entity visits,
+    /// not a place it lives", and a visit with no stated size is a
+    /// residence. The defaults `open_world` uses are generous because
+    /// they have to cover a session opened for a large download; a
+    /// session opened to look up one part number should say so, and
+    /// this is how.
+    pub fn open_world_bounded(
+        &mut self,
+        ttl: u64,
+        purpose: &str,
+        max_fetches: u32,
+        max_bytes: u64,
+    ) -> SessionId {
         let s = Session::open(
             brainos_worlds::world::World::Internet,
             self.tick,
             ttl,
             purpose,
-        );
+        )
+        .bounded(max_fetches, max_bytes);
         self.sessions.push(s);
         self.kira.world_enabled = true;
         SessionId::from_bytes(self.rng.nonce32())

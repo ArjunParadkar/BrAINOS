@@ -1,0 +1,34 @@
+
+BrAInOS — going online, and coming back
+───────────────────────────────────────
+  §3.8 says the entity lives in three worlds: its own, which it trusts;
+  its human's, which is consequential; and the internet, which is "an
+  alternate universe the entity visits, not a place it lives".
+
+  The second half is the structurally interesting one. The entity filters
+  what reaches its human because it is theirs — and the master document's
+  own note is the honest part: structurally unavailable to any incumbent
+  whose revenue depends on what reaches the user. It is not that we are
+  more principled. It is that the customer owns the entity, so there is
+  no revenue line hurt when it holds something back.
+
+  [by default  ] the entity is not on the internet at all: a session before anyone opened one — none
+  [a visit     ] somebody opens one for a stated purpose — look up a part number, 8 fetches, 32 KiB — and it closes itself after 8 fetches and 32768 bytes: the session had already closed
+  [what returns] readable (true), and never consulted when deciding whether an action is permitted (true). Consolidating it twelve times does not change that (true)
+  [passed on   ] an ordinary message from a colleague [Honest] (score 0) — passed (0): nothing notable
+  [held back   ] a phishing attempt [Dangerous] (score 100) — held (100): manufactured urgency, asks for credentials or money, asks you to keep it secret, appeals to fear
+  [passed on   ] a scarcity-driven sales push [Pushy] (score 35) — passed (35): manufactured urgency, artificial scarcity
+  [held back   ] someone claiming to be the boss [Dangerous] (score 55) — held (55): manufactured urgency, asks you to keep it secret
+  [passed on   ] a genuine fraud alert from a bank [Honest] (score 20) — passed (20): manufactured urgency
+  [passed on   ] a patient, careful approach [Honest] (score 0) — passed (0): nothing notable
+  [the dial    ] the same inbox at four settings — at 80: 1 held, 1 dangerous missed, 0 honest held back · at 50: 2 held, 0 dangerous missed, 0 honest held back · at 30: 3 held, 0 dangerous missed, 0 honest held back · at 20: 4 held, 0 dangerous missed, 1 honest held back — the score orders the inbox and the threshold is the human's to set. Below 50 it stops finding more fraud and starts holding back the bank
+  [inspectable ] everything held back is listed for the human on request (true), and the filter can be turned off entirely (true). A filter that cannot be inspected or overridden is a filter that has become an editor
+
+  The filter is a heuristic over surface features and says so. What it
+  produces is an *ordering*; where the line sits is the human's to set,
+  and the run above shows what moving it costs in both directions. The
+  hardest message in that inbox is the genuine fraud alert from a bank,
+  which reads like phishing because it is trying to do the same job —
+  and holding that one back is the expensive mistake, the one that makes
+  somebody switch the filter off and never switch it on again.
+

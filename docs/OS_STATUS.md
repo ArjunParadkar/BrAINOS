@@ -87,13 +87,14 @@ cargo run --release --bin brainos -- fleet    # does it transfer between entitie
 cargo run --release --bin brainos -- day      # can it be left running?
 cargo run --release --bin brainos -- incident # reconstruct it, and prove it
 cargo run --release --bin brainos -- degrade  # what happens when the cloud goes
+cargo run --release --bin brainos -- worlds   # going online, and the advocate
 cargo run --release --bin brainos -- model    # what a model can and cannot do
 cargo run --release --bin brainos -- life     # one entity through all of it
 cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 755 tests
+cargo test --workspace --release              # 762 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -323,6 +324,66 @@ ability to *produce* a proof for a forgotten decision — and a proof
 issued before it was forgotten still verifies, because a proof is
 checked against a root rather than against a log. The board keeps
 minutes of leaves and hands the rest to flash.
+
+---
+
+## Going online, and coming back
+
+§3.8 says the entity lives in three worlds: its own, which it trusts;
+its human's, which is consequential; and the internet, which is "an
+alternate universe the entity visits, not a place it lives".
+
+**Going out.** The entity is not on the network until somebody opens a
+session for a stated purpose; the session is bounded in fetches and in
+bytes and closes itself — in the run, after exactly 8 fetches and 32 KiB.
+`Entity::open_world_bounded` exists because a visit with no stated size
+is a residence, and the generous defaults that cover a large download
+are the wrong thing for looking up one part number. What comes back can
+be read and can *never* be consulted when deciding whether an action is
+permitted, and consolidating an internet claim twelve times does not
+launder it.
+
+**Advocacy**, which is the structurally interesting half. The entity
+filters what reaches its human because it is theirs — and the master
+document's own note is the honest part: *structurally unavailable to any
+incumbent whose revenue depends on what reaches the user.* It is not
+that we are more principled. It is that the customer owns the entity, so
+there is no revenue line hurt when it holds something back.
+
+The filter is a heuristic over surface features and says so. What it
+produces is an **ordering**, and where the line sits is the human's to
+set:
+
+| the message | score | at 50 |
+|---|---|---|
+| a phishing attempt | 100 | held |
+| someone claiming to be the boss | 55 | held |
+| a scarcity-driven sales push | 35 | passed, with the reasons attached |
+| a genuine fraud alert from a bank | 20 | passed |
+| an ordinary message from a colleague | 0 | passed |
+| a patient, careful approach from a stranger | 0 | passed |
+
+And the same inbox at four settings, which is the part worth quoting:
+
+```
+at 80: 1 held, 1 dangerous missed, 0 honest held back
+at 50: 2 held, 0 dangerous missed, 0 honest held back
+at 30: 3 held, 0 dangerous missed, 0 honest held back
+at 20: 4 held, 0 dangerous missed, 1 honest held back
+```
+
+Below 50 it stops finding more fraud and starts holding back the bank.
+The hardest message in that inbox is the *genuine* fraud alert, which
+reads like phishing because it is trying to do the same job — and
+holding it back is the expensive mistake, the one that makes somebody
+switch the filter off and never switch it on again. A test asserts that
+tightening the filter costs something and that loosening it costs
+something, because a trade-off demonstrated on an easy problem is not a
+demonstration.
+
+Everything held back is listed for the human on request, the reasons are
+attached, and the filter can be turned off entirely. A filter that
+cannot be inspected or overridden is a filter that has become an editor.
 
 ---
 

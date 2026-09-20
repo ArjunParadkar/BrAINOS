@@ -16,6 +16,7 @@
 pub mod clock;
 pub mod ros2_stack;
 pub mod store;
+pub mod worlds_run;
 pub mod bench;
 pub mod compound;
 pub mod day;
