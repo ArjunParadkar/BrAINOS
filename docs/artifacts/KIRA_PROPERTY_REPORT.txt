@@ -54,11 +54,37 @@ Second domain — the two envelopes
     - a body whose geometry would tip never walks
     - an independently written oracle agrees, case by case
 
+Third domain — hostile input
+----------------------------
+  Every decoder in the workspace, fed random bytes and mutated-valid
+  bytes. No decoder may panic; anything that decodes must re-encode to
+  exactly its own bytes; and a format carrying an integrity check must
+  catch every mutation.
+
+  inputs fed: 36000
+  decoders: 9
+
+    decoder                        tried  accepted  non-canonical
+    abi::Verb                      4000       120              0
+    abi::Namespace                 4000       166              0
+    abi::Text                      4000       469              0
+    transport::Frame               4000         0              0   (integrity-checked: no mutation may pass)
+    bodyd::Command                 4000       442              0
+    bodyd::Report                  4000       902              0
+    memory::journal::Record        4000         0              0   (integrity-checked: no mutation may pass)
+    adapters::Json                 4000       248              0
+    adapters::mhs                  4000       200              0
+
+  verdict: holds
+
 What this is
 ------------
-  Bounded exhaustive model checking. Every case in the domains above was
-  run through the real code — not a model of it — and every property was
-  asserted over every resulting trace. Within those domains the properties
+  Bounded exhaustive model checking on the first two domains, and
+  randomised plus mutation fuzzing on the third. Every case in the
+  first two was run through the real code, not a model of it, and every
+  property was asserted over every resulting trace. Within those
+  domains the properties hold for all inputs, not for the ones a test
+  author thought of.
   hold for all inputs, not for the ones a test author thought of.
 
 What this is not

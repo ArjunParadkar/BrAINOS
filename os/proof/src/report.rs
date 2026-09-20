@@ -52,6 +52,8 @@ pub struct Report {
     pub verdict: Verdict,
     /// the second domain: the two-envelope property on the body side
     pub envelopes: Option<crate::envelopes::EnvelopeReport>,
+    /// the third: every decoder against hostile input
+    pub hostile: Option<crate::hostile::HostileReport>,
 }
 
 impl Report {
@@ -69,6 +71,7 @@ impl Report {
             results,
             verdict,
             envelopes: None,
+            hostile: None,
         }
     }
 
@@ -77,6 +80,14 @@ impl Report {
             self.verdict = Verdict::Violated;
         }
         self.envelopes = Some(e);
+        self
+    }
+
+    pub fn with_hostile(mut self, h: crate::hostile::HostileReport) -> Report {
+        if !h.holds() {
+            self.verdict = Verdict::Violated;
+        }
+        self.hostile = Some(h);
         self
     }
 
@@ -183,11 +194,44 @@ impl Report {
             s.push('\n');
         }
 
+        if let Some(h) = &self.hostile {
+            s.push_str("Third domain — hostile input\n");
+            s.push_str("----------------------------\n");
+            s.push_str("  Every decoder in the workspace, fed random bytes and mutated-valid\n");
+            s.push_str("  bytes. No decoder may panic; anything that decodes must re-encode to\n");
+            s.push_str("  exactly its own bytes; and a format carrying an integrity check must\n");
+            s.push_str("  catch every mutation.\n\n");
+            push_field(&mut s, "inputs fed", h.total_inputs as u64);
+            push_field(&mut s, "decoders", h.targets.len() as u64);
+            s.push('\n');
+            s.push_str("    decoder                        tried  accepted  non-canonical\n");
+            for t in &h.targets {
+                s.push_str("    ");
+                let mut name = alloc::string::String::from(t.name);
+                while name.len() < 28 {
+                    name.push(' ');
+                }
+                s.push_str(&name);
+                pad_u64(&mut s, t.tried as u64, 7);
+                pad_u64(&mut s, t.accepted as u64, 10);
+                pad_u64(&mut s, t.not_canonical as u64, 15);
+                if t.integrity_protected {
+                    s.push_str("   (integrity-checked: no mutation may pass)");
+                }
+                s.push('\n');
+            }
+            s.push_str("\n  verdict: ");
+            s.push_str(if h.holds() { "holds\n\n" } else { "VIOLATED\n\n" });
+        }
+
         s.push_str("What this is\n------------\n");
         for line in [
-            "  Bounded exhaustive model checking. Every case in the domains above was",
-            "  run through the real code — not a model of it — and every property was",
-            "  asserted over every resulting trace. Within those domains the properties",
+            "  Bounded exhaustive model checking on the first two domains, and",
+            "  randomised plus mutation fuzzing on the third. Every case in the",
+            "  first two was run through the real code, not a model of it, and every",
+            "  property was asserted over every resulting trace. Within those",
+            "  domains the properties hold for all inputs, not for the ones a test",
+            "  author thought of.",
             "  hold for all inputs, not for the ones a test author thought of.",
         ] {
             s.push_str(line);
@@ -218,10 +262,21 @@ impl Report {
         s
     }
 
-    /// Everything, both domains.
+    /// Everything: all three domains.
     pub fn full() -> Report {
-        crate::harness::verify().with_envelopes(crate::envelopes::verify_envelopes())
+        crate::harness::verify()
+            .with_envelopes(crate::envelopes::verify_envelopes())
+            .with_hostile(crate::hostile::verify_hostile(2_000))
     }
+}
+
+fn pad_u64(s: &mut String, v: u64, width: usize) {
+    let mut n = String::new();
+    push_u64(&mut n, v);
+    while n.len() < width {
+        n.insert(0, ' ');
+    }
+    s.push_str(&n);
 }
 
 fn push_field(s: &mut String, label: &str, value: u64) {

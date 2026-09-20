@@ -365,6 +365,9 @@ fn the_property_report_holds_in_this_build() {
     let report = brainos_proof::report::Report::full();
     assert!(report.holds(), "\n{}", report.render());
     assert!(report.coverage.is_meaningful());
-    let envelopes = report.envelopes.expect("both domains run");
+    let envelopes = report.envelopes.expect("the envelope domain runs");
     assert!(envelopes.holds());
+    let hostile = report.hostile.expect("the hostile domain runs");
+    assert!(hostile.holds());
+    assert!(hostile.total_inputs >= 30_000);
 }
