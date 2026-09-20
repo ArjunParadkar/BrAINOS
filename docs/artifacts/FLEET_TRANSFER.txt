@@ -15,6 +15,21 @@ BrAInOS — does experience transfer between entities?
   recovers eventually, because what is adopted is evidence rather than a
   verdict. The number that matters is how long the recovery takes.
 
+  The ordering held. The recovery did not — under the first adoption
+  rule, which copied the seller's evidence wholesale, a badly-sourced
+  skill left the entity permanently worse than one that started from
+  nothing: 80% against alone's 87%, still falling short after twelve
+  hundred episodes, with the cost showing up as refusal rather than
+  failure. The mechanism is the one skill.rs already warned about in its
+  own comment: an entity that believes a condition is required declines
+  exactly the situations that would disprove it.
+
+  So the rule changed, and this is the run under the new one. What
+  transfers is the *claim*, not the seller's numbers; the buyer holds it
+  on trust, acts on it — which is what makes a skill worth buying — and
+  deliberately violates it one blocked opportunity in twelve until it
+  has five local tests of its own. Both numbers are below.
+
   36 entities across 3 deployments, 1200 episodes each
 
   What each deployment's veteran had to sell, after 600 attempts:
@@ -25,21 +40,36 @@ BrAInOS — does experience transfer between entities?
   Judgement by arm, over the entity's life (% of situations handled well):
                                          0-200 200-400 400-600 600-800800-10001000-1200
     alone                                  80%     84%     85%     86%     86%     87%
-    adopts from the same deployment        89%     89%     88%     89%     88%     90%
-    adopts from a random deployment        73%     78%     78%     79%     79%     80%
+    adopts from the same deployment        85%     88%     87%     89%     88%     89%
+    adopts from a random deployment        77%     83%     83%     86%     86%     87%
     handed the true rule (ceiling)         89%     89%     89%     89%     89%     90%
 
   Cost of a wrong belief — how often it refused something that would
   have worked (% of declines):
                                              1       2       3       4       5       6
     alone                                  15%     14%     13%     13%     12%     12%
-    adopts from the same deployment         9%      9%     10%     10%      9%      9%
-    adopts from a random deployment        21%     20%     20%     19%     20%     19%
+    adopts from the same deployment        11%     10%     10%     10%     10%     10%
+    adopts from a random deployment        18%     15%     14%     12%     12%     12%
 
 Result
 ────────────────────
-  final judgement   alone 87%  ·  matched 90%  ·  blind 80%  ·  ceiling 90%
-  first slice       matched 89%  ·  blind 73%  ·  alone 80%
-  a badly-sourced skill never recovers within 1200 episodes — the entity's own
-  caution stops it generating the evidence that would contradict it
+  final judgement   alone 87%  ·  matched 89%  ·  blind 87%  ·  ceiling 90%
+  first slice       matched 85%  ·  blind 77%  ·  alone 80%
+  probes            matched 4 · blind 4 deliberate violations per entity, 
+                    which is what the correction costs
+
+  A badly-sourced skill now stops costing anything after about 600 episodes
+  — that is where a blind adopter is doing as well as a fresh entity is
+  doing at the same age — and reaches the level a fresh entity ends up at
+  by 1000. Under the old rule it reached neither, ever.
+
+  What it costs: matched lost about a point against the old rule (89%
+  where copying the seller's evidence gave 90%). That is the price of
+  checking a claim that happened to be true. Under the old rule the same
+  mechanism made a claim that happened to be false permanent.
+
+  What this cannot show: the three deployments are three rules I wrote.
+  It says what the mechanism does when worlds differ. It does not say how
+  much real deployments differ, and anyone quoting the number without
+  that sentence is misquoting it.
 

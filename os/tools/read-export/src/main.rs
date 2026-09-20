@@ -276,8 +276,8 @@ fn read(raw: &[u8]) -> Result<(), String> {
         return Err("no BRAINEX1 magic".into());
     }
     let version = c.u16()?;
-    if version != 2 {
-        return Err(format!("format version {version}; this reader knows 2"));
+    if version != 3 {
+        return Err(format!("format version {version}; this reader knows 3"));
     }
 
     // --- manifest ---
@@ -412,8 +412,8 @@ fn read(raw: &[u8]) -> Result<(), String> {
             let _kind = m.u8()?;
         }
         let _retrievals = m.u32()?;
-        // v2: a node may carry its exact structured form alongside its
-        // readable one. Skills use it; nothing else does yet.
+        // v2 onward: a node may carry its exact structured form alongside
+        // its readable one. Skills use it; nothing else does yet.
         let state = m.bytes()?;
 
         if kind < by_kind.len() {

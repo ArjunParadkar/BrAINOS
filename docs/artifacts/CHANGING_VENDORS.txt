@@ -9,7 +9,7 @@ BrAInOS — changing vendors
   described in the manufacturer's own format, adopts the file.
 
   [vendor A  ] entity c9571eeb..8860 lived on a hexapod: 66 memories, 1 skills, 61 ticks old, verbs legs.sit, legs.stand, legs.turn, legs.walk, voice.say
-  [leave     ] the customer exports: 15192 bytes in 3 sections, signed by their own Key
+  [leave     ] the customer exports: 15198 bytes in 3 sections, signed by their own Key
   [gone      ] vendor A ceases to exist — entity, bodies, gate, audit log, journal, all destroyed. One file crosses the gap, plus a Key that vendor A never held
   [vendor B  ] a six-axis arm described in the manufacturer's own format adopts the file: same entity (yes), 67 memories, 1 skills, 62 ticks old, 0 completed embodiments on record, 1 bodies ever
   [judgement ] what it worked out by trying — carpet 100% over 19 tests — arrives intact. That is the moat: not the file, the 19 attempts behind it

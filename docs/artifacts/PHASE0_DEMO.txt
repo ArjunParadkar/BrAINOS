@@ -15,7 +15,7 @@ BrAInOS — Phase 0, in simulation
   [skill     ] legs.walk is now 35/41 (85%), learned preconditions: 
   [audit     ] 5 decisions (2 granted, 3 refused), merkle root 83f6c1159ed2423c…
   [audit     ] decision #1 proven in the log with a 3-hash path; remove it and every later root changes
-  [export    ] 12363 bytes, 3 sections, signed by the entity's own key; the format spec is inside the file
+  [export    ] 12369 bytes, 3 sections, signed by the entity's own key; the format spec is inside the file
   [continuity] a brand-new process on the same Key woke with 53 memories and 1 skills; it still knows the floor is carpet: true
   [export    ] the file, imported cold into a fresh graph: 50 memories, 1 skills, 0 wakes on record
 
@@ -27,7 +27,7 @@ Result
   skills        1
   gated         2 granted, 3 refused
   audit root    83f6c1159ed2423cc2649810b501d4f815d681edbc9f1aae6b5fa314ad74b403
-  export        12363 bytes
+  export        12369 bytes
   continuity    memory outlived the process and the bodies
 
   What this does not show: nothing here has touched a motor.

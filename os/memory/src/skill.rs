@@ -70,6 +70,41 @@ pub const STALE_AFTER: u64 = 400;
 /// hunch before it forgets something it found out.
 pub const MAX_PRECONDITIONS: usize = 32;
 
+/// How many local tests before an adopted claim stops being taken on
+/// trust. The same five that a self-learned one needs, because it is the
+/// same question: has this entity found out, here?
+pub const LOCAL_TESTS_ENOUGH: u16 = 5;
+
+/// How often an entity deliberately violates a borrowed rule it has not
+/// checked, so that it can find out whether the rule is true here.
+///
+/// One opportunity in twelve. The number is a cost: twelve is roughly
+/// sixty attempts to resolve a borrowed claim, and each of those
+/// attempts may fail. Measured against the alternative — a wrong
+/// borrowed rule left in place, which the fleet experiment found costs
+/// seven points of judgement permanently — that is cheap. It is not
+/// free, and the experiment reports the failures it causes.
+pub const PROBE_EVERY: u16 = 12;
+
+/// What an entity decided to do about a skill, and why.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Decision {
+    /// nothing binding is missing
+    Attempt,
+    /// something borrowed is missing, and this is the deliberate
+    /// violation that finds out whether it is true here. The tag is the
+    /// claim being tested, so the entity can say what it is doing.
+    Probe(String),
+    /// something the entity established for itself is missing
+    Decline(String),
+}
+
+impl Decision {
+    pub fn acts(&self) -> bool {
+        matches!(self, Decision::Attempt | Decision::Probe(_))
+    }
+}
+
 /// A condition learned from experience.
 ///
 /// **What makes something a precondition is that without it the thing
@@ -104,6 +139,21 @@ pub struct Precondition {
     /// when the entity last attempted without this tag — the last time
     /// it found out rather than assumed
     pub last_tested: Tick,
+    /// This came from somebody else and has not been checked here.
+    ///
+    /// The fleet experiment measured what happens without this
+    /// distinction: a skill adopted from a deployment unlike your own
+    /// leaves the entity permanently *worse* than one that started from
+    /// nothing, because believing a condition is required means
+    /// declining exactly the situations that would disprove it. An
+    /// adopted claim is therefore held differently from an established
+    /// one — acted on, because that is what makes it worth buying, and
+    /// deliberately violated now and then, because that is what makes it
+    /// correctable.
+    pub adopted: bool,
+    /// Blocked opportunities since the last deliberate violation.
+    /// Only meaningful while `adopted` and unverified.
+    pub since_probe: u16,
 }
 
 impl Precondition {
@@ -153,7 +203,20 @@ impl Precondition {
     /// freshness it outlives the world it was learned in and the
     /// entity's own caution stops it finding out.
     pub fn is_binding_at(&self, now: Tick) -> bool {
-        self.is_well_supported() && self.is_fresh(now)
+        if self.tests >= LOCAL_TESTS_ENOUGH {
+            // enough local evidence: what this entity found out decides,
+            // whoever it originally came from
+            return self.is_well_supported() && self.is_fresh(now);
+        }
+        // borrowed and not yet checked here. Acted on — that is what
+        // makes a bought skill worth buying — and probed, which is what
+        // keeps it from being permanent.
+        self.adopted && self.is_fresh(now)
+    }
+
+    /// Borrowed, and this entity has not yet found out for itself.
+    pub fn is_on_trust(&self) -> bool {
+        self.adopted && self.tests < LOCAL_TESTS_ENOUGH
     }
 
     /// Kept for callers that only want the evidence question.
@@ -183,6 +246,8 @@ impl Encode for Precondition {
         e.u16(self.tests);
         e.u16(self.test_failures);
         self.last_tested.encode(e);
+        e.bool(self.adopted);
+        e.u16(self.since_probe);
     }
 }
 
@@ -195,6 +260,8 @@ impl Decode for Precondition {
             tests: d.u16()?,
             test_failures: d.u16()?,
             last_tested: Tick::decode(d)?,
+            adopted: d.bool()?,
+            since_probe: d.u16()?,
         })
     }
 }
@@ -332,6 +399,57 @@ impl Skill {
         self.missing_at(context, now).is_empty()
     }
 
+    /// Decide, and remember having decided.
+    ///
+    /// `applicable_at` is the read-only question and stays that way.
+    /// This is the one an entity actually acts on, and it mutates
+    /// because a decision to hold off on a borrowed rule is itself
+    /// something to keep track of: the entity owes that rule a test, and
+    /// this is where the debt is counted.
+    pub fn decide_at(&mut self, context: &[&str], now: Tick) -> Decision {
+        let blocking: Vec<usize> = self
+            .preconditions
+            .iter()
+            .enumerate()
+            .filter(|(_, p)| p.is_binding_at(now) && !context.iter().any(|c| *c == p.tag))
+            .map(|(i, _)| i)
+            .collect();
+
+        if blocking.is_empty() {
+            return Decision::Attempt;
+        }
+
+        // Probing is only honest when *every* reason to hold off is one
+        // the entity took on trust. A locally-established condition is
+        // missing means declining is right, and violating it to check a
+        // borrowed one next to it would be finding out the wrong thing.
+        let all_on_trust = blocking
+            .iter()
+            .all(|&i| self.preconditions[i].is_on_trust());
+        if !all_on_trust {
+            let tag = self.preconditions[blocking[0]].tag.clone();
+            return Decision::Decline(tag);
+        }
+
+        let mut due = None;
+        for &i in &blocking {
+            let p = &mut self.preconditions[i];
+            p.since_probe = p.since_probe.saturating_add(1);
+            if due.is_none() && p.since_probe >= PROBE_EVERY {
+                due = Some(i);
+            }
+        }
+        match due {
+            Some(i) => {
+                for &j in &blocking {
+                    self.preconditions[j].since_probe = 0;
+                }
+                Decision::Probe(self.preconditions[i].tag.clone())
+            }
+            None => Decision::Decline(self.preconditions[blocking[0]].tag.clone()),
+        }
+    }
+
     pub fn applicable(&self, context: &[&str]) -> bool {
         self.missing(context).is_empty()
     }
@@ -399,13 +517,15 @@ impl Skill {
                     tests: 0,
                     test_failures: 0,
                     last_tested: at,
+                    adopted: false,
+                    since_probe: 0,
                 });
             }
         }
         // a tag that has been tested and did not matter stops being a
         // candidate at all
         self.preconditions
-            .retain(|p| p.tests < 5 || p.strength() >= 20);
+            .retain(|p| p.tests < LOCAL_TESTS_ENOUGH || p.strength() >= 20);
 
         // and the list itself is bounded: drop the weakest untested
         // candidate first, so a hunch goes before a finding
@@ -691,12 +811,23 @@ impl SkillGraph {
                 break;
             }
             skill.preconditions.push(Precondition {
-                // the clock is the receiver's; a claim adopted today is
+                tag: p.tag.clone(),
+                // What transfers is the *claim*, not the seller's
+                // numbers. The counts here stay local from the start, so
+                // "how many times has this entity found out" has one
+                // meaning and a seller cannot inflate it. Until the
+                // entity has its own five tests, the claim is held on
+                // trust — acted on, and probed.
+                adopted: true,
+                support: 0,
+                against: 0,
+                tests: 0,
+                test_failures: 0,
+                since_probe: 0,
+                // the clock is the receiver's: a claim adopted today is
                 // as fresh as today, and goes stale on this entity's
                 // schedule rather than the seller's
                 last_tested: at,
-                tag: p.tag.clone(),
-                ..*p
             });
             taken += 1;
         }

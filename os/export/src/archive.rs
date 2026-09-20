@@ -24,14 +24,18 @@ use brainos_memory::graph::StateGraph;
 use brainos_memory::law::MemoryHandle;
 
 pub const MAGIC: [u8; 8] = *b"BRAINEX1";
-/// Version 2. v1 predates nodes carrying their structured form, so a v1
-/// memory section decodes into skills that have forgotten every
-/// precondition they ever learned. Rather than read one and silently
-/// hand back a diminished entity, this build refuses it by name.
-pub const FORMAT_VERSION: u16 = 2;
+/// Version 3.
+///
+/// v1 predates nodes carrying their structured form, so its skills have
+/// forgotten every precondition they ever learned. v2 predates a
+/// precondition recording whether it was adopted from another entity,
+/// so its borrowed claims cannot be told from established ones and
+/// would never be probed. Both would decode into an entity quietly
+/// missing part of itself, so both are refused by name rather than read.
+pub const FORMAT_VERSION: u16 = 3;
 
 /// The oldest version this build will read.
-pub const OLDEST_READABLE: u16 = 2;
+pub const OLDEST_READABLE: u16 = 3;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ExportError {

@@ -46,7 +46,7 @@ use brainos_crypto::rng::Drbg;
 use brainos_entity::entity::Entity;
 use brainos_memory::consolidate::Dream;
 use brainos_memory::episode::Outcome;
-use brainos_memory::skill::Precondition;
+use brainos_memory::skill::{Decision, Precondition};
 
 use crate::compound::Situation;
 
@@ -133,6 +133,10 @@ pub struct Slice {
     pub succeeded: u32,
     pub declined: u32,
     pub declined_rightly: u32,
+    /// attempts made *specifically* to check a borrowed claim. A subset
+    /// of `attempted`, counted separately because probing has a cost and
+    /// the cost should be visible rather than buried in the total.
+    pub probed: u32,
 }
 
 impl Slice {
@@ -216,17 +220,31 @@ fn career(
         let situation = Situation::from_bits(situation_rng.below(8));
         let tags = situation.tags();
 
-        let attempt = match arm {
-            Arm::Oracle => tags.contains(&deployment.true_condition()) && situation.battery_ok,
-            _ => e
-                .skills
-                .for_verb(&walk)
-                .map(|s| s.applicable_at(&tags, e.tick))
-                .unwrap_or(true),
+        let (attempt, probing) = match arm {
+            Arm::Oracle => (
+                tags.contains(&deployment.true_condition()) && situation.battery_ok,
+                false,
+            ),
+            _ => {
+                let now = e.tick;
+                match e
+                    .skills
+                    .for_verb_mut(&walk)
+                    .map(|s| s.decide_at(&tags, now))
+                {
+                    Some(Decision::Attempt) => (true, false),
+                    Some(Decision::Probe(_)) => (true, true),
+                    Some(Decision::Decline(_)) => (false, false),
+                    None => (true, false),
+                }
+            }
         };
 
         let would_succeed = deployment.outcome(situation, &mut world_rng);
 
+        if probing {
+            s.probed += 1;
+        }
         if attempt {
             s.attempted += 1;
             if would_succeed {
@@ -324,9 +342,20 @@ fn veteran(deployment: Deployment, episodes: usize, seed: &[u8]) -> Vec<Precondi
         }
     }
 
+    // What is for sale is what the veteran can back up, not every tag it
+    // ever tracked. Selling the hunches too made matched and blind
+    // adopt near-identical lists and the two arms came out to the digit
+    // — which is what a bug in an experiment looks like when it is
+    // lucky enough to be obvious.
     e.skills
         .for_verb(&walk)
-        .map(|s| s.preconditions.clone())
+        .map(|s| {
+            s.preconditions
+                .iter()
+                .filter(|p| p.is_well_supported())
+                .cloned()
+                .collect()
+        })
         .unwrap_or_default()
 }
 
@@ -371,8 +400,29 @@ impl FleetResult {
         (vals.iter().sum::<u32>() / vals.len() as u32) as u8
     }
 
+    pub fn mean_probes(&self, arm: Arm) -> u32 {
+        let cs = self.arm(arm);
+        if cs.is_empty() {
+            return 0;
+        }
+        let total: u32 = cs
+            .iter()
+            .map(|c| c.slices.iter().map(|s| s.probed).sum::<u32>())
+            .sum();
+        total / cs.len() as u32
+    }
+
     pub fn slices(&self) -> usize {
         self.careers.first().map(|c| c.slices.len()).unwrap_or(0)
+    }
+
+    /// The first slice in which `arm` is doing at least as well as the
+    /// baseline *is doing at the time*. This is the honest convergence
+    /// number: it asks when the handicap stops mattering, rather than
+    /// when the handicapped entity catches a moving target's finish
+    /// line.
+    pub fn converges_with_alone_at(&self, arm: Arm) -> Option<usize> {
+        (0..self.slices()).find(|&i| self.mean_judgement(arm, i) >= self.mean_judgement(Arm::Alone, i))
     }
 
     /// The first slice in which `arm` reaches `alone`'s final level.

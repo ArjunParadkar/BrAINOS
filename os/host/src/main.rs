@@ -128,8 +128,22 @@ fn fleet() -> ExitCode {
 
   Pre-registered before the run: matched > alone > blind, and blind
   recovers eventually, because what is adopted is evidence rather than a
-  verdict. The number that matters is how long the recovery takes.\n"
-    );
+  verdict. The number that matters is how long the recovery takes.
+
+  The ordering held. The recovery did not — under the first adoption
+  rule, which copied the seller's evidence wholesale, a badly-sourced
+  skill left the entity permanently worse than one that started from
+  nothing: 80% against alone's 87%, still falling short after twelve
+  hundred episodes, with the cost showing up as refusal rather than
+  failure. The mechanism is the one skill.rs already warned about in its
+  own comment: an entity that believes a condition is required declines
+  exactly the situations that would disprove it.
+
+  So the rule changed, and this is the run under the new one. What
+  transfers is the *claim*, not the seller's numbers; the buyer holds it
+  on trust, acts on it — which is what makes a skill worth buying — and
+  deliberately violates it one blocked opportunity in twelve until it
+  has five local tests of its own. Both numbers are below.\n"    );
 
     let r = run_fleet(12, 1_200, 6);
 
@@ -192,17 +206,36 @@ fn fleet() -> ExitCode {
         r.mean_judgement(Arm::Blind, 0),
         r.mean_judgement(Arm::Alone, 0)
     );
-    match r.catches_up_at(Arm::Blind) {
-        Some(i) => println!(
-            "  a badly-sourced skill costs {} episodes before the entity is back where\n  it would have been learning alone",
-            i * (r.episodes / r.slices())
+    println!(
+        "  probes            matched {} · blind {} deliberate violations per entity, \n                    which is what the correction costs",
+        r.mean_probes(Arm::Matched),
+        r.mean_probes(Arm::Blind)
+    );
+    let per = r.episodes / r.slices();
+    match (
+        r.converges_with_alone_at(Arm::Blind),
+        r.catches_up_at(Arm::Blind),
+    ) {
+        (Some(c), Some(i)) => println!(
+            "\n  A badly-sourced skill now stops costing anything after about {} episodes\n  — that is where a blind adopter is doing as well as a fresh entity is\n  doing at the same age — and reaches the level a fresh entity ends up at\n  by {}. Under the old rule it reached neither, ever.",
+            c * per,
+            i * per
         ),
-        None => println!(
-            "  a badly-sourced skill never recovers within {} episodes — the entity's own\n  caution stops it generating the evidence that would contradict it",
+        (Some(c), None) => println!(
+            "\n  A badly-sourced skill stops costing anything after about {} episodes,\n  but never reaches where learning alone ends up.",
+            c * per
+        ),
+        _ => println!(
+            "\n  A badly-sourced skill still never recovers within {} episodes. The probe\n  rule did not fix it, and this line says so rather than the number being\n  quietly dropped.",
             r.episodes
         ),
     }
-    println!();
+    println!(
+        "\n  What it costs: matched lost about a point against the old rule ({matched}%\n  where copying the seller's evidence gave 90%). That is the price of\n  checking a claim that happened to be true. Under the old rule the same\n  mechanism made a claim that happened to be false permanent.\n"
+    );
+    println!(
+        "  What this cannot show: the three deployments are three rules I wrote.\n  It says what the mechanism does when worlds differ. It does not say how\n  much real deployments differ, and anyone quoting the number without\n  that sentence is misquoting it.\n"
+    );
     ExitCode::SUCCESS
 }
 
