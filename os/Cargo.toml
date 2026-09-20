@@ -38,6 +38,7 @@ members = [
     "export",
     "host",
     "nostd",
+    "tools/read-export",
 ]
 
 [workspace.package]

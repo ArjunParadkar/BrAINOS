@@ -23,6 +23,7 @@ fn main() -> ExitCode {
         "compound" => compound(),
         "day" => day(),
         "stat" => stat(),
+        "export" => export(args.get(2).map(|s| s.as_str())),
         "help" | "-h" | "--help" => {
             usage();
             ExitCode::SUCCESS
@@ -54,6 +55,8 @@ usage: brainos <command>
   compound the experiment behind the moat claim: does an entity with
            experience make better decisions than one without?
   day      a working day of ambient operation: can it be left running?
+  export   write an entity export to a file, so it can be read back by
+           something that is not us (see tools/read-export)
   stat     what this build contains
 "
     );
@@ -99,6 +102,29 @@ fn demo() -> ExitCode {
     } else {
         ExitCode::FAILURE
     }
+}
+
+fn export(path: Option<&str>) -> ExitCode {
+    let path = path.unwrap_or("entity.brainex");
+    rule("BrAInOS — export");
+    let r = brainos_host::demo::run();
+    if let Err(e) = std::fs::write(path, &r.archive) {
+        eprintln!("  could not write {path}: {e}");
+        return ExitCode::FAILURE;
+    }
+    println!("  entity     {}", r.entity_id);
+    println!("  memories   {}", r.memories);
+    println!("  written    {} ({} bytes)", path, r.archive.len());
+    println!(
+        "\n  This file is the customer's, not ours. To check that, read it with
+  something that shares no code with BrAInOS:
+
+      cargo run -p read-export --release -- {path}
+
+  That reader's whole dependency list is ed25519-dalek. Its layout came
+  from the specification carried inside this file, in the readme section.\n"
+    );
+    ExitCode::SUCCESS
 }
 
 fn verify() -> ExitCode {

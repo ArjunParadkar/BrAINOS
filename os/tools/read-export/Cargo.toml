@@ -1,0 +1,18 @@
+[package]
+name = "read-export"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "A standalone reader for a BrAInOS entity export. Depends on no BrAInOS crate — that is the point."
+
+# The dependency list is the claim.
+#
+# One crate, for ed25519, because nobody should hand-roll a signature
+# scheme. SHA-256 is implemented in this file from FIPS 180-4, in about
+# eighty lines, so that the reader does not even need that.
+#
+# There is deliberately no `brainos-*` here, and a test in the workspace
+# asserts it: if reading an entity export required our code, the
+# customer would not own their entity, they would rent it.
+[dependencies]
+ed25519-dalek = { version = "2", default-features = false }
