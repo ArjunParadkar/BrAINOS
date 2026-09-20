@@ -168,6 +168,31 @@ impl Entity {
         if let Some(l) = life {
             self.life = l;
         }
+
+        // The counter is the entity's, not the caller's.
+        //
+        // `at` was being taken at face value, which meant the host could
+        // set an entity's age by choosing a number — and age is the
+        // x-axis of the curve §2.4 says the moat becomes visible on.
+        // A metric that is easy to move without getting better is a
+        // metric that will be moved without getting better, so it is not
+        // the caller's to move: a returning entity resumes from where it
+        // actually stopped.
+        //
+        // Where it stopped is recovered from its own record — the last
+        // completed span, or, for an entity exported while awake and
+        // therefore having no closing span, the newest thing it
+        // remembers. A memory cannot be later than the counter that
+        // stamped it, so the newest provenance is a sound floor.
+        let resume = self
+            .life
+            .last_stopped_at()
+            .into_iter()
+            .chain(self.graph.nodes().iter().map(|n| n.provenance.at))
+            .max();
+        if let Some(r) = resume {
+            self.tick = r.next();
+        }
         self.index = Index::build(&self.graph);
         self.graph.mark_session();
 
@@ -179,21 +204,27 @@ impl Entity {
             .unwrap_or(false);
 
         self.span = Span {
-            woke_at: at,
+            woke_at: self.tick,
             ..Span::default()
         };
         self.awake = true;
 
-        // a wake is itself something that happened
+        // A wake is itself something that happened — and it happened at
+        // the entity's tick, not at the caller's. Those used to be the
+        // same number; now that the counter is the entity's own, using
+        // `at` here would stamp the first memory of an embodiment with
+        // a time the entity was never at, and every staleness judgement
+        // downstream reads these stamps.
+        let now = self.tick;
         Episode::observed(
             if after_power_loss {
                 "woke after losing power"
             } else {
                 "woke"
             },
-            at,
+            now,
         )
-        .record(&self.handle, &mut self.graph, Provenance::own(at));
+        .record(&self.handle, &mut self.graph, Provenance::own(now));
 
         Ok(Wake {
             inherited: self.graph.inherited,

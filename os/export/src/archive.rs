@@ -386,3 +386,47 @@ pub fn import(
     Life::from_bytes(&life_section.bytes)
         .map_err(|_| ExportError::Corrupt("life section did not decode"))
 }
+
+/// Take custody of an exported entity: verify the archive, then wake the
+/// entity from it.
+///
+/// This is the operation a *receiving* vendor performs. It exists as one
+/// function rather than as a recipe in a document because the ordering
+/// matters and is easy to get wrong: verify completely, then load. A
+/// vendor who loads first and verifies afterwards has already been given
+/// somebody else's memories, and "we checked and then deleted them" is
+/// not the same as never having had them.
+///
+/// The entity must be fresh — a process does not adopt an entity into a
+/// body that is already inhabited by one — and the Key must be the
+/// customer's own. The archive carries the public half; the private half
+/// is in the customer's secure element, which is why the receiving
+/// vendor can read the file but cannot become the entity.
+pub fn adopt(
+    entity: &mut brainos_entity::entity::Entity,
+    archive: &Archive,
+    at: Tick,
+) -> Result<brainos_entity::entity::Wake, ExportError> {
+    if entity.is_awake() {
+        return Err(ExportError::WrongEntity);
+    }
+    if !archive.manifest.entity.ct_eq(&entity.id()) {
+        return Err(ExportError::WrongEntity);
+    }
+
+    // verification first, and completely
+    archive.verify(&entity.key().public())?;
+
+    let memory = archive
+        .section(SectionKind::Memory)
+        .ok_or(ExportError::Incomplete("memory"))?;
+    let life_section = archive
+        .section(SectionKind::Life)
+        .ok_or(ExportError::Incomplete("life"))?;
+    let life = Life::from_bytes(&life_section.bytes)
+        .map_err(|_| ExportError::Corrupt("life section did not decode"))?;
+
+    entity
+        .wake(Some(&memory.bytes), Some(life), at)
+        .map_err(|_| ExportError::Corrupt("memory section did not load"))
+}

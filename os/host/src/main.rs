@@ -24,6 +24,7 @@ fn main() -> ExitCode {
         "day" => day(),
         "stat" => stat(),
         "export" => export(args.get(2).map(|s| s.as_str())),
+        "leave" => leave(),
         "help" | "-h" | "--help" => {
             usage();
             ExitCode::SUCCESS
@@ -55,6 +56,9 @@ usage: brainos <command>
   compound the experiment behind the moat claim: does an entity with
            experience make better decisions than one without?
   day      a working day of ambient operation: can it be left running?
+  leave    the freedom principle, exercised: an entity that lived its
+           whole life on one vendor's hexapod is moved to a competitor's
+           arm, after the first vendor has ceased to exist
   export   write an entity export to a file, so it can be read back by
            something that is not us (see tools/read-export)
   stat     what this build contains
@@ -100,6 +104,34 @@ fn demo() -> ExitCode {
     if r.memory_survived {
         ExitCode::SUCCESS
     } else {
+        ExitCode::FAILURE
+    }
+}
+
+fn leave() -> ExitCode {
+    rule("BrAInOS — changing vendors");
+    println!(
+        "  \"The customer owns the entity. Permanently.\" Every company says
+  something like that; the question is whether the architecture makes it
+  true. So: an entity spends its whole life on one vendor's hexapod, the
+  customer exports it, that vendor is then destroyed entirely — entity,
+  bodies, gate, audit log, journal — and a competitor's six-axis arm,
+  described in the manufacturer's own format, adopts the file.\n"
+    );
+    let m = brainos_host::migrate::migrate();
+    for (step, text) in brainos_host::migrate::narrate(&m) {
+        println!("  [{:<10}] {}", step, text);
+    }
+    println!(
+        "\n  What this costs the customer: nothing technical. The second robot is
+  a stranger to this entity's calibration and has to be learned; the
+  memories came free. That is the moat, and it is the honest one —
+  worth staying for, not impossible to leave.\n"
+    );
+    if m.is_free() {
+        ExitCode::SUCCESS
+    } else {
+        eprintln!("  the customer did NOT get to leave cleanly\n");
         ExitCode::FAILURE
     }
 }

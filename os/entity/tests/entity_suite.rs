@@ -765,3 +765,128 @@ fn two_bodies_one_memory_the_phase_zero_demo() {
     );
     assert_eq!(reborn.life.bodies_ever.len(), 2);
 }
+
+// ---------------------------------------------------------------------
+// the counter belongs to the entity
+// ---------------------------------------------------------------------
+
+/// §2.4 makes entity age the x-axis of the curve the moat becomes
+/// visible on. So age has to be a fact about the entity rather than a
+/// number the host chose — otherwise the curve is forgeable by the one
+/// party with an interest in forging it.
+#[test]
+fn the_host_cannot_inflate_an_entitys_age() {
+    let mut e = Entity::new(BrainKey::from_seed(&[0x31; 32]), Tick(0));
+    e.wake(None, None, Tick(1)).unwrap();
+    for i in 0..20 {
+        e.tick(SenseFrame::quiet(Instant(i)));
+    }
+    let lived = e.life.age(e.tick);
+    let (durable, life) = e.sleep().unwrap();
+
+    // an honest host, and a host trying to sell an experienced robot
+    let mut honest = Entity::new(BrainKey::from_seed(&[0x31; 32]), Tick(0));
+    honest.wake(Some(&durable), Some(life.clone()), Tick(22)).unwrap();
+
+    let mut liar = Entity::new(BrainKey::from_seed(&[0x31; 32]), Tick(0));
+    liar.wake(Some(&durable), Some(life), Tick(10_000_000)).unwrap();
+
+    assert_eq!(
+        honest.life.age(honest.tick),
+        liar.life.age(liar.tick),
+        "the age an entity reports depended on the number the host passed to wake"
+    );
+    assert!(
+        liar.life.age(liar.tick) < lived + 4,
+        "an entity that lived {lived} ticks came back claiming {}",
+        liar.life.age(liar.tick)
+    );
+}
+
+/// The counter must not run backwards either: a host that wakes an
+/// entity at a tick it has already been past would have it stamp new
+/// memories with times that precede memories it already holds, and
+/// every freshness and staleness judgement downstream reads those
+/// stamps.
+#[test]
+fn the_counter_never_runs_backwards() {
+    let mut e = Entity::new(BrainKey::from_seed(&[0x32; 32]), Tick(0));
+    e.wake(None, None, Tick(1)).unwrap();
+    for i in 0..50 {
+        e.tick(SenseFrame::quiet(Instant(i)));
+    }
+    let high = e.tick;
+    let (durable, life) = e.sleep().unwrap();
+
+    let mut back = Entity::new(BrainKey::from_seed(&[0x32; 32]), Tick(0));
+    back.wake(Some(&durable), Some(life), Tick(0)).unwrap();
+    assert!(
+        back.tick > high,
+        "woken at tick 0, the entity resumed at {:?} having reached {high:?}",
+        back.tick
+    );
+    let newest = back
+        .graph
+        .nodes()
+        .iter()
+        .map(|n| n.provenance.at)
+        .max()
+        .unwrap();
+    assert_eq!(
+        newest, back.tick,
+        "the wake it just recorded is not the newest thing it remembers"
+    );
+}
+
+/// An entity captured while awake has no closing span, so there is no
+/// span to resume from and it has to recover the counter from its own
+/// memories. That is the case a vendor going bankrupt overnight
+/// produces, and it is the one most likely to be untested.
+///
+/// What it resumes at is the newest thing it durably recorded, plus
+/// one. Ticks it spent thinking without recording anything are lost,
+/// which is the same semantics a journal gives after power loss and is
+/// the right ones: an entity comes back at the last thing it wrote
+/// down. Note the direction of the error — this *under*-counts age,
+/// never over-counts it, and under-counting is the safe direction for a
+/// number the vendor has an interest in inflating.
+#[test]
+fn an_entity_captured_while_awake_resumes_at_its_newest_memory() {
+    let mut e = Entity::new(BrainKey::from_seed(&[0x33; 32]), Tick(0));
+    e.wake(None, None, Tick(1)).unwrap();
+    for i in 0..30 {
+        e.tick(SenseFrame::quiet(Instant(i)));
+        if i % 10 == 0 {
+            e.outcome(
+                v("legs.stand"),
+                None,
+                Outcome::Succeeded,
+                "stood",
+                &["workshop"],
+            );
+        }
+    }
+    let newest_written = e
+        .graph
+        .nodes()
+        .iter()
+        .map(|n| n.provenance.at)
+        .max()
+        .unwrap();
+    // no sleep: the durable bytes are taken mid-life
+    let durable = e.graph.encode_durable().unwrap();
+    let life = e.life.clone();
+    assert!(life.recent().is_empty(), "the premise: no completed span");
+
+    let mut next = Entity::new(BrainKey::from_seed(&[0x33; 32]), Tick(0));
+    next.wake(Some(&durable), Some(life), Tick(999_999)).unwrap();
+    assert_eq!(
+        next.tick,
+        newest_written.next(),
+        "resumed somewhere other than just after the newest thing it wrote down"
+    );
+    assert!(
+        next.tick < Tick(999_999),
+        "the caller's number leaked into the counter"
+    );
+}

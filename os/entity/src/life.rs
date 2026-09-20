@@ -160,6 +160,14 @@ impl Life {
         &self.recent
     }
 
+    /// Where the cognition counter was when this entity last stopped.
+    ///
+    /// `None` for an entity that has never completed a span — a first
+    /// waking, or one exported while awake.
+    pub fn last_stopped_at(&self) -> Option<Tick> {
+        self.recent.last().map(|s| s.slept_at)
+    }
+
     /// Is this entity better calibrated than it was?
     ///
     /// Compares the first and last thirds of the remembered spans. The

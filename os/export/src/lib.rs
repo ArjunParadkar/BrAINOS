@@ -42,5 +42,5 @@ extern crate alloc;
 pub mod archive;
 pub mod format;
 
-pub use archive::{export, import, Archive, ExportError, Manifest, Section, SectionKind};
+pub use archive::{adopt, export, import, Archive, ExportError, Manifest, Section, SectionKind};
 pub use format::describe_format;

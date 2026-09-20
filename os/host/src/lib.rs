@@ -20,6 +20,7 @@ pub mod compound;
 pub mod day;
 pub mod demo;
 pub mod fullstack;
+pub mod migrate;
 
 pub use clock::SystemClock;
 pub use store::{FileStore, StoreError};
