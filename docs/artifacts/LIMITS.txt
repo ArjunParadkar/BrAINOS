@@ -1,0 +1,123 @@
+
+BrAInOS — where this breaks
+───────────────────────────
+  Every claim in the architecture has an implied scale, and a claim whose
+  scale has not been measured is a claim with a hole in it. Part 0 says
+  no artifact ships with a known correctness defect; this is the other
+  half of that — knowing where the claims stop being true, before
+  somebody finds out in a warehouse.
+
+  Three kinds of limit, because they call for different reactions.
+  `hard` is a constant in the code and is there on purpose. `bound` is a
+  configured cap; raising it costs memory and nothing else. `soft` means
+  nothing stops you, it simply gets worse — and those are the dangerous
+  ones, because there is no error to notice.
+
+  bodies one entity holds at once [soft]
+      1000+ accepted
+      nothing refuses. The body map is a linear scan, so verb lookup is
+      O(bodies × regions) and an entity with a thousand bodies pays for all
+      of them on every gate evaluation. Past a few dozen this is a fleet, and
+      a fleet belongs to the registry — which cannot command — rather than
+      to one entity
+      set in: no cap; brainos_body::region::BodyMap
+
+  episodes an entity remembers [bound]
+      4096 by default, 256 embedded
+      the oldest and least salient are dropped. At ~120 bytes each the default
+      is ~490 KiB, which an ESP32-S3 with 512 KiB of SRAM in total does not
+      have — which is what Bounds::EMBEDDED is for
+      set in: brainos_memory::graph::Bounds
+
+  candidate preconditions per skill [hard]
+      32
+      the weakest untested candidate is evicted — a hunch is forgotten
+      before a finding. Unbounded until a skill was serialized into a node, at
+      which point an unbounded skill became an unbounded node
+      set in: brainos_memory::skill::MAX_PRECONDITIONS
+
+  bytes a node's structured form may hold [bound]
+      4096
+      the write is refused and the caller told, rather than truncated. Half a
+      serialization is a corrupt memory, not a smaller one
+      set in: brainos_memory::graph::Bounds::max_state
+
+  delegation chain depth [soft]
+      4096+ verified
+      each link narrows, never widens, so depth costs verification time and
+      nothing else. The practical limit is the expiry: a chain can only be as
+      long as there are ticks to give away
+      set in: no cap; bounded by the expiry being narrowed
+
+  payload in one transport frame [hard]
+      448 bytes
+      larger payloads are refused at the sender. Sized so a frame fits inside
+      a single BLE MTU-bounded write with room for the header and MAC
+      set in: brainos_transport::frame::MAX_PAYLOAD
+
+  envelope channels [hard]
+      8
+      a body that needs a ninth physical quantity cannot express it, and an
+      unstated channel is a violation rather than a pass — so the failure is
+      a refusal to move, not an unchecked motion
+      set in: brainos_rt::envelope::Channel
+
+  the retrieval index's own footprint [soft]
+      about 210 bytes per memory
+      measured below rather than estimated. At the default bound of 4,096
+      episodes the index is ~870 KiB — larger than the memories it indexes,
+      and on its own more than an ESP32-S3's entire 512 KiB of SRAM. The
+      earlier footprint number counted the memories and not the index; the
+      real embedded constraint is the index, and Bounds::EMBEDDED at 256
+      episodes puts it around 55 KiB
+      set in: follows from Bounds and brainos_memory::index
+
+  producing one audit inclusion proof [soft]
+      linear in the whole history
+      the path is logarithmic but building it walks every level, so proving
+      one decision out of a million takes most of a second. Acceptable because
+      proving happens after an incident rather than in the loop — unlike the
+      root, which every checkpoint needs and which is now logarithmic
+      set in: brainos_crypto::merkle::MerkleLog::prove
+
+  term length for retrieval [hard]
+      8 bytes, truncating
+      words sharing their first eight bytes collide — "calibration" and
+      "calibrated" are one term. Deliberate: it is a stemmer that needs no
+      dictionary and no model, and the collisions it causes are mostly the
+      ones a stemmer would want
+      set in: brainos_memory::index::TERM_MAX
+
+
+Retrieval at scale — the soft limit most likely to bite
+───────────────────────────────────────────────────────
+  One memory that answers the question is planted among distractors that
+  are deliberately similar: same sentence shape, same vocabulary,
+  different specifics. A haystack of unrelated text would make BM25 look
+  better than it is. `rank` is where the planted memory came back; 1 is
+  first and 0 means it was not in the top ten at all.
+
+      memories   rank     build µs     query µs  index bytes
+           101      1           98            2        21416
+          1001      1          890            1       212216
+          4097      1         4318            4       868568
+         16385      1        16308            5      3473624
+
+The audit log as it grows
+─────────────────────────
+  The Merkle log keeps every leaf hash forever — 32 bytes per decision —
+  and prunes the records instead. The root is what every checkpoint
+  needs, and it used to be rebuilt from every level: 0.7 s at a million
+  decisions, which a robot making ten a second reaches in about a day.
+  It is now a frontier of perfect subtrees, so it costs the population
+  count of the log's length. Producing a *proof* is still linear, and
+  that is left alone on purpose — proving happens after an incident, not
+  in the loop.
+
+       decisions   proof path    root µs    prove µs    leaves kept
+            1000           10          5         988            31 KiB
+          100000           17          6       96966          3125 KiB
+         1000000           20          6      990058         31250 KiB
+
+  At the bound this ships with, the entity still finds what it knows.
+

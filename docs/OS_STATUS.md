@@ -28,10 +28,11 @@ cargo run --release --bin brainos -- fleet    # does it transfer between entitie
 cargo run --release --bin brainos -- day      # can it be left running?
 cargo run --release --bin brainos -- incident # reconstruct it, and prove it
 cargo run --release --bin brainos -- degrade  # what happens when the cloud goes
+cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 683 tests
+cargo test --workspace --release              # 692 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -214,6 +215,69 @@ has 512 KiB of SRAM in total. `Bounds::EMBEDDED` is 256 episodes, about
 30 KiB. The same entity remembers less in a small body and more in a
 large one — the bound is a property of the body it is currently thinking
 in, not of who it is.
+
+---
+
+## Where this breaks
+
+Every claim in the architecture has an implied scale, and a claim whose
+scale has not been measured is a claim with a hole in it. Part 0 says no
+artifact ships with a known correctness defect; `brainos limits` is the
+other half of that — knowing where the claims stop being true, before
+somebody finds out in a warehouse.
+
+Each limit is labelled by kind, because the three call for completely
+different reactions. **hard** is a constant in the code, there on
+purpose. **bound** is a configured cap; raising it costs memory and
+nothing else. **soft** means nothing stops you, it simply gets worse —
+and those are the point of the exercise, because there is no error to
+notice.
+
+| limit | kind | value |
+|---|---|---|
+| bodies one entity holds at once | soft | 1,000+ accepted; verb lookup is a linear scan over all of them |
+| episodes an entity remembers | bound | 4,096 default, 256 embedded |
+| candidate preconditions per skill | hard | 32 |
+| a node's structured form | bound | 4,096 bytes; refused, never truncated |
+| delegation chain depth | soft | 4,096+ verified; bounded by the expiry being narrowed |
+| transport frame payload | hard | 448 bytes |
+| envelope channels | hard | 8 |
+| the retrieval index's own footprint | soft | ~210 bytes per memory |
+| producing one audit proof | soft | linear in the whole history |
+| term length for retrieval | hard | 8 bytes, truncating |
+
+**Retrieval holds.** One memory that answers the question, planted among
+distractors of the same shape and vocabulary — a haystack of unrelated
+text would flatter BM25. It comes back at rank 1 at 100, 1,000, 4,096
+and 16,385 memories, and a query takes 1–7 µs.
+
+**But the index is the embedded constraint, not the memories.** At the
+default bound the index is ~870 KiB — larger than the memories it
+indexes, and on its own more than an ESP32-S3's entire 512 KiB. The
+footprint number in `bench` counts the memories and not the index; that
+understatement is the kind that survives into a datasheet, so there is
+now a test asserting the index is the bigger number.
+
+**And a defect the run found.** `root()` rebuilt every level of the
+Merkle tree — 0.7 s at a million decisions, which a robot making ten
+gated decisions a second reaches in about a day. The root is what every
+checkpoint needs, and checkpoints are what make an audit log evidence
+rather than a diary, so an expensive root means taking fewer of them. It
+is now a frontier of perfect-subtree roots, and the promote-the-odd-node
+tree turns out to be exactly the fold of the binary decomposition of *n*
+from the right, so the two constructions coincide:
+
+| decisions | proof path | root before | root after | prove |
+|---|---|---|---|---|
+| 1,000 | 10 | 898 µs | **4 µs** | 879 µs |
+| 100,000 | 17 | 67 ms | **3 µs** | 72 ms |
+| 1,000,000 | 20 | 732 ms | **4 µs** | 709 ms |
+
+Producing a *proof* is still linear and is left alone on purpose: proving
+happens after an incident, not in the loop. A clever root that disagreed
+with the obvious one would silently invalidate every proof ever issued,
+so `root_the_slow_way` is kept and the two are checked against each other
+on every prefix up to 1,500 leaves.
 
 ---
 
@@ -630,7 +694,14 @@ end-to-end assertion.
     set it. A human reads "budget-limited", tops up the allowance, and
     nothing changes. Now `limited_by: Option<Limit>` distinguishes
     `Budget` from `Reach`.
-20. In the fleet experiment itself, veterans were selling every tag they
+20. **The Merkle root was rebuilt from every level on each call**, which
+    is O(n) and invisible in a demo. It is what every checkpoint needs,
+    and for the thing this product is *for* — an entity that accumulates
+    for years — it reached 0.7 s at a million decisions, about a day of
+    a robot making ten gated decisions a second. An expensive checkpoint
+    means taking fewer, and checkpoints are what make an audit log
+    evidence. Now a frontier of perfect subtrees: 4 µs, flat.
+21. In the fleet experiment itself, veterans were selling every tag they
     had ever tracked rather than the ones they could back up, which made
     the matched and blind arms come out identical to the digit. A seller
     sells findings, not hunches. There is now a test that the two arms

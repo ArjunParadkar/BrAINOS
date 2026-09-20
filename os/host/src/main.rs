@@ -28,6 +28,7 @@ fn main() -> ExitCode {
         "fleet" => fleet(),
         "incident" => incident(),
         "degrade" => degrade(),
+        "limits" => limits(),
         "help" | "-h" | "--help" => {
             usage();
             ExitCode::SUCCESS
@@ -61,6 +62,7 @@ usage: brainos <command>
   day      a working day of ambient operation: can it be left running?
   fleet    does experience transfer between entities, or only within
            one? The measurement behind the skill marketplace.
+  limits   where this breaks: every claim's implied scale, measured
   degrade  what happens when the part of the mind that runs elsewhere
            stops being reachable
   incident after something goes wrong: reconstruct it from the audit log
@@ -115,6 +117,119 @@ fn demo() -> ExitCode {
     } else {
         ExitCode::FAILURE
     }
+}
+
+fn limits() -> ExitCode {
+    use brainos_host::limits::measure;
+
+    rule("BrAInOS — where this breaks");
+    println!(
+        "  Every claim in the architecture has an implied scale, and a claim whose
+  scale has not been measured is a claim with a hole in it. Part 0 says
+  no artifact ships with a known correctness defect; this is the other
+  half of that — knowing where the claims stop being true, before
+  somebody finds out in a warehouse.
+
+  Three kinds of limit, because they call for different reactions.
+  `hard` is a constant in the code and is there on purpose. `bound` is a
+  configured cap; raising it costs memory and nothing else. `soft` means
+  nothing stops you, it simply gets worse — and those are the dangerous
+  ones, because there is no error to notice.\n"
+    );
+
+    let l = measure();
+
+    for lim in &l.limits {
+        println!("  {} [{}]", lim.what, lim.kind.name());
+        println!("      {}", lim.value);
+        println!("      {}", wrap(&lim.consequence, 72, "      "));
+        println!("      set in: {}\n", lim.set_in);
+    }
+
+    rule("Retrieval at scale — the soft limit most likely to bite");
+    println!(
+        "  One memory that answers the question is planted among distractors that
+  are deliberately similar: same sentence shape, same vocabulary,
+  different specifics. A haystack of unrelated text would make BM25 look
+  better than it is. `rank` is where the planted memory came back; 1 is
+  first and 0 means it was not in the top ten at all.\n"
+    );
+    println!(
+        "    {:>10} {:>6} {:>12} {:>12} {:>12}",
+        "memories", "rank", "build µs", "query µs", "index bytes"
+    );
+    for p in &l.retrieval {
+        println!(
+            "    {:>10} {:>6} {:>12} {:>12} {:>12}",
+            p.memories,
+            if p.rank_of_the_needle == 0 {
+                String::from("LOST")
+            } else {
+                p.rank_of_the_needle.to_string()
+            },
+            p.build_us,
+            p.query_us,
+            p.index_bytes
+        );
+    }
+
+    rule("The audit log as it grows");
+    println!(
+        "  The Merkle log keeps every leaf hash forever — 32 bytes per decision —
+  and prunes the records instead. The root is what every checkpoint
+  needs, and it used to be rebuilt from every level: 0.7 s at a million
+  decisions, which a robot making ten a second reaches in about a day.
+  It is now a frontier of perfect subtrees, so it costs the population
+  count of the log's length. Producing a *proof* is still linear, and
+  that is left alone on purpose — proving happens after an incident, not
+  in the loop.\n"
+    );
+    println!(
+        "    {:>12} {:>12} {:>10} {:>11} {:>14}",
+        "decisions", "proof path", "root µs", "prove µs", "leaves kept"
+    );
+    for p in &l.audit {
+        println!(
+            "    {:>12} {:>12} {:>10} {:>11} {:>13} KiB",
+            p.decisions,
+            p.proof_path,
+            p.root_us,
+            p.prove_us,
+            p.leaf_bytes / 1024
+        );
+    }
+
+    println!();
+    if l.retrieval_holds_at_default_bounds() {
+        println!(
+            "  At the bound this ships with, the entity still finds what it knows.\n"
+        );
+        ExitCode::SUCCESS
+    } else {
+        println!(
+            "  AT THE DEFAULT BOUND THE ENTITY CANNOT FIND WHAT IT KNOWS. That is the
+  finding, and it is a defect rather than a limit.\n"
+        );
+        ExitCode::FAILURE
+    }
+}
+
+fn wrap(text: &str, width: usize, indent: &str) -> String {
+    let mut out = String::new();
+    let mut col = 0;
+    for word in text.split_whitespace() {
+        if col > 0 && col + word.len() + 1 > width {
+            out.push('\n');
+            out.push_str(indent);
+            col = 0;
+        } else if col > 0 {
+            out.push(' ');
+            col += 1;
+        }
+        out.push_str(word);
+        col += word.len();
+    }
+    out
 }
 
 fn degrade() -> ExitCode {

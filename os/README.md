@@ -31,12 +31,13 @@ cargo run --release --bin brainos -- fleet    # does it transfer between entitie
 cargo run --release --bin brainos -- day      # can it be left running?
 cargo run --release --bin brainos -- incident # reconstruct it, and prove it
 cargo run --release --bin brainos -- degrade  # what happens when the cloud goes
+cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # and read it with none of our code
 cargo run --release --bin brainos -- stat     # what this build contains
 
-cargo test --workspace --release              # 683 tests
+cargo test --workspace --release              # 692 tests
 tools/check-no-std.sh                         # the bare-metal build, when a target exists
 ```
 

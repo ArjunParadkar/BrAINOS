@@ -49,11 +49,33 @@ pub fn node_hash(left: &Hash, right: &Hash) -> Hash {
 #[derive(Default, Clone)]
 pub struct MerkleLog {
     leaves: Vec<Hash>,
+    /// The roots of the perfect subtrees covering the log so far, in
+    /// decreasing height order.
+    ///
+    /// This is what makes `root()` cheap. Rebuilding the whole tree to
+    /// answer it is O(n), which is invisible for a demo and a real
+    /// problem for the thing this product is *for*: an entity that
+    /// accumulates for years. A robot making ten gated decisions a
+    /// second reaches a million in about a day, at which point every
+    /// checkpoint cost 0.7 s on a laptop — and checkpoints are what
+    /// make the audit log evidence rather than a diary, so making them
+    /// expensive means taking fewer of them.
+    ///
+    /// The promote-the-odd-node tree turns out to be exactly the fold of
+    /// the binary decomposition of `n` from the right, so a frontier
+    /// works: appending merges equal-height neighbours, and the root is
+    /// the frontier folded right to left. An exhaustive test checks the
+    /// two agree on every prefix, because a clever root that disagrees
+    /// with the obvious one would invalidate every proof ever issued.
+    frontier: Vec<(u8, Hash)>,
 }
 
 impl MerkleLog {
     pub fn new() -> MerkleLog {
-        MerkleLog { leaves: Vec::new() }
+        MerkleLog {
+            leaves: Vec::new(),
+            frontier: Vec::new(),
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -67,13 +89,27 @@ impl MerkleLog {
     /// Append one record. Returns its index, which is what a `Proof`
     /// later refers to.
     pub fn append(&mut self, data: &[u8]) -> usize {
-        self.leaves.push(leaf_hash(data));
-        self.leaves.len() - 1
+        self.append_hash(leaf_hash(data))
     }
 
     pub fn append_hash(&mut self, h: Hash) -> usize {
         self.leaves.push(h);
+        self.absorb(h);
         self.leaves.len() - 1
+    }
+
+    /// Fold a new leaf into the frontier: merge with the neighbour above
+    /// while the heights match, which is the carry in binary counting.
+    fn absorb(&mut self, h: Hash) {
+        let mut node = (0u8, h);
+        while let Some(&(height, top)) = self.frontier.last() {
+            if height != node.0 {
+                break;
+            }
+            self.frontier.pop();
+            node = (height.saturating_add(1), node_hash(&top, &node.1));
+        }
+        self.frontier.push(node);
     }
 
     pub fn leaf(&self, i: usize) -> Option<Hash> {
@@ -84,6 +120,24 @@ impl MerkleLog {
     /// hash — distinct from any real root, because `leaf_hash` of
     /// anything is tagged and therefore never zero in practice.
     pub fn root(&self) -> Root {
+        let Some((_, last)) = self.frontier.last() else {
+            return Hash::ZERO;
+        };
+        let mut acc = *last;
+        for (_, h) in self.frontier.iter().rev().skip(1) {
+            acc = node_hash(h, &acc);
+        }
+        acc
+    }
+
+    /// The root, computed the obvious way: build every level.
+    ///
+    /// Kept because `root()` is now clever, and a clever answer is only
+    /// trustworthy next to the obvious one it has to agree with. The
+    /// test suite checks they agree on every prefix up to a few
+    /// thousand leaves; this is O(n) and is not on any path that runs
+    /// more than once.
+    pub fn root_the_slow_way(&self) -> Root {
         if self.leaves.is_empty() {
             return Hash::ZERO;
         }
@@ -102,6 +156,12 @@ impl MerkleLog {
             level = next;
         }
         level[0]
+    }
+
+    /// How many perfect subtrees the frontier currently holds — the
+    /// population count of the log's length, and the cost of a root.
+    pub fn frontier_len(&self) -> usize {
+        self.frontier.len()
     }
 
     /// An inclusion proof for one entry.

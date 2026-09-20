@@ -178,6 +178,15 @@ impl Index {
     /// silently goes stale. A stale index is the worst of the three: the
     /// entity confidently does not remember something it knows, and
     /// nothing anywhere reports an error.
+    /// Roughly what this index costs in memory.
+    ///
+    /// Approximate on purpose: it is for deciding whether an index fits
+    /// on a board, and a number that is right to within a few percent
+    /// answers that question exactly as well as an exact one would.
+    pub fn approximate_bytes(&self) -> usize {
+        self.postings.len() * (TERM_MAX + 8 + 4) + self.lengths.len() * 12 + 64
+    }
+
     pub fn is_stale(&self, graph: &StateGraph) -> bool {
         self.built_nodes != graph.len()
             || self.built_high_water != graph.nodes().last().map(|n| n.id.0).unwrap_or(0)

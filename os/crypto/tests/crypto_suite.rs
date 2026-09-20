@@ -532,3 +532,78 @@ fn bounded_sampling_stays_in_range_and_covers_it() {
     assert!(hits.iter().all(|&h| h > 700), "{hits:?}");
     assert_eq!(d.below(0), 0);
 }
+
+// ---------------------------------------------------------------------
+// the incremental root has to agree with the obvious one
+// ---------------------------------------------------------------------
+//
+// `root()` used to rebuild every level, which is O(n) and was fine until
+// the limits run asked what it costs for the thing this product is for:
+// an entity that accumulates for years. A robot making ten gated
+// decisions a second reaches a million in about a day, and a checkpoint
+// there cost 0.7 s — and checkpoints are what make the audit log
+// evidence rather than a diary, so making them expensive means taking
+// fewer of them.
+//
+// It is now a frontier of perfect-subtree roots, folded right to left.
+// That is a clever answer, and a clever answer that disagreed with the
+// obvious one would silently invalidate every proof ever issued. So
+// they are checked against each other on *every* prefix.
+
+#[test]
+fn the_fast_root_and_the_obvious_root_agree_on_every_prefix() {
+    let mut log = MerkleLog::new();
+    for i in 0..1_500u32 {
+        assert_eq!(
+            log.root(),
+            log.root_the_slow_way(),
+            "the two roots disagree at {i} leaves, which would invalidate every proof \
+             issued against either"
+        );
+        log.append(&i.to_le_bytes());
+    }
+    assert_eq!(log.root(), log.root_the_slow_way());
+}
+
+/// And every proof still verifies against the fast root, which is the
+/// property that actually matters — a root nothing can be proven against
+/// is not a root.
+#[test]
+fn every_proof_verifies_against_the_fast_root() {
+    for n in [1usize, 2, 3, 5, 8, 13, 64, 100, 257] {
+        let mut log = MerkleLog::new();
+        for i in 0..n {
+            log.append(&(i as u32).to_le_bytes());
+        }
+        let root = log.root();
+        for i in 0..n {
+            let p = log.prove(i).expect("a proof for every leaf");
+            assert!(
+                p.verify_record(&(i as u32).to_le_bytes(), &root),
+                "leaf {i} of {n} does not verify against the fast root"
+            );
+        }
+    }
+}
+
+/// The cost of a root is the population count of the log's length, so it
+/// is logarithmic rather than linear.
+#[test]
+fn the_cost_of_a_root_is_logarithmic() {
+    let mut log = MerkleLog::new();
+    for i in 0..4_096u32 {
+        log.append(&i.to_le_bytes());
+    }
+    // 4096 is a power of two: exactly one perfect subtree
+    assert_eq!(log.frontier_len(), 1);
+
+    log.append(&9_999u32.to_le_bytes());
+    assert_eq!(log.frontier_len(), 2, "4097 = 4096 + 1");
+
+    let mut odd = MerkleLog::new();
+    for i in 0..4_095u32 {
+        odd.append(&i.to_le_bytes());
+    }
+    // 4095 is twelve ones in binary, and that is the whole cost
+    assert_eq!(odd.frontier_len(), 12);
+}
