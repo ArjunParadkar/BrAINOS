@@ -77,6 +77,33 @@ pub struct Manifest {
     pub irreversible: bool,
     /// one line for a human
     pub summary: String,
+    /// **Where this was learned.**
+    ///
+    /// The fleet-transfer experiment measured what a marketplace without
+    /// this field costs. A skill adopted from a deployment unlike your
+    /// own left the entity *permanently worse* than one that started
+    /// from nothing — 80% against 87% — because what an entity learns is
+    /// never "walking needs carpet", it is "walking needs carpet
+    /// **here**", and nothing in the claim says where here is. Two
+    /// robots in different places learn opposite rules and both are
+    /// right.
+    ///
+    /// So a package says where it came from, and the buyer can tell a
+    /// matched skill from a blind one before installing it rather than
+    /// six hundred episodes afterwards. It is a free-text label, not an
+    /// ontology: an honest short description a human recognises beats a
+    /// taxonomy nobody fills in correctly.
+    pub learned_in: String,
+    /// How much evidence is behind it: attempts the publisher made
+    /// *without* each condition, which is the only number that says
+    /// anything about necessity.
+    ///
+    /// Advisory in exactly the way `claimed_consequence` is — a buyer
+    /// cannot check it and the gate does not believe it. What makes it
+    /// safe to act on anyway is that the buyer holds the claim on trust
+    /// and probes it: its own five tests overrule whatever the seller
+    /// said.
+    pub tests_behind_it: u32,
 }
 
 impl Manifest {
@@ -87,7 +114,22 @@ impl Manifest {
     /// manifest that contradicts itself is one nobody should be asked to
     /// countersign.
     pub fn is_consistent(&self) -> bool {
-        !self.verbs.is_empty() && self.verbs.iter().all(|v| v.matches(&self.scope))
+        !self.verbs.is_empty()
+            && self.verbs.iter().all(|v| v.matches(&self.scope))
+            // a package that will not say where it was learned is one an
+            // owner cannot judge, and the experiment says an unjudgeable
+            // package is worse than no package
+            && !self.learned_in.is_empty()
+    }
+
+    /// Does this package come from somewhere like here?
+    ///
+    /// Deliberately a string comparison and deliberately the buyer's
+    /// call. There is no authority that knows whether two workshops are
+    /// alike, and a system that pretended to would be confidently wrong
+    /// in exactly the cases that matter.
+    pub fn learned_somewhere_like(&self, here: &str) -> bool {
+        self.learned_in.eq_ignore_ascii_case(here)
     }
 
     pub fn digest(&self) -> Hash {
@@ -106,7 +148,85 @@ impl Manifest {
             h.field(v.as_str().as_bytes());
         }
         h.field(&[self.claimed_consequence, self.irreversible as u8]);
+        h.field(self.learned_in.as_bytes());
+        h.field(&self.tests_behind_it.to_le_bytes());
         h.finish()
+    }
+}
+
+/// What a skill package actually delivers.
+///
+/// The marketplace's other types are about *authority* — may this run,
+/// did the owner agree, does it ask for more than they granted. This is
+/// the content: the conditions the publisher found mattered.
+///
+/// Note what is *not* here. The publisher's counts are not delivered.
+/// What transfers is the claim; the buyer's own numbers start at zero
+/// and its own five tests overrule whatever the seller believed. That
+/// is not politeness about data formats, it is the conclusion of the
+/// fleet-transfer measurement: delivering the seller's evidence made a
+/// mismatched skill permanent, and delivering the claim alone made it
+/// temporary. `Manifest::tests_behind_it` carries the seller's count as
+/// advisory text for a human deciding whether to buy, and nothing reads
+/// it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SkillContents {
+    pub verb: Verb,
+    pub name: String,
+    /// the tags the publisher found were required, in sorted order so
+    /// the digest does not depend on how they were listed
+    pub conditions: Vec<String>,
+}
+
+impl SkillContents {
+    pub fn new(verb: Verb, name: &str, conditions: &[&str]) -> SkillContents {
+        let mut conditions: Vec<String> = conditions
+            .iter()
+            .map(|c| alloc::string::ToString::to_string(*c))
+            .collect();
+        conditions.sort();
+        conditions.dedup();
+        SkillContents {
+            verb,
+            name: alloc::string::ToString::to_string(name),
+            conditions,
+        }
+    }
+
+    pub fn digest(&self) -> Hash {
+        let mut h = Sha256::tagged(Tag::Package);
+        h.field(self.verb.as_str().as_bytes());
+        h.field(self.name.as_bytes());
+        h.field(&(self.conditions.len() as u64).to_le_bytes());
+        for c in &self.conditions {
+            h.field(c.as_bytes());
+        }
+        h.finish()
+    }
+
+    /// Does this content match what the manifest promised?
+    ///
+    /// A package whose manifest declares `legs.climb` and whose contents
+    /// teach something about `arm.grasp` is one where the thing the
+    /// owner countersigned is not the thing being installed.
+    pub fn matches(&self, manifest: &Manifest) -> bool {
+        manifest.verbs.contains(&self.verb) && self.verb.matches(&manifest.scope)
+    }
+}
+
+/// What the publisher's signature covers: the manifest and whatever the
+/// package delivers, bound together.
+fn signed_digest(manifest: &Manifest, contents: Option<&SkillContents>) -> Hash {
+    match contents {
+        // a package with no contents signs its manifest digest exactly
+        // as it always did, so nothing already published changes meaning
+        None => manifest.digest(),
+        Some(c) => {
+            let mut h = Sha256::tagged(Tag::Package);
+            h.field(manifest.digest().as_bytes());
+            h.field(c.digest().as_bytes());
+            h.finish()
+        }
     }
 }
 
@@ -119,20 +239,43 @@ pub struct Package {
     pub signature: Signature,
     pub published_at: Tick,
     pub withdrawn: bool,
+    /// what it delivers, and its digest is covered by the signature —
+    /// so a reseller cannot keep the manifest and swap the contents
+    pub contents: Option<SkillContents>,
 }
 
 impl Package {
     /// Publish. The publisher signs the manifest digest.
     pub fn publish(key: &BrainKey, manifest: Manifest, at: Tick) -> Option<Package> {
+        Package::publish_with(key, manifest, None, at)
+    }
+
+    /// Publish a package that delivers something.
+    ///
+    /// The signature covers the manifest digest *and* the contents
+    /// digest together, so a reseller cannot keep the manifest an owner
+    /// countersigned and swap what it installs.
+    pub fn publish_with(
+        key: &BrainKey,
+        manifest: Manifest,
+        contents: Option<SkillContents>,
+        at: Tick,
+    ) -> Option<Package> {
         if !manifest.is_consistent() {
             return None;
         }
-        let digest = manifest.digest();
+        if let Some(c) = &contents {
+            if !c.matches(&manifest) {
+                return None;
+            }
+        }
+        let digest = signed_digest(&manifest, contents.as_ref());
         Some(Package {
             id: CapabilityId(digest.to_id()),
             signature: key.sign(Tag::Package, digest.as_bytes()),
             publisher: Publisher { key: key.public() },
             manifest,
+            contents,
             published_at: at,
             withdrawn: false,
         })
@@ -140,9 +283,14 @@ impl Package {
 
     pub fn verify(&self) -> bool {
         self.manifest.is_consistent()
+            && self
+                .contents
+                .as_ref()
+                .map(|c| c.matches(&self.manifest))
+                .unwrap_or(true)
             && self.publisher.key.verify(
                 Tag::Package,
-                self.manifest.digest().as_bytes(),
+                signed_digest(&self.manifest, self.contents.as_ref()).as_bytes(),
                 &self.signature,
             )
     }

@@ -71,6 +71,7 @@ dependencies = [
  "brainos-body",
  "brainos-cognition",
  "brainos-crypto",
+ "brainos-fleet",
  "brainos-kira",
  "brainos-memory",
  "brainos-rt",

@@ -467,6 +467,71 @@ impl Entity {
         (&self.handle, &mut self.graph, &mut self.skills)
     }
 
+    /// Take delivery of a skill bought from the marketplace.
+    ///
+    /// The last link in a chain that was otherwise complete: `fleet`
+    /// could decide whether a package *may* be installed — is it signed,
+    /// did the owner countersign it, does it ask for more authority than
+    /// they granted — and nothing carried what it actually teaches into
+    /// an entity.
+    ///
+    /// What arrives is the claim, not the seller's numbers. The
+    /// conditions are adopted on trust so the skill works on the first
+    /// day, which is what makes it worth buying, and probed one blocked
+    /// opportunity in twelve until this entity has five tests of its
+    /// own — at which point its own evidence overrules whatever the
+    /// publisher believed. That is not a courtesy; the fleet-transfer
+    /// measurement found that delivering the seller's evidence made a
+    /// mismatched skill *permanent*, leaving the buyer worse off than if
+    /// it had never bought anything.
+    ///
+    /// Caller's job, before this: verify the package and the
+    /// countersignature through `fleet::marketplace::install`, and
+    /// decide whether `manifest.learned_in` describes somewhere like
+    /// here. That judgement is deliberately not made here — there is no
+    /// authority that knows whether two workshops are alike.
+    ///
+    /// Returns how many conditions were taken on. Conditions the entity
+    /// already has evidence about are not overwritten: somebody else's
+    /// claim does not displace what this entity found out.
+    pub fn take_delivery_of(
+        &mut self,
+        contents: &brainos_fleet::marketplace::SkillContents,
+    ) -> usize {
+        let prov = Provenance::from_world(
+            brainos_memory::provenance::Origin::Peer,
+            self.tick,
+        );
+        self.skills.learn(
+            &self.handle,
+            &mut self.graph,
+            contents.verb,
+            &contents.name,
+            prov,
+        );
+        let taught: Vec<brainos_memory::skill::Precondition> = contents
+            .conditions
+            .iter()
+            .map(|tag| brainos_memory::skill::Precondition {
+                tag: tag.clone(),
+                support: 0,
+                against: 0,
+                tests: 0,
+                test_failures: 0,
+                last_tested: self.tick,
+                adopted: true,
+                since_probe: 0,
+            })
+            .collect();
+        self.skills.adopt(
+            &self.handle,
+            &mut self.graph,
+            &contents.verb,
+            &taught,
+            self.tick,
+        )
+    }
+
     /// Name a way of doing something.
     ///
     /// The entity declaring that it *has* an approach, separately from

@@ -14,6 +14,7 @@ brainos-crypto = { workspace = true }
 brainos-memory = { workspace = true }
 brainos-body = { workspace = true }
 brainos-kira = { workspace = true }
+brainos-fleet = { workspace = true }
 brainos-cognition = { workspace = true }
 brainos-worlds = { workspace = true }
 brainos-rt = { workspace = true }

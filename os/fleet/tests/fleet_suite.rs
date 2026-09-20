@@ -218,7 +218,58 @@ fn manifest(scope: Namespace, verbs: &[&str]) -> Manifest {
         claimed_consequence: 60,
         irreversible: true,
         summary: "climb a domestic stair".to_string(),
+        learned_in: "domestic stairs, carpeted".to_string(),
+        tests_behind_it: 140,
     }
+}
+
+/// A package that will not say where it was learned cannot be
+/// published.
+///
+/// The fleet-transfer experiment measured what a marketplace without
+/// that field costs: a skill adopted from a deployment unlike your own
+/// left the entity permanently *worse* than one that started from
+/// nothing, because what an entity learns is never "walking needs
+/// carpet", it is "walking needs carpet here". A package the buyer
+/// cannot judge is worse than no package, so it is refused at
+/// publication — the same place a package that contradicts itself is
+/// refused.
+#[test]
+fn a_package_that_will_not_say_where_it_was_learned_cannot_be_published() {
+    let publisher = BrainKey::from_seed(&[11; 32]);
+    let mut anonymous = manifest(Namespace::only("legs").unwrap(), &["legs.climb"]);
+    anonymous.learned_in = String::new();
+    assert!(!anonymous.is_consistent());
+    assert!(Package::publish(&publisher, anonymous, Tick(1)).is_none());
+}
+
+/// And the buyer, not the marketplace, decides whether somewhere is
+/// like here. There is no authority that knows whether two workshops
+/// are alike, and one that pretended to would be confidently wrong in
+/// exactly the cases that matter.
+#[test]
+fn whether_a_skill_comes_from_somewhere_like_here_is_the_buyers_call() {
+    let m = manifest(Namespace::only("legs").unwrap(), &["legs.climb"]);
+    assert!(m.learned_somewhere_like("domestic stairs, carpeted"));
+    assert!(m.learned_somewhere_like("Domestic Stairs, Carpeted"));
+    assert!(!m.learned_somewhere_like("warehouse, steel mesh"));
+}
+
+/// Where it was learned is part of what the publisher signed, so it
+/// cannot be edited after the fact by whoever is reselling it.
+#[test]
+fn the_provenance_is_covered_by_the_publishers_signature() {
+    let publisher = BrainKey::from_seed(&[12; 32]);
+    let honest = manifest(Namespace::only("legs").unwrap(), &["legs.climb"]);
+    let package = Package::publish(&publisher, honest.clone(), Tick(1)).unwrap();
+    assert!(package.verify());
+
+    let mut relabelled = package.clone();
+    relabelled.manifest.learned_in = "anywhere at all".to_string();
+    assert!(
+        !relabelled.verify(),
+        "a reseller relabelled where a skill was learned and the package still verified"
+    );
 }
 
 #[test]

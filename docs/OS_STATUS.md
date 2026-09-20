@@ -32,7 +32,7 @@ cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 702 tests
+cargo test --workspace --release              # 710 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -641,6 +641,25 @@ the same mechanism made a claim that happened to be false permanent.
 without recording what kind of place a skill was learned in, *and*
 without the buyer re-testing it, does not merely fail to help. It
 degrades the fleet, permanently.
+
+Both halves are now in the types rather than in this paragraph. A
+`Manifest` carries `learned_in`, a package that will not say where it
+was learned cannot be published at all, and the label is covered by the
+publisher's signature so a reseller cannot relabel it. Whether somewhere
+is *like here* stays the buyer's call — there is no authority that knows
+whether two workshops are alike, and one that pretended to would be
+confidently wrong in exactly the cases that matter.
+
+And the last link is closed. `fleet` could decide whether a package may
+be installed — signed, countersigned, within the authority the owner
+granted — and nothing carried what it teaches into an entity, so the
+experiment had to reach past it. `SkillContents` is what a package
+delivers, bound into the publisher's signature so the contents cannot be
+swapped after an owner countersigns the manifest; `Entity::take_delivery_of`
+adopts them as claims held on trust. A test buys a skill learned on
+shipboard ladders, installs it in a building with carpeted stairs, and
+watches the entity probe its way out of the condition that does not
+apply here.
 
 The three deployments are three rules I wrote. This says what the
 mechanism does when worlds differ; it does not say how much real
