@@ -98,10 +98,10 @@ Retrieval at scale — the soft limit most likely to bite
   first and 0 means it was not in the top ten at all.
 
       memories   rank     build µs     query µs  index bytes
-           101      1           68            1        21416
-          1001      1          637            0       212216
-          4097      1         2926            1       868568
-         16385      1        11832            2      3473624
+           101      1           64            2        21416
+          1001      1          565            0       212216
+          4097      1         2680            1       868568
+         16385      1        10965            3      3473624
 
 The audit log as it grows
 ─────────────────────────
@@ -115,9 +115,9 @@ The audit log as it grows
   in the loop.
 
        decisions   proof path    root µs    prove µs    leaves kept
-            1000           10          3         707            31 KiB
-          100000           17          3       70264          3125 KiB
-         1000000           20          4      681601         31250 KiB
+            1000           10          3         631            31 KiB
+          100000           17          3       62770          3125 KiB
+         1000000           20          4      625279         31250 KiB
 
   At the bound this ships with, the entity still finds what it knows.
 
