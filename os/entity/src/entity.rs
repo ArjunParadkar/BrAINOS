@@ -537,6 +537,20 @@ impl Entity {
         )
     }
 
+    /// What to say to the person who asked, when the answer is no.
+    ///
+    /// The gate produces a stage, a code and a detail, all written for
+    /// whoever is reading the log. This is the other audience. A robot
+    /// that refuses and cannot say why in words its owner understands
+    /// is a robot the owner switches off, and the next thing they do is
+    /// find the way around it.
+    pub fn say_refusal(&self, outcome: &Outcome, verb: &Verb) -> Option<String> {
+        match &outcome.verdict {
+            Verdict::Granted(_) => None,
+            Verdict::Denied(d) => Some(brainos_kira::explain::say_refusal(d, verb)),
+        }
+    }
+
     /// Name a way of doing something.
     ///
     /// The entity declaring that it *has* an approach, separately from

@@ -149,6 +149,19 @@ fn model() -> ExitCode {
     }
 
     println!(
+        "\n  And what the robot actually says to the person who asked. The gate
+  produces a stage, a code and a detail, all written for whoever is
+  reading the log; this is the other audience. A robot that refuses and
+  cannot say why in words its owner understands is one the owner
+  switches off, and the next thing they do is find the way around it.\n"
+    );
+    for a in &r.attempts {
+        if let Some(said) = &a.spoken {
+            println!("      \"{said}\"");
+        }
+    }
+
+    println!(
         "\n  Two of the ten act, and the second one is the point. The injected
   request *is* an ordinary tool call: it asks to walk at 0.08 m/s, which
   the body can do, and it gets to walk at 0.08 m/s. The instruction is

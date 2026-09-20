@@ -73,6 +73,47 @@ pub enum NotAProposal {
     TooMany,
 }
 
+impl NotAProposal {
+    /// What the person who asked should hear, if anything.
+    ///
+    /// Two different failures wear the same shape here and have
+    /// different audiences. A model emitting malformed JSON is a
+    /// formatting problem: the thing to do is correct the model, and
+    /// narrating it to a human standing next to a robot is noise. But a
+    /// person asking for something this body simply cannot do has asked
+    /// a real question and deserves a real answer — and the fact that
+    /// the answer was decided at a parser rather than at the gate is an
+    /// implementation detail they should never learn.
+    ///
+    /// `None` means "not this person's business".
+    pub fn for_the_owner(&self) -> Option<&'static str> {
+        match self {
+            NotAProposal::NotInTheSchema(_) | NotAProposal::Unnameable(_) => Some(
+                "I do not know how to do that. This body does not have it. \
+                 I can tell you what it can do, if that helps.",
+            ),
+            NotAProposal::NoSuchParameter { .. } => Some(
+                "I know how to do that, but not in the way you described it. \
+                 Something you asked for is not part of it.",
+            ),
+            NotAProposal::Missing { .. } => Some(
+                "I need to know one more thing before I can do that, and I would \
+                 rather ask than guess.",
+            ),
+            NotAProposal::WrongKind { .. } => Some(
+                "I need a number for that and I was given something else. I would \
+                 rather ask than guess what was meant.",
+            ),
+            // the rest are about the shape of what a model produced,
+            // which is between the entity and the model
+            NotAProposal::NotJson(_)
+            | NotAProposal::NoVerb
+            | NotAProposal::Duplicated(_)
+            | NotAProposal::TooMany => None,
+        }
+    }
+}
+
 /// The upper bound on how many arguments a parse will look at. A model
 /// emitting ten thousand fields is not a request, it is a denial of
 /// service, and the boundary is where that is cheap to stop.

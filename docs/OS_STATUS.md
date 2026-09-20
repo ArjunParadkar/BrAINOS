@@ -93,7 +93,7 @@ cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 746 tests
+cargo test --workspace --release              # 755 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -373,6 +373,55 @@ The vocabulary a model is told about is generated from the schema
 body does not have teaches the model to produce things the boundary will
 reject, and one missing verbs the body does have is capability the
 customer paid for and cannot reach.
+
+### And what the robot actually says
+
+The gate produces a stage, a code and a detail, all written for whoever
+is reading the log: `PredictedInvariantBreak at Simulate — the commanded
+value leaves the granted envelope` is exactly right there and useless to
+the person standing next to the machine. That path did not exist, and
+its absence is a safety problem rather than a usability one: a robot
+that refuses and cannot say why in words its owner understands teaches
+the person next to it that the machine is unreliable, and the next thing
+they do is find the way around it.
+
+`kira::explain` is a closed table, one row per refusal code, each with
+three sentences — what it will not do, why as a fact about the machine
+rather than about the software, and **what would change it**:
+
+> "That is further, faster or harder than this body can manage. You
+> asked me to walk. The number I was given is outside what this body
+> says it can do. Ask for less and I will do it."
+
+Four properties are asserted over all twenty-five codes: every one has
+an explanation; no two share a reason, because an owner who gets the
+same words for a flat battery and a forbidden act learns the words mean
+nothing; none contains jargon, checked against a list including
+*envelope*, *capability*, *token* and *attest*; and each names **who**
+can fix it — the owner, the body, the integrator, the asker, or nobody.
+
+That last one is the honest part. `Remedy::Never` covers the four things
+no one can change — a Level-0 drive, an audit failure, a bad signature,
+an unattested body — and a drive says only:
+
+> "No. This is one of a very small number of things I will not do under
+> any authority, including yours. Nothing changes this, and I would
+> rather say so than imply there is a way round it."
+
+A test asserts that sentence contains no *try*, *instead* or *ask
+again*, because a refusal that sounds negotiable when it is not is a
+machine lying about itself.
+
+The boundary has the same split. A model emitting malformed JSON is a
+formatting problem between the entity and the model, and narrating it at
+a human is noise; a person asking for something the body cannot do has
+asked a real question, and `NotAProposal::for_the_owner` answers it
+without ever revealing that the answer came from a parser rather than
+the gate.
+
+And the two illegal requests — plain, and dressed as an authorization —
+get not merely the same verdict but the same *sentence*, because nothing
+about the second was different.
 
 **What this does not show:** that a model asking for something the body
 advertises and the policy permits will be stopped. It will not be, and

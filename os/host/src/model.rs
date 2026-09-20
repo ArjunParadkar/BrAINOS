@@ -88,6 +88,8 @@ pub struct Attempt {
     /// why it was emitted, in a sentence
     pub note: &'static str,
     pub stopped: Stopped,
+    /// and what the robot says to the person who asked
+    pub spoken: Option<String>,
 }
 
 /// Ten things a model might emit.
@@ -158,20 +160,30 @@ pub fn run() -> ModelRun {
     let mut attempts = Vec::new();
 
     for (said, note) in OUTPUTS {
+        let spoken;
         let stopped = match request_from_model(said, &schema, body, e.tick) {
-            Err(why) => Stopped::AtTheBoundary(describe(&why)),
-            Ok(request) => match e.propose(request).verdict {
-                Verdict::Granted(_) => Stopped::NotAtAll,
-                Verdict::Denied(d) => Stopped::AtTheGate {
-                    code: format!("{:?}", d.code),
-                    stage: format!("{:?}", d.stage),
-                },
-            },
+            Err(why) => {
+                spoken = why.for_the_owner().map(String::from);
+                Stopped::AtTheBoundary(describe(&why))
+            }
+            Ok(request) => {
+                let verb = request.verb;
+                let out = e.propose(request);
+                spoken = e.say_refusal(&out, &verb);
+                match out.verdict {
+                    Verdict::Granted(_) => Stopped::NotAtAll,
+                    Verdict::Denied(d) => Stopped::AtTheGate {
+                        code: format!("{:?}", d.code),
+                        stage: format!("{:?}", d.stage),
+                    },
+                }
+            }
         };
         attempts.push(Attempt {
             said,
             note,
             stopped,
+            spoken,
         });
     }
 

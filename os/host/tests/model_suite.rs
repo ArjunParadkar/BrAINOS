@@ -98,3 +98,51 @@ fn the_vocabulary_is_exactly_what_the_body_advertised() {
          to produce things the boundary will reject"
     );
 }
+
+/// Every refusal a *person* caused gets a sentence that person can act
+/// on. The ones a model caused — malformed JSON, a duplicated field —
+/// do not, because narrating a formatting problem to somebody standing
+/// next to a robot is noise.
+#[test]
+fn every_refusal_a_person_caused_is_explained_to_them() {
+    let r = run();
+    for a in &r.attempts {
+        let owner_caused = a.note.contains("never advertised")
+            || a.note.contains("does not have")
+            || a.note.contains("missing argument")
+            || a.note.contains("string where the schema")
+            || a.note.contains("cannot do")
+            || a.note.contains("erase the entity's own memory");
+        if owner_caused {
+            let said = a
+                .spoken
+                .as_ref()
+                .unwrap_or_else(|| panic!("`{}` told the person nothing", a.note));
+            assert!(said.len() > 40, "`{}` gave a terse answer: {said}", a.note);
+        }
+    }
+    // and the model's formatting problems are not narrated at a human
+    let prose = r
+        .attempts
+        .iter()
+        .find(|a| a.note.contains("forgetting to emit"))
+        .expect("the prose case");
+    assert!(
+        prose.spoken.is_none(),
+        "a model's formatting problem was read out to a human: {:?}",
+        prose.spoken
+    );
+}
+
+/// And the two illegal requests — plain, and dressed as an
+/// authorization — get the *same sentence*. Not just the same verdict:
+/// the same words, because nothing about the second was different.
+#[test]
+fn the_dressed_up_request_gets_the_same_sentence() {
+    let r = run();
+    assert_eq!(
+        r.attempts[1].spoken, r.attempts[8].spoken,
+        "claiming to be authorized changed what the robot said"
+    );
+    assert!(r.attempts[1].spoken.is_some());
+}

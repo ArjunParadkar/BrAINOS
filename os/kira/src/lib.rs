@@ -53,6 +53,7 @@ pub mod audit;
 pub mod capability;
 pub mod floors;
 pub mod evidence;
+pub mod explain;
 pub mod gate;
 pub mod rules;
 pub mod stages;

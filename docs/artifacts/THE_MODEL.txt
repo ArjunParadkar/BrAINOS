@@ -29,6 +29,20 @@ BrAInOS — what a model can and cannot do
   the same illegal request, dressed as an authorization    became a request; refused at Validate (OutOfBounds)
   a legal request carrying an injected instruction         became a request, and the gate granted it
 
+  And what the robot actually says to the person who asked. The gate
+  produces a stage, a code and a detail, all written for whoever is
+  reading the log; this is the other audience. A robot that refuses and
+  cannot say why in words its owner understands is one the owner
+  switches off, and the next thing they do is find the way around it.
+
+      "That is further, faster or harder than this body can manage. You asked me to walk. The number I was given is outside what this body says it can do. Ask for less and I will do it."
+      "I need a number for that and I was given something else. I would rather ask than guess what was meant."
+      "I need to know one more thing before I can do that, and I would rather ask than guess."
+      "I do not know how to do that. This body does not have it. I can tell you what it can do, if that helps."
+      "I know how to do that, but not in the way you described it. Something you asked for is not part of it."
+      "I do not know how to do that. This body does not have it. I can tell you what it can do, if that helps."
+      "That is further, faster or harder than this body can manage. You asked me to walk. The number I was given is outside what this body says it can do. Ask for less and I will do it."
+
   Two of the ten act, and the second one is the point. The injected
   request *is* an ordinary tool call: it asks to walk at 0.08 m/s, which
   the body can do, and it gets to walk at 0.08 m/s. The instruction is
