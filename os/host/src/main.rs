@@ -21,6 +21,7 @@ fn main() -> ExitCode {
         "stack" => stack(),
         "bench" => bench(),
         "compound" => compound(),
+        "day" => day(),
         "stat" => stat(),
         "help" | "-h" | "--help" => {
             usage();
@@ -52,6 +53,7 @@ usage: brainos <command>
            the architecture's tiers imply
   compound the experiment behind the moat claim: does an entity with
            experience make better decisions than one without?
+  day      a working day of ambient operation: can it be left running?
   stat     what this build contains
 "
     );
@@ -141,6 +143,28 @@ fn stack() -> ExitCode {
   simulated is the servo.\n"
     );
     ExitCode::SUCCESS
+}
+
+fn day() -> ExitCode {
+    rule("BrAInOS — a day in the life");
+    println!(
+        "  Not \"does this work\" but \"can this be left running\". Twenty thousand
+  ticks of a body reporting telemetry, with rare faults, a human who
+  speaks now and then, and quiet periods to consolidate in. The day is
+  one I wrote, so it can show the loop is stable, affordable and
+  attentive to the right things in a world with a known answer key —
+  and cannot show what a real workshop is like.\n"
+    );
+    let d = brainos_host::day::run(20_000);
+    for (step, text) in brainos_host::day::narrate(&d) {
+        println!("  [{:<12}] {}", step, text);
+    }
+    println!();
+    if d.could_be_left_running() {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::FAILURE
+    }
 }
 
 fn compound() -> ExitCode {

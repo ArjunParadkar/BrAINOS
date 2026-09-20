@@ -27,9 +27,10 @@ cargo run --release --bin brainos -- verify   # the Stage 6 property report
 cargo run --release --bin brainos -- bench    # measured latencies and footprint
 cargo run --release --bin brainos -- wire     # the transport under a bad link
 cargo run --release --bin brainos -- compound # does experience compound?
+cargo run --release --bin brainos -- day      # can it be left running?
 cargo run --release --bin brainos -- stat     # what this build contains
 
-cargo test --workspace --release              # 596 tests
+cargo test --workspace --release              # 611 tests
 tools/check-no-std.sh                         # the bare-metal build, when a target exists
 ```
 
@@ -200,6 +201,53 @@ What it does not show is that a robot gets better. The world is simulated
 and its structure is one I wrote. What it shows is that the mechanism
 finds structure when there is some and does not manufacture an
 improvement when there is none.
+
+## Can it be left running?
+
+Every other test asks whether something works. `brainos day` asks
+whether an entity can be left alone with a body for a working day:
+twenty thousand ticks of telemetry, rare faults, a human who speaks now
+and then, and an idle period at the end when the robot is put away.
+
+The balance it measures is easy to get wrong in both directions. An
+entity that surfaces everything is a firehose nobody keeps; one that
+surfaces nothing is a machine that quietly fails. So the metric is
+deliberately **not** per-occurrence recall — a leg stalling fifty times
+should be known about once, promptly, and then counted, and scoring
+per-occurrence recall would rank the firehose highest.
+
+A representative day: both kinds of fault noticed on their **first**
+occurrence; the human aware of a fault in **100%** of the windows one
+occurred in; 42 interruptions, **90%** of which deserved one; **zero**
+interruptions on ticks where nothing happened; and the full escalation
+budget still available at the end.
+
+Three bugs came out of it, all in the attention model and none visible
+to a unit test:
+
+1. **Repetition damping never decayed.** An entity that surfaced a
+   recurring fault six times went permanently silent about it. A leg
+   that keeps stalling should keep being mentioned; the tenth occurrence
+   is worse news than the first.
+2. **Damping keyed on the channel alone.** A leg drawing 1.9 A under
+   heavy motion — often, harmlessly — saturated the counter for
+   `leg.current`, so a leg drawing 2.8 A because it had *stalled* was
+   never mentioned at all. Fifty-four stalls, none surfaced. Damping is
+   keyed on the channel and the severity band now.
+3. **Consequence was additive.** A channel that matters carried a
+   constant into the score whatever it read, so a three-sigma blip on a
+   tilt sensor — six tenths of a degree, well inside its own noise —
+   interrupted a human. Consequence answers *if this is real, how bad is
+   it*; surprise answers *how much reason is there to think it
+   happened*. They multiply now. A refusal is treated as evidence in its
+   own right, because the gate refusing something *is* the event.
+
+And one finding that is not a bug: **consolidation never runs during a
+busy day.** A workshop does not give an entity two hundred consecutive
+quiet ticks, and rewriting memory while a gait loop is running is
+exactly what the quiet check exists to prevent. The dreaming happens
+when the robot is put away, which is where the architecture's word for
+it came from.
 
 ## What none of this shows
 

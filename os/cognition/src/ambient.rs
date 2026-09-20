@@ -104,6 +104,50 @@ impl Intent {
     }
 }
 
+/// One thing the entity has recently told its human about.
+#[derive(Clone, Copy, Debug)]
+struct Surfaced {
+    /// the channel, and which severity band it was in
+    channel: u64,
+    band: u8,
+    repeats: u8,
+    at: Tick,
+}
+
+/// Which severity band an observation falls in.
+///
+/// Damping is keyed on the channel *and* the band, because a channel
+/// with two regimes has two stories. A leg that draws 1.9 A under heavy
+/// motion — often, and harmlessly — and 2.8 A because it has stalled —
+/// rarely, and not harmlessly — is reporting two different things down
+/// one wire, and a counter that cannot tell them apart lets the common
+/// one silence the rare one.
+///
+/// Bands are octaves of deviation: 1-2 sigmas, 2-4, 4-8, and so on.
+/// Coarse on purpose. A finer split would make every slightly-worse
+/// occurrence a fresh event and undo the damping entirely.
+pub fn severity_band(sigmas: f32) -> u8 {
+    if !sigmas.is_finite() || sigmas < 1.0 {
+        return 0;
+    }
+    let mut band = 0u8;
+    let mut v = sigmas;
+    while v >= 2.0 && band < 15 {
+        v /= 2.0;
+        band += 1;
+    }
+    band
+}
+
+/// How long before one repeat is forgiven.
+///
+/// At roughly a tick every ten milliseconds this is about ten seconds.
+/// The number that matters is the ratio between it and how often a
+/// genuine fault recurs: a fault that comes back inside the window is
+/// the same event still happening, and one that comes back after it is
+/// news again.
+pub const FORGIVE_AFTER: u64 = 1_000;
+
 /// What the entity is currently paying attention to.
 #[derive(Clone, Debug, Default)]
 pub struct Attention {
@@ -120,8 +164,27 @@ pub struct Ambient {
     pub attention: Attention,
     /// how many times the tier below has failed at the current problem
     lower_failures: u32,
-    /// things already surfaced, so repetition damps the score
-    surfaced: Vec<(u64, u8)>,
+    /// What has been surfaced recently: channel, repeats, when, and how
+    /// extreme it was.
+    ///
+    /// All four are load-bearing, and a twenty-thousand-tick run found
+    /// out why by scoring 37% recall with two separate bugs in this one
+    /// field.
+    ///
+    /// **The tick.** Damping without it means an entity that surfaced a
+    /// recurring fault six times goes permanently silent about it. A leg
+    /// that keeps stalling should keep being mentioned; the tenth
+    /// occurrence is worse news than the first, not less interesting.
+    ///
+    /// **The severity.** Damping on channel identity alone means a
+    /// frequent mild anomaly masks a rare severe one on the same
+    /// channel. In the run that found it, a leg drawing 1.9 A under
+    /// heavy motion — often, and harmlessly — saturated the counter for
+    /// `leg.current`, so a leg drawing 2.8 A because it had stalled was
+    /// never mentioned at all. Fifty-four stalls, none surfaced. "It is
+    /// much worse than last time" is new information, whatever the
+    /// channel.
+    surfaced: Vec<Surfaced>,
     pub ticks: u64,
     pub escalations: u64,
 }
@@ -245,7 +308,7 @@ impl Ambient {
         // --- ATTEND ---
         match worst {
             Some((s, name)) if s.is_salient() => {
-                let repeats = self.repeat_count(s.key);
+                let repeats = self.repeat_count(s.key, now, s.sigmas);
                 let salience = Salience {
                     surprise: s.sigmas,
                     consequence: consequence_of(&name),
@@ -269,7 +332,7 @@ impl Ambient {
                 self.attention.quiet_ticks = 0;
 
                 if salience.should_surface() {
-                    self.note_surfaced(s.key);
+                    self.note_surfaced(s.key, now, s.sigmas);
                     let item = Salient::new(&name, salience);
                     self.attention.items = alloc::vec![item.clone()];
                     return Intent::Surface {
@@ -297,18 +360,43 @@ impl Ambient {
         }
     }
 
-    fn repeat_count(&self, key: u64) -> u8 {
+    /// How many times this channel, at this severity, has recently been
+    /// surfaced. One repeat is forgiven per `FORGIVE_AFTER` ticks.
+    fn repeat_count(&self, key: u64, now: Tick, severity: f32) -> u8 {
+        let band = severity_band(severity);
         self.surfaced
             .iter()
-            .find(|(k, _)| *k == key)
-            .map(|(_, n)| *n)
+            .find(|s| s.channel == key && s.band == band)
+            .map(|s| {
+                let forgiven = (now.since(s.at) / FORGIVE_AFTER).min(u8::MAX as u64) as u8;
+                s.repeats.saturating_sub(forgiven)
+            })
             .unwrap_or(0)
     }
 
-    fn note_surfaced(&mut self, key: u64) {
-        match self.surfaced.iter_mut().find(|(k, _)| *k == key) {
-            Some((_, n)) => *n = n.saturating_add(1),
-            None => self.surfaced.push((key, 1)),
+    fn note_surfaced(&mut self, key: u64, now: Tick, severity: f32) {
+        let band = severity_band(severity);
+        let decayed = self.repeat_count(key, now, severity);
+        match self
+            .surfaced
+            .iter_mut()
+            .find(|s| s.channel == key && s.band == band)
+        {
+            Some(s) => {
+                s.repeats = decayed.saturating_add(1);
+                s.at = now;
+            }
+            None => self.surfaced.push(Surfaced {
+                channel: key,
+                band,
+                repeats: 1,
+                at: now,
+            }),
+        }
+        // a channel with many bands is a channel with a lot going on;
+        // bound it so a noisy sensor cannot grow this without limit
+        while self.surfaced.len() > 128 {
+            self.surfaced.remove(0);
         }
     }
 
@@ -325,6 +413,17 @@ impl Ambient {
     /// Quiet is the proxy for "no body is in motion".
     pub fn should_consolidate(&self, after_quiet_ticks: u64) -> bool {
         self.attention.quiet_ticks >= after_quiet_ticks
+    }
+
+    /// A consolidation pass just ran.
+    ///
+    /// Resets the quiet counter, so the next one waits another whole
+    /// idle period rather than firing on every subsequent tick. Without
+    /// it, a night's idleness runs eight hundred passes where four would
+    /// do — which a twenty-thousand-tick day found by reporting exactly
+    /// that number.
+    pub fn consolidated(&mut self) {
+        self.attention.quiet_ticks = 0;
     }
 }
 

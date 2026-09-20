@@ -513,6 +513,9 @@ impl Entity {
         self.graph.mark_session();
         self.index = Index::build(&self.graph);
         self.span.dreams = self.span.dreams.saturating_add(1);
+        // the next pass waits another whole idle period rather than
+        // firing on every subsequent tick
+        self.ambient.consolidated();
         Some(report)
     }
 

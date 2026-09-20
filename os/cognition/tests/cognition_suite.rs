@@ -293,16 +293,74 @@ fn the_surprise_rate_reports_how_well_calibrated_the_entity_is() {
 // ---------- salience ----------
 
 #[test]
-fn consequence_dominates_surprise() {
-    let surprising_but_harmless = Salience {
-        surprise: 10.0,
-        consequence: 0,
+fn consequence_scales_evidence_rather_than_replacing_it() {
+    // Given the same evidence, the more consequential reading scores
+    // higher. That is what "consequence dominates" should mean.
+    let evidence = 6.0;
+    let harmless = Salience {
+        surprise: evidence,
+        consequence: 5,
         relevance: 0,
         urgency: 0,
         repeats: 0,
         refusal: false,
     };
-    let unsurprising_but_dangerous = Salience {
+    let dangerous = Salience {
+        consequence: 95,
+        ..harmless
+    };
+    assert!(dangerous.score() > harmless.score() * 2);
+    assert!(dangerous.should_surface());
+    assert!(!harmless.should_surface());
+
+    // and at full evidence, the consequential one interrupts while the
+    // harmless one still does not
+    let certain_and_dangerous = Salience {
+        surprise: 10.0,
+        ..dangerous
+    };
+    let certain_and_harmless = Salience {
+        surprise: 10.0,
+        ..harmless
+    };
+    assert!(certain_and_dangerous.should_interrupt());
+    assert!(!certain_and_harmless.should_interrupt());
+}
+
+#[test]
+fn an_important_channel_reading_exactly_normal_does_not_interrupt() {
+    // The bug a day of ambient operation found. Consequence used to be
+    // additive, so a channel that matters carried a constant into the
+    // score whatever it read — and a three-sigma blip on a tilt sensor,
+    // six tenths of a degree and well inside its own noise, interrupted
+    // a human.
+    let blip = Salience {
+        surprise: 3.0,
+        consequence: 90, // tilt, on a body that can fall
+        relevance: 40,
+        urgency: 30,
+        repeats: 0,
+        refusal: false,
+    };
+    assert!(
+        !blip.should_interrupt(),
+        "a barely-salient reading scored {} and interrupted",
+        blip.score()
+    );
+    assert!(blip.should_surface(), "but it is still worth logging");
+
+    // the same channel genuinely out of range does interrupt
+    let real = Salience {
+        surprise: 10.0,
+        urgency: 80,
+        ..blip
+    };
+    assert!(real.should_interrupt());
+}
+
+#[test]
+fn nothing_happening_on_an_important_channel_scores_nothing() {
+    let quiet = Salience {
         surprise: 0.0,
         consequence: 100,
         relevance: 0,
@@ -310,8 +368,27 @@ fn consequence_dominates_surprise() {
         repeats: 0,
         refusal: false,
     };
-    assert!(unsurprising_but_dangerous.score() > surprising_but_harmless.score());
-    assert!(unsurprising_but_dangerous.should_interrupt());
+    assert_eq!(
+        quiet.score(),
+        0,
+        "an entity that interrupts because a channel matters, while the \
+         channel reads normal, is broken"
+    );
+}
+
+#[test]
+fn a_refusal_is_evidence_in_its_own_right() {
+    // The gate refusing something *is* the event; there is no surprise
+    // term to wait for.
+    let refused = Salience {
+        surprise: 0.0,
+        consequence: 90,
+        relevance: 50,
+        urgency: 50,
+        repeats: 0,
+        refusal: true,
+    };
+    assert!(refused.should_interrupt(), "scored {}", refused.score());
 }
 
 #[test]

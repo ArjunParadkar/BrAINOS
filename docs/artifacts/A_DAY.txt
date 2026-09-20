@@ -1,0 +1,21 @@
+
+BrAInOS — a day in the life
+───────────────────────────
+  Not "does this work" but "can this be left running". Twenty thousand
+  ticks of a body reporting telemetry, with rare faults, a human who
+  speaks now and then, and quiet periods to consolidate in. The day is
+  one I wrote, so it can show the loop is stable, affordable and
+  attentive to the right things in a world with a known answer key —
+  and cannot show what a real workshop is like.
+
+  [ran         ] 20000 ticks, 95% of them quiet — the entity was not being asked questions, it was running
+  [first notice] reflex stop: noticed on occurrence 1 · leg stall: noticed on occurrence 1
+  [awareness   ] of 10 windows in which something went wrong, the human heard about it in 10 (100%) — not every occurrence, which would be the firehose, but every stretch of time
+  [precision   ] 42 interruptions, 38 of them (90%) for something that deserved one
+  [quiet       ] 155 things surfaced, 42 of which (27%) actually interrupted — 2 interruptions per thousand ticks. An entity that surfaces everything is a firehose nobody keeps; one that surfaces nothing is a machine that quietly fails
+  [thinking    ] 691 escalations above the reflex tier, with 100% of the budget left at the end and 0 escalations the budget refused
+  [dreaming    ] 0 consolidation passes during the day and 5 once the body was put away — a busy workshop never gives two hundred consecutive quiet ticks, and rewriting memory while a gait loop runs is the thing the quiet check exists to prevent. 201 memories at the end
+  [by kind     ] quiet: 19244 seen, 17 reached, 0 interrupted · rail dip: 482 seen, 91 reached, 4 interrupted · leg stall: 54 seen, 14 reached, 5 interrupted · reflex stop: 33 seen, 33 reached, 33 interrupted · the human spoke: 187 seen, 0 reached, 0 interrupted
+  [calibration ] surprise rate 1% — a well-calibrated entity in a familiar place should be low single digits, and one that is surprised half the time is somewhere it does not understand and should say so
+  [verdict     ] this entity could be left running: it caught what mattered, stayed quiet, and still had budget at the end
+

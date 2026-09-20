@@ -33,31 +33,52 @@ pub struct Salience {
 impl Salience {
     /// The score, 0–100.
     ///
-    /// Consequence dominates, and the weights are chosen so that a
-    /// maximally consequential event clears the interrupt threshold *on
-    /// its own* — an unsurprising, unrequested, unhurried event that
-    /// could injure someone still gets said out loud. On a laptop a
-    /// surprising event is interesting; on a body a consequential one is
-    /// the only kind that must not be missed.
+    /// Consequence answers *if this is real, how bad is it*. Surprise
+    /// answers *how much reason is there to think something happened*.
+    /// The two **multiply**, and a twenty-thousand-tick run is what
+    /// settled that they should.
+    ///
+    /// They used to add, which made consequence a constant the channel
+    /// carried: a three-sigma blip on a robot's tilt sensor — six tenths
+    /// of a degree, well inside its own noise — interrupted a human,
+    /// because tilt is important on a body that can fall. An entity that
+    /// interrupts on the strength of which channel a reading came from,
+    /// while the reading is indistinguishable from normal, is broken in
+    /// a way that is hard to notice from a unit test and obvious after
+    /// four hours of operation.
+    ///
+    /// A refusal is treated as evidence in its own right. The gate
+    /// refusing something *is* the event; there is no surprise term to
+    /// wait for.
     ///
     /// ```text
-    ///   surprise    0–60    capped at ten sigmas
-    ///   consequence 0–400   four times the others: the dominant term
+    ///   evidence    0–100%  how much reason to think something happened
+    ///   stake       0–400   consequence, scaled by evidence
+    ///   surprise    0–60    the deviation itself
     ///   relevance   0–50
     ///   urgency     0–50
     ///   refusal     0 or 60
-    ///   ─────────────────
+    ///   ────────────────────
     ///   total       0–620
     /// ```
     pub fn score(&self) -> u8 {
+        let evidence_pct: u32 = if self.refusal {
+            100
+        } else {
+            (self.surprise.clamp(0.0, 10.0) * 10.0) as u32
+        };
+
         let mut s = 0u32;
+        // how bad it would be, scaled by how much reason there is to
+        // think it happened
+        s += (self.consequence as u32 * evidence_pct) / 100 * 4;
         s += (self.surprise.clamp(0.0, 10.0) * 6.0) as u32;
-        s += self.consequence as u32 * 4;
         s += self.relevance as u32 / 2;
         s += self.urgency as u32 / 2;
         if self.refusal {
             s += 60;
         }
+
         // repetition damps: telling someone the same thing five times is
         // how an assistant becomes something people mute
         let damped = s >> self.repeats.min(6);
