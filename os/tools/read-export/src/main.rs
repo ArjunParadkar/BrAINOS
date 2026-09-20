@@ -276,8 +276,8 @@ fn read(raw: &[u8]) -> Result<(), String> {
         return Err("no BRAINEX1 magic".into());
     }
     let version = c.u16()?;
-    if version != 1 {
-        return Err(format!("format version {version}; this reader knows 1"));
+    if version != 2 {
+        return Err(format!("format version {version}; this reader knows 2"));
     }
 
     // --- manifest ---
@@ -393,6 +393,7 @@ fn read(raw: &[u8]) -> Result<(), String> {
     println!("\n  {count} memories:\n");
 
     let mut by_kind = [0usize; 9];
+    let mut structured = 0usize;
     let mut shown = 0;
     for _ in 0..count {
         let id = m.u64()?;
@@ -411,9 +412,15 @@ fn read(raw: &[u8]) -> Result<(), String> {
             let _kind = m.u8()?;
         }
         let _retrievals = m.u32()?;
+        // v2: a node may carry its exact structured form alongside its
+        // readable one. Skills use it; nothing else does yet.
+        let state = m.bytes()?;
 
         if kind < by_kind.len() {
             by_kind[kind] += 1;
+        }
+        if kind == 3 && !state.is_empty() {
+            structured += 1;
         }
         if shown < 12 {
             println!(
@@ -430,6 +437,11 @@ fn read(raw: &[u8]) -> Result<(), String> {
         println!("    … and {} more", count as usize - shown);
     }
 
+    if structured > 0 {
+        println!(
+            "\n  {structured} skill(s) carry their exact learned state, not just a summary"
+        );
+    }
     println!("\n  by kind:");
     for (i, n) in by_kind.iter().enumerate() {
         if *n > 0 {

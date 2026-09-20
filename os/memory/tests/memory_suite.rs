@@ -1126,3 +1126,151 @@ fn durations_and_bodies_ride_along_on_an_episode() {
     assert_eq!(e.took, Duration::from_millis(2_100));
     assert_eq!(e.body, Some(BodyId::from_bytes([3; 32])));
 }
+
+// ---------------------------------------------------------------------
+// what an entity has learned has to survive being switched off
+// ---------------------------------------------------------------------
+//
+// This was broken and nothing caught it. A skill node's content is
+// prose — `legs.walk :: walk :: 40/60 :: needs carpet` — and prose was
+// the only durable form a skill had, so `rehydrate` could recover the
+// verb, the name and the counts and nothing else. An entity that spent
+// sixty attempts establishing that walking needs carpet woke up knowing
+// its success rate and no longer knowing why.
+//
+// That is the moat leaking. §2.4's claim is that accumulated experience
+// persists and compounds; the thing that *is* the accumulated judgement
+// was being dropped at every reboot and at every export.
+
+fn taught_that_walking_needs_carpet() -> (MemoryHandle, StateGraph, SkillGraph, Verb) {
+    let walk = Verb::parse("legs.walk").unwrap();
+    let body = BodyId::from_bytes([0xB2; 32]);
+    let h = MemoryHandle::issue(EntityId::from_bytes([0x5A; 32]));
+    let mut g = StateGraph::new();
+    let mut s = SkillGraph::new();
+    s.learn(&h, &mut g, walk, "walk", Provenance::own(Tick(1)));
+
+    for i in 0..60u64 {
+        let carpet = i % 3 != 0;
+        let ctx: Vec<String> = vec![if carpet { "carpet" } else { "tile" }.to_string()];
+        s.observe(
+            &h,
+            &mut g,
+            &walk,
+            carpet,
+            false,
+            Some(body),
+            &ctx,
+            Tick(10 + i),
+            None,
+        );
+    }
+    (h, g, s, walk)
+}
+
+#[test]
+fn a_learned_precondition_survives_rehydration() {
+    let (_h, g, s, walk) = taught_that_walking_needs_carpet();
+    let before = s.for_verb(&walk).unwrap().clone();
+    assert!(
+        before.preconditions.iter().any(|p| p.tag == "carpet" && p.is_well_supported()),
+        "the premise: it learned something. {:?}",
+        before.preconditions
+    );
+
+    let mut after = SkillGraph::new();
+    after.rehydrate(&g);
+    let recovered = after.for_verb(&walk).expect("the skill came back");
+
+    assert_eq!(
+        recovered.preconditions.len(),
+        before.preconditions.len(),
+        "preconditions were lost across a rehydrate"
+    );
+    for p in &before.preconditions {
+        let q = recovered
+            .preconditions
+            .iter()
+            .find(|q| q.tag == p.tag)
+            .unwrap_or_else(|| panic!("precondition {} was lost", p.tag));
+        assert_eq!(q.tests, p.tests, "{}: the test count changed", p.tag);
+        assert_eq!(
+            q.test_failures, p.test_failures,
+            "{}: the evidence changed",
+            p.tag
+        );
+        assert_eq!(q.strength(), p.strength(), "{}: the strength changed", p.tag);
+    }
+    assert_eq!(recovered.attempts, before.attempts);
+    assert_eq!(recovered.successes, before.successes);
+}
+
+/// The per-body record too: how well this skill goes *on this body* is
+/// the thing that makes a body a stranger or a known quantity, and it
+/// was being dropped with everything else.
+#[test]
+fn the_per_body_record_survives_rehydration() {
+    let (_h, g, s, walk) = taught_that_walking_needs_carpet();
+    let before = s.for_verb(&walk).unwrap().per_body.len();
+    assert!(before > 0, "the premise: it acted with a body");
+
+    let mut after = SkillGraph::new();
+    after.rehydrate(&g);
+    assert_eq!(
+        after.for_verb(&walk).unwrap().per_body.len(),
+        before,
+        "the per-body record was lost"
+    );
+}
+
+/// A graph written before nodes could carry state still loads — with
+/// the counts, and without the judgement. That is a real loss and it is
+/// why the export format refuses to read a v1 file rather than doing
+/// this quietly; here it is asserted so the fallback is a known
+/// behaviour rather than an accident.
+#[test]
+fn a_stateless_skill_node_still_loads_and_says_less() {
+    let (h, mut g, s, walk) = taught_that_walking_needs_carpet();
+    let id = s.for_verb(&walk).unwrap().id;
+    g.set_skill_state(&h, id, &[]);
+
+    let mut after = SkillGraph::new();
+    after.rehydrate(&g);
+    let recovered = after.for_verb(&walk).expect("it still loads");
+    assert_eq!(recovered.attempts, 60, "the counts are in the prose");
+    assert!(
+        recovered.preconditions.is_empty(),
+        "the prose does not carry the evidence, and pretending it does would be worse"
+    );
+}
+
+/// Everything in this system is bounded; a skill's candidate
+/// preconditions were not, and now that a skill is serialized into a
+/// node an unbounded skill is an unbounded node.
+#[test]
+fn a_skill_does_not_grow_without_limit() {
+    use brainos_memory::skill::MAX_PRECONDITIONS;
+    let walk = Verb::parse("legs.walk").unwrap();
+    let h = MemoryHandle::issue(EntityId::from_bytes([0x5B; 32]));
+    let mut g = StateGraph::new();
+    let mut s = SkillGraph::new();
+    s.learn(&h, &mut g, walk, "walk", Provenance::own(Tick(1)));
+
+    // a world with a great many distinct, meaningless tags
+    for i in 0..400u64 {
+        let ctx: Vec<String> = vec![format!("tag_{i}"), "always".to_string()];
+        s.observe(&h, &mut g, &walk, true, false, None, &ctx, Tick(10 + i), None);
+    }
+    let skill = s.for_verb(&walk).unwrap();
+    assert!(
+        skill.preconditions.len() <= MAX_PRECONDITIONS,
+        "a skill grew to {} preconditions",
+        skill.preconditions.len()
+    );
+    // and the one tag that was present every single time is not the one
+    // that got evicted
+    assert!(
+        skill.preconditions.iter().any(|p| p.tag == "always"),
+        "the best-supported candidate was evicted in favour of noise"
+    );
+}

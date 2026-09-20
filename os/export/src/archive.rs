@@ -24,7 +24,14 @@ use brainos_memory::graph::StateGraph;
 use brainos_memory::law::MemoryHandle;
 
 pub const MAGIC: [u8; 8] = *b"BRAINEX1";
-pub const FORMAT_VERSION: u16 = 1;
+/// Version 2. v1 predates nodes carrying their structured form, so a v1
+/// memory section decodes into skills that have forgotten every
+/// precondition they ever learned. Rather than read one and silently
+/// hand back a diminished entity, this build refuses it by name.
+pub const FORMAT_VERSION: u16 = 2;
+
+/// The oldest version this build will read.
+pub const OLDEST_READABLE: u16 = 2;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ExportError {
@@ -32,6 +39,9 @@ pub enum ExportError {
     NotAnArchive,
     /// a newer format version than this build understands
     TooNew { theirs: u16, ours: u16 },
+    /// an older format this build will not read, because reading it
+    /// would produce an entity quietly missing part of itself
+    TooOld { theirs: u16, oldest: u16 },
     /// the signature did not verify against the entity it names
     Unsigned,
     /// the Merkle root does not match the sections present
@@ -257,6 +267,12 @@ impl Archive {
             return Err(ExportError::TooNew {
                 theirs: version,
                 ours: FORMAT_VERSION,
+            });
+        }
+        if version < OLDEST_READABLE {
+            return Err(ExportError::TooOld {
+                theirs: version,
+                oldest: OLDEST_READABLE,
             });
         }
 

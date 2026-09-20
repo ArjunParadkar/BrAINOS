@@ -2,7 +2,7 @@
 BrAInOS — this build
 ────────────────────
   abi version           1.0.0
-  export format         v1
+  export format         v2
   gate stages           8
   refusal codes         25
   domain separation tags 15

@@ -193,6 +193,20 @@ pub struct Node {
     /// how many times this node has been retrieved. Retrieval is
     /// evidence of usefulness, and usefulness is what should survive.
     pub retrievals: u32,
+    /// The structured form of this memory, for the kinds that have one.
+    ///
+    /// `content` is what the entity can *read back* — it is prose, it is
+    /// what lexical retrieval searches, and it is lossy on purpose. That
+    /// was fine until it turned out to be the only durable form a skill
+    /// had: an entity would learn across sixty attempts that walking
+    /// needs carpet, sleep, and wake up knowing its success rate and
+    /// nothing else. The accumulated judgement — which is the whole of
+    /// §2.4's moat — evaporated at every reboot.
+    ///
+    /// So a node may carry its exact form alongside its readable one.
+    /// Empty for everything that does not need it, which is most
+    /// memories.
+    pub state: Vec<u8>,
 }
 
 impl Node {
@@ -229,6 +243,7 @@ impl Encode for Node {
             edge.encode(e);
         }
         e.u32(self.retrievals);
+        e.bytes(&self.state);
     }
 }
 
@@ -258,6 +273,7 @@ impl Decode for Node {
             provenance,
             edges,
             retrievals: d.u32()?,
+            state: d.bytes()?.to_vec(),
         })
     }
 }
@@ -271,6 +287,10 @@ pub struct Bounds {
     pub max_beliefs: usize,
     pub max_audit: usize,
     pub max_content: usize,
+    /// the cap on a node's structured form. A node whose state would
+    /// exceed it keeps no state at all rather than a truncated one: half
+    /// a serialization is not a smaller memory, it is a corrupt one.
+    pub max_state: usize,
 }
 
 impl Default for Bounds {
@@ -285,6 +305,7 @@ impl Default for Bounds {
             // this is the working window kept in the graph
             max_audit: 8_192,
             max_content: 1_024,
+            max_state: 4_096,
         }
     }
 }
@@ -297,6 +318,7 @@ impl Bounds {
         max_beliefs: 64,
         max_audit: 256,
         max_content: 256,
+        max_state: 1_024,
     };
 
     pub fn cap_for(&self, kind: NodeKind) -> Option<usize> {
@@ -480,6 +502,7 @@ impl StateGraph {
             provenance,
             edges: Vec::new(),
             retrievals: 0,
+            state: Vec::new(),
         });
 
         self.enforce_bounds(kind);
@@ -610,6 +633,28 @@ impl StateGraph {
     /// reasoned about. A skill node is different — it is a live summary
     /// of statistics that live in the skill graph, and letting it drift
     /// would mean an export carried stale numbers.
+    /// Replace a skill node's structured form.
+    ///
+    /// Narrow on purpose, like `rewrite_skill_node` next to it: a skill
+    /// keeping its own exact state current is the one caller. A state
+    /// that would exceed the bound is refused rather than truncated —
+    /// half a serialization is a corrupt memory, not a smaller one, and
+    /// the caller is told so it can shed something instead.
+    pub fn set_skill_state(&mut self, _h: &MemoryHandle, id: NodeId, state: &[u8]) -> bool {
+        if state.len() > self.bounds.max_state {
+            return false;
+        }
+        let Ok(i) = self.nodes.binary_search_by_key(&id.0, |n| n.id.0) else {
+            return false;
+        };
+        if self.nodes[i].kind != NodeKind::Skill {
+            return false;
+        }
+        self.nodes[i].state.clear();
+        self.nodes[i].state.extend_from_slice(state);
+        true
+    }
+
     pub fn rewrite_skill_node(&mut self, _h: &MemoryHandle, id: NodeId, text: &str) -> bool {
         let Ok(i) = self.nodes.binary_search_by_key(&id.0, |n| n.id.0) else {
             return false;

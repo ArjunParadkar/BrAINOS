@@ -1,0 +1,27 @@
+
+BrAInOS — changing vendors
+──────────────────────────
+  "The customer owns the entity. Permanently." Every company says
+  something like that; the question is whether the architecture makes it
+  true. So: an entity spends its whole life on one vendor's hexapod, the
+  customer exports it, that vendor is then destroyed entirely — entity,
+  bodies, gate, audit log, journal — and a competitor's six-axis arm,
+  described in the manufacturer's own format, adopts the file.
+
+  [vendor A  ] entity c9571eeb..8860 lived on a hexapod: 66 memories, 1 skills, 61 ticks old, verbs legs.sit, legs.stand, legs.turn, legs.walk, voice.say
+  [leave     ] the customer exports: 15192 bytes in 3 sections, signed by their own Key
+  [gone      ] vendor A ceases to exist — entity, bodies, gate, audit log, journal, all destroyed. One file crosses the gap, plus a Key that vendor A never held
+  [vendor B  ] a six-axis arm described in the manufacturer's own format adopts the file: same entity (yes), 67 memories, 1 skills, 62 ticks old, 0 completed embodiments on record, 1 bodies ever
+  [judgement ] what it worked out by trying — carpet 100% over 19 tests — arrives intact. That is the moat: not the file, the 19 attempts behind it
+  [world     ] it still knows the workshop floor is carpet: true — a fact about the world, still true without the body that learned it
+  [body      ] it still remembers the old body's binding femur (true) and the old calibration (true), and neither applies here: the arm was calibrated from scratch (true)
+  [repertoire] what it can do is now arm.home, arm.move_joint — walking is not on the list, because there are no legs
+  [refused   ] asking the arm to walk: NoSuchLimb at Authorize · asking the hexapod that no longer exists: NoSuchBody at Authorize — a memory of a skill is not a licence to act with a body you do not have
+  [acts      ] and the arm moves on the first try: true — no relearning, no migration window, no support ticket
+  [forgery   ] vendor B can read the entity and cannot be it: a re-signed archive does not verify (true)
+
+  What this costs the customer: nothing technical. The second robot is
+  a stranger to this entity's calibration and has to be learned; the
+  memories came free. That is the moat, and it is the honest one —
+  worth staying for, not impossible to leave.
+

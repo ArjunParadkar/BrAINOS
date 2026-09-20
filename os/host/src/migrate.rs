@@ -122,6 +122,12 @@ pub struct Migration {
     pub still_knows_the_floor: bool,
     /// something it learned about *itself* while it was a hexapod
     pub still_knows_its_binding_femur: bool,
+    /// the tested judgement it acquired, before and after the move:
+    /// (tag, strength, tests). This is the accumulated experience §2.4
+    /// calls the moat, and the interesting question is whether a change
+    /// of vendor costs any of it.
+    pub judgement_before: Vec<(String, u8, u16)>,
+    pub judgement_after: Vec<(String, u8, u16)>,
 
     // --- what correctly did not ---
     pub repertoire_before: Vec<String>,
@@ -182,23 +188,40 @@ pub fn migrate() -> Migration {
         &["workshop"],
     );
 
+    // It practises, and while practising it finds something out: the
+    // gait works on carpet and fails on the tiled section. That is not
+    // a fact about walking, it is a fact about *this workshop*, learned
+    // by trying it — and it is the kind of thing the moat is supposedly
+    // made of, so the migration had better carry it.
     a.learn_skill(v("legs.walk"), "walking");
-    for i in 0..24u64 {
+    for i in 0..60u64 {
         a.tick(SenseFrame::quiet(Instant(10 + i)));
+        let on_carpet = i % 3 != 0;
         let out = a.attempt(v("legs.walk"), hexapod, &[("speed", 0.08), ("heading", 0.0)]);
-        let ok = matches!(out.verdict, Verdict::Granted(_));
+        let granted = matches!(out.verdict, Verdict::Granted(_));
         a.outcome(
             v("legs.walk"),
             Some(hexapod),
-            if ok {
+            if granted && on_carpet {
                 EpisodeOutcome::Succeeded
             } else {
                 EpisodeOutcome::Failed
             },
             "forward across the workshop",
-            &["carpet", "workshop"],
+            &[if on_carpet { "carpet" } else { "tile" }, "workshop"],
         );
     }
+    let judgement_before: Vec<(String, u8, u16)> = a
+        .skills
+        .for_verb(&v("legs.walk"))
+        .map(|s| {
+            s.preconditions
+                .iter()
+                .filter(|p| p.is_binding_at(a.tick))
+                .map(|p| (p.tag.clone(), p.strength(), p.tests))
+                .collect()
+        })
+        .unwrap_or_default();
 
     let memories_before = a.graph.len();
     let skills_before = a.skills.len();
@@ -247,6 +270,18 @@ pub fn migrate() -> Migration {
     let age_after = b.life.age(b.tick);
     let wakes_after = b.life.wakes;
     let bodies_ever = b.life.bodies_ever.len();
+
+    let judgement_after: Vec<(String, u8, u16)> = b
+        .skills
+        .for_verb(&v("legs.walk"))
+        .map(|s| {
+            s.preconditions
+                .iter()
+                .filter(|p| p.is_binding_at(b.tick))
+                .map(|p| (p.tag.clone(), p.strength(), p.tests))
+                .collect()
+        })
+        .unwrap_or_default();
 
     let still_knows_the_floor = b
         .recall("what is the workshop floor like", 4)
@@ -345,6 +380,8 @@ pub fn migrate() -> Migration {
         bodies_ever,
         still_knows_the_floor,
         still_knows_its_binding_femur,
+        judgement_before,
+        judgement_after,
         repertoire_before,
         repertoire_after,
         old_calibration_remembered,
@@ -365,10 +402,22 @@ impl Migration {
             && self.skills_after == self.skills_before
             && self.age_after >= self.age_before
             && self.still_knows_the_floor
+            && !self.judgement_before.is_empty()
+            && self.judgement_after == self.judgement_before
             && self.walk_on_the_arm.is_some()
             && self.arm_acted
             && self.vendor_b_cannot_forge
     }
+}
+
+fn describe(j: &[(String, u8, u16)]) -> String {
+    if j.is_empty() {
+        return String::from("nothing");
+    }
+    j.iter()
+        .map(|(tag, strength, tests)| format!("{tag} {strength}% over {tests} tests"))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 /// The narrated run.
@@ -411,6 +460,23 @@ pub fn narrate(m: &Migration) -> Vec<(&'static str, String)> {
             m.age_after,
             m.wakes_after,
             m.bodies_ever
+        ),
+    ));
+    out.push((
+        "judgement",
+        format!(
+            "what it worked out by trying — {} — arrives {}. That is the moat: not the \
+             file, the {} attempts behind it",
+            describe(&m.judgement_after),
+            if m.judgement_after == m.judgement_before {
+                "intact"
+            } else {
+                "CHANGED — it forgot something in transit"
+            },
+            m.judgement_before
+                .iter()
+                .map(|(_, _, t)| *t as u32)
+                .sum::<u32>(),
         ),
     ));
     out.push((

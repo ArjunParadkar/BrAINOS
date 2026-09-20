@@ -60,6 +60,16 @@ pub const EVIDENCE_WINDOW: u16 = 64;
 /// changes, it finds out.
 pub const STALE_AFTER: u64 = 400;
 
+/// The most candidate preconditions one skill tracks.
+///
+/// Everything else in this system is bounded and this was not: a world
+/// with many distinct tags would grow a skill without limit, and now
+/// that a skill is serialized into its node, an unbounded skill is an
+/// unbounded node. When the cap is reached the weakest *untested*
+/// candidate is dropped, never a tested one — an entity should forget a
+/// hunch before it forgets something it found out.
+pub const MAX_PRECONDITIONS: usize = 32;
+
 /// A condition learned from experience.
 ///
 /// **What makes something a precondition is that without it the thing
@@ -396,6 +406,31 @@ impl Skill {
         // candidate at all
         self.preconditions
             .retain(|p| p.tests < 5 || p.strength() >= 20);
+
+        // and the list itself is bounded: drop the weakest untested
+        // candidate first, so a hunch goes before a finding
+        while self.preconditions.len() > MAX_PRECONDITIONS {
+            let victim = self
+                .preconditions
+                .iter()
+                .enumerate()
+                .min_by_key(|(_, p)| (p.tests > 0, p.support, p.tests))
+                .map(|(i, _)| i);
+            match victim {
+                Some(i) => {
+                    self.preconditions.remove(i);
+                }
+                None => break,
+            }
+        }
+    }
+
+    /// This skill's exact form, for the graph to hold alongside its
+    /// readable one.
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut e = Encoder::new();
+        self.encode(&mut e);
+        e.finish_bounded()
     }
 
     pub fn render(&self) -> String {
@@ -581,7 +616,9 @@ impl SkillGraph {
             last_used: prov.at,
         };
         let id = graph.add(h, NodeKind::Skill, &skill.render(), 60, prov);
-        self.skills.push(Skill { id, ..skill });
+        let skill = Skill { id, ..skill };
+        graph.set_skill_state(h, id, &skill.to_bytes());
+        self.skills.push(skill);
         id
     }
 
@@ -604,8 +641,13 @@ impl SkillGraph {
         let text = skill.render();
         // the graph node mirrors the skill, so an export carries both the
         // statistics and the memory they were learned from
+        let state = skill.to_bytes();
         graph.revise(h, id, 60 + (skill.success_rate_pct() / 3));
         rewrite_node(h, graph, id, &text);
+        // the readable form is what retrieval searches; the exact form is
+        // what survives a reboot. Both, or the entity wakes up having
+        // forgotten how to judge.
+        graph.set_skill_state(h, id, &state);
         if let Some(ep) = episode {
             graph.link(h, ep, id, EdgeKind::About);
         }
@@ -627,9 +669,12 @@ impl SkillGraph {
             .iter()
             .filter_map(|s| self.for_verb(&s.verb).map(|c| c.id))
             .collect();
+        let mut fresh = Vec::new();
         if let Some(s) = self.skills.iter_mut().find(|s| s.id == id) {
             s.steps = steps;
+            fresh = s.to_bytes();
         }
+        graph.set_skill_state(h, id, &fresh);
         for c in child_ids {
             graph.link(h, id, c, EdgeKind::Uses);
         }
@@ -692,9 +737,24 @@ impl SkillGraph {
     }
 
     /// Rebuild from a graph after an import.
+    ///
+    /// A skill node carries its exact form as well as its readable one,
+    /// and the exact form is what is used when it is there. Parsing the
+    /// prose is the fallback, for a graph written before nodes could
+    /// carry state — it recovers the verb, the name and the counts, and
+    /// loses the preconditions and the per-body record, which is
+    /// precisely the loss that made this necessary.
     pub fn rehydrate(&mut self, graph: &StateGraph) {
         self.skills.clear();
         for n in graph.of_kind(NodeKind::Skill) {
+            if !n.state.is_empty() {
+                if let Ok(s) = Skill::from_bytes(&n.state) {
+                    // the node's id is authoritative: it is where this
+                    // skill actually lives in this graph
+                    self.skills.push(Skill { id: n.id, ..s });
+                    continue;
+                }
+            }
             let mut parts = n.content.split(" :: ");
             let Some(verb_s) = parts.next() else { continue };
             let Ok(verb) = Verb::parse(verb_s) else {

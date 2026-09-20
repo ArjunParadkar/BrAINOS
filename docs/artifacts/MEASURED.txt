@@ -8,31 +8,31 @@ BrAInOS — measured
 
   operation                                                  min    median    budget spread  fits
   ────────────────────────────────────────────────────────────────────────────────────────────────────────
-  KIRA: one full eight-stage evaluation (granted)        118.4us   121.3us  100.00ms   2.3x  yes, 0% of budget
-  KIRA: one evaluation refused at authorize               77.8us    79.9us  100.00ms   2.8x  yes, 0% of budget
-  ed25519: one signature                                  35.1us    62.0us         —   2.7x  —
-  ed25519: one verification                               35.8us    37.0us         —   2.9x  —
-  hexapod: plan and verify a whole gait cycle             32.7us    33.0us     1.00s   1.0x  yes, 0% of budget
-  hexapod: the tip-over check alone, over a whole cycle     9.1us     9.2us         —   1.0x  —
-  hexapod: the tip-over check on one pose                  179ns     182ns   10.00ms  46.9x  yes, 0% of budget
-  bodyd: one reflex pass                                    42ns      42ns   10.00ms 337.3x  yes, 0% of budget
-  memory: one recall over a full graph                    1.25ms    1.32ms  100.00ms   2.2x  yes, 1% of budget
-  memory: writing one episode                              1.7us     2.4us   10.00ms   1.8x  yes, 0% of budget
-  memory: one consolidation pass                         199.9us   860.3us    30.00s  20.3x  yes, 0% of budget
-  journal: seal one record                                1.59ms    1.68ms  100.00ms   3.8x  yes, 1% of budget
-  wire: seal one frame                                     1.4us     1.5us   10.00ms  12.6x  yes, 0% of budget
-  wire: open one frame                                     1.5us     1.5us   10.00ms  10.6x  yes, 0% of budget
+  KIRA: one full eight-stage evaluation (granted)        153.9us   162.0us  100.00ms   1.2x  yes, 0% of budget
+  KIRA: one evaluation refused at authorize               98.7us   104.5us  100.00ms   1.1x  yes, 0% of budget
+  ed25519: one signature                                  47.2us    49.1us         —   1.2x  —
+  ed25519: one verification                               49.2us    51.0us         —   1.1x  —
+  hexapod: plan and verify a whole gait cycle             33.9us    34.5us     1.00s   1.1x  yes, 0% of budget
+  hexapod: the tip-over check alone, over a whole cycle     9.7us     9.8us         —   1.1x  —
+  hexapod: the tip-over check on one pose                  223ns     224ns   10.00ms   1.1x  yes, 0% of budget
+  bodyd: one reflex pass                                    39ns      40ns   10.00ms   1.8x  yes, 0% of budget
+  memory: one recall over a full graph                   976.5us    1.06ms  100.00ms   1.4x  yes, 0% of budget
+  memory: writing one episode                              1.9us     2.7us   10.00ms   2.0x  yes, 0% of budget
+  memory: one consolidation pass                         185.3us   761.7us    30.00s   4.6x  yes, 0% of budget
+  journal: seal one record                                1.63ms    2.18ms  100.00ms   1.5x  yes, 1% of budget
+  wire: seal one frame                                     1.7us     1.7us   10.00ms   1.1x  yes, 0% of budget
+  wire: open one frame                                     1.7us     1.7us   10.00ms   1.3x  yes, 0% of budget
 
-  6 of 14 measurements have a p99 more than 3x their min, which means
+  1 of 14 measurements have a p99 more than 3x their min, which means
   this machine was busy while they ran. The min is the number to believe;
   the spread is a reading about the machine, not about the code.
 
 What the numbers mean
 ─────────────────────
-  A gate evaluation is 118.4 us and 59% of it is the two ed25519 operations 
+  A gate evaluation is 153.9 us and 62% of it is the two ed25519 operations 
   — one to sign the proposal, one to verify it. Everything else the eight 
   stages do, including the body's forward model and the Merkle append, is 
-  the remaining 41%. 
+  the remaining 38%. 
 
   That has a consequence for where the gate runs. ed25519 in software on an 
   Xtensa core at 240 MHz is a few milliseconds per operation, so the same 
@@ -42,18 +42,18 @@ What the numbers mean
   instead of asking per step. The measurement agrees with the architecture 
   rather than the other way round, which is the useful direction. 
 
-  One reflex pass is 42 ns, and re-deriving the tip-over margin from scratch 
-  would add 179 ns. A 1 kHz servo loop has a millisecond; both together are 
+  One reflex pass is 39 ns, and re-deriving the tip-over margin from scratch 
+  would add 223 ns. A 1 kHz servo loop has a millisecond; both together are 
   under a percent of it, on this machine. Scaled by the hundred-fold an 
   Xtensa core is slower, still under one percent. 
 
-  Retrieval over a graph at its episodic bound is 1.25 ms, about 721x the 
+  Retrieval over a graph at its episodic bound is 976.5 us, about 514x the 
   cost of writing one memory. That ratio is what makes rebuilding the index 
   on read rather than maintaining it on write the right trade: reads are 
   rare and thinking is what they feed, writes are constant and happen while 
   something is moving. 
 
-  Sealing the whole state graph into a journal record is 1.59 ms. At that 
+  Sealing the whole state graph into a journal record is 1.63 ms. At that 
   cost, committing on every episode would be wasteful and committing only at 
   sleep would lose a session to a power cut — which is what the segmenting 
   is for: episodes commit often and cheaply, the skill graph and the life 
@@ -107,8 +107,8 @@ Does it fit on the board?
   An ESP32-S3 has 512 KiB of SRAM. Allowing 320 KiB for the firmware, the
   gait loop's buffers and the wire, a state graph has about 192 KiB.
 
-  default bounds (4,096 episodes)      needs  492 KiB of  192 KiB   DOES NOT FIT
-  embedded bounds (256 episodes)       needs   30 KiB of  192 KiB   fits
+  default bounds (4,096 episodes)      needs  508 KiB of  192 KiB   DOES NOT FIT
+  embedded bounds (256 episodes)       needs   31 KiB of  192 KiB   fits
 
   This is why Bounds::EMBEDDED exists and is not a smaller number chosen
   for tidiness. An entity on the board remembers less and consolidates
@@ -117,7 +117,7 @@ Does it fit on the board?
   currently thinking in, not of who it is.
 
 
-  a state graph with 1001 memories encodes to 123064 bytes — about 123 B per memory,
+  a state graph with 1001 memories encodes to 127068 bytes — about 127 B per memory,
   so an entity at its default episodic bound of 4,096 episodes is roughly
-  492 KiB of durable state.
+  508 KiB of durable state.
 

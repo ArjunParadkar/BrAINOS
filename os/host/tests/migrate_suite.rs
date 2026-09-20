@@ -118,3 +118,29 @@ fn the_narration_covers_every_step() {
         );
     }
 }
+
+/// The claim §2.4 actually makes. Not "the memories are in the file" —
+/// the *judgement*: what the entity worked out by trying things, which
+/// is the expensive part and the only part a competitor cannot copy.
+///
+/// This was broken until the fourth domain's fleet work went looking
+/// for it. A skill's durable form was its prose rendering, so an entity
+/// arrived at its new vendor with its success rate and no idea why, and
+/// every test here passed anyway because they counted skills rather
+/// than asking what the skills knew.
+#[test]
+fn the_tested_judgement_crosses_the_gap() {
+    let m = migrate();
+    assert!(
+        !m.judgement_before.is_empty(),
+        "the premise: the entity learned something testable on the hexapod"
+    );
+    assert_eq!(
+        m.judgement_after, m.judgement_before,
+        "the entity arrived at its new vendor having forgotten what it learned"
+    );
+    let (tag, strength, tests) = &m.judgement_before[0];
+    assert_eq!(tag, "carpet");
+    assert!(*strength >= 80, "the evidence weakened: {strength}%");
+    assert!(*tests >= 5, "only {tests} tests behind it");
+}

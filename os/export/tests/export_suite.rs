@@ -229,11 +229,33 @@ fn something_that_is_not_an_archive_is_recognized_as_such() {
         Err(ExportError::NotAnArchive)
     );
     let mut truncated = b"BRAINEX1".to_vec();
-    truncated.extend_from_slice(&1u16.to_le_bytes());
+    truncated.extend_from_slice(&FORMAT_VERSION.to_le_bytes());
     assert!(matches!(
         Archive::from_bytes(&truncated),
         Err(ExportError::Corrupt(_))
     ));
+}
+
+/// A version this build is too new to read is refused *by name*.
+///
+/// v1 predates nodes carrying their structured form, so its memory
+/// section decodes into skills that have forgotten every precondition
+/// they ever learned. Reading one would hand the customer back an
+/// entity quietly missing the part of itself that took the longest to
+/// acquire, and `Corrupt("memory")` would be a misleading way to say
+/// so. It is a different situation and it gets a different error.
+#[test]
+fn an_older_format_is_refused_by_name_rather_than_read_lossily() {
+    let mut old = b"BRAINEX1".to_vec();
+    old.extend_from_slice(&1u16.to_le_bytes());
+    old.extend_from_slice(&[0u8; 64]);
+    assert_eq!(
+        Archive::from_bytes(&old),
+        Err(ExportError::TooOld {
+            theirs: 1,
+            oldest: brainos_export::archive::OLDEST_READABLE
+        })
+    );
 }
 
 #[test]
