@@ -26,6 +26,7 @@ members = [
     "rt",
     "memory",
     "body",
+    "bodyd",
     "kira",
     "cognition",
     "worlds",
@@ -36,6 +37,7 @@ members = [
     "fleet",
     "export",
     "host",
+    "nostd",
 ]
 
 [workspace.package]
@@ -49,6 +51,7 @@ brainos-crypto = { path = "crypto" }
 brainos-rt = { path = "rt" }
 brainos-memory = { path = "memory" }
 brainos-body = { path = "body" }
+brainos-bodyd = { path = "bodyd" }
 brainos-kira = { path = "kira" }
 brainos-cognition = { path = "cognition" }
 brainos-worlds = { path = "worlds" }

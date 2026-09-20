@@ -1,0 +1,28 @@
+[package]
+name = "brainos-nostd-check"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "A canary that fails to build if std leaks into the core. Built for a bare target; see src/lib.rs."
+
+[lib]
+doctest = false
+test = false
+bench = false
+
+[dependencies]
+brainos-abi = { workspace = true }
+brainos-crypto = { workspace = true }
+brainos-rt = { workspace = true }
+brainos-memory = { workspace = true }
+brainos-body = { workspace = true }
+brainos-kira = { workspace = true }
+brainos-cognition = { workspace = true }
+brainos-worlds = { workspace = true }
+brainos-entity = { workspace = true }
+brainos-transport = { workspace = true }
+brainos-adapters = { workspace = true }
+brainos-proof = { workspace = true }
+brainos-fleet = { workspace = true }
+brainos-export = { workspace = true }

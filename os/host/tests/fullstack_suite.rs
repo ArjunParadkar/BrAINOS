@@ -1,0 +1,368 @@
+//! The whole stack, tested.
+//!
+//! The test that matters is `a_subverted_seat_cannot_make_the_body_fall`.
+//! Everything else in this workspace is about making KIRA correct; that
+//! one is about what happens when it is not.
+
+use brainos_abi::time::{Duration, Instant};
+use brainos_abi::verb::Verb;
+use brainos_bodyd::hexapod::{MIN_GAIT_SPEED, TOP_SPEED_MPS};
+use brainos_bodyd::mechanism::Refusal;
+use brainos_bodyd::protocol::Report;
+use brainos_bodyd::runtime::State;
+use brainos_host::fullstack::{subverted_seat, Stack};
+use brainos_rt::envelope::Channel;
+use brainos_rt::reflex::StopReason;
+use brainos_transport::loopback::Faults;
+use miniblur_core::geometry::{LegGeom, Vec2};
+
+fn v(s: &str) -> Verb {
+    Verb::parse(s).unwrap()
+}
+
+fn healthy() -> Stack {
+    Stack::assemble(LegGeom::default(), Faults::PERFECT)
+}
+
+// ---------- the ordinary path ----------
+
+#[test]
+fn a_legal_walk_goes_all_the_way_from_intent_to_a_played_gait() {
+    let mut s = healthy();
+    let (seat, body) = s.ask(
+        v("legs.walk"),
+        &[("speed", 0.08), ("heading", 0.0)],
+        Instant(0),
+    );
+    assert!(seat.is_granted(), "{seat:?}");
+
+    let accepted = match body {
+        Some(Report::Accepted {
+            samples,
+            worst_margin,
+            ..
+        }) => (samples, worst_margin),
+        other => panic!("the body should have accepted it: {other:?}"),
+    };
+    assert!(accepted.0 >= 40, "a whole gait cycle");
+    assert!(
+        accepted.1 > 8.0,
+        "the default Mini-Blur's tripod gait has about 8mm of margin: {}",
+        accepted.1
+    );
+
+    let played = s.play_out(Instant(0), Duration::from_millis(40), 400);
+    assert_eq!(played.samples_played, accepted.0);
+    assert_eq!(played.state, State::Idle);
+    assert!(played.stopped.is_none());
+}
+
+#[test]
+fn the_body_keeps_the_tighter_envelope_and_says_which() {
+    let s = healthy();
+    let effective = s.body.effective_envelope().unwrap();
+    let angle = effective.limit(Channel::Angle).unwrap();
+    // the seat granted ±30; the gait's own reach is ±28
+    assert_eq!(angle.max, 28.0);
+    assert_eq!(angle.min, -28.0);
+}
+
+// ---------- the exercise ----------
+
+#[test]
+fn a_subverted_seat_cannot_make_the_body_fall() {
+    let r = subverted_seat();
+
+    // the gate granted it. The token was genuine — minted by the real
+    // commit stage after a real evaluation — because what is wrong here
+    // is the schema the seat holds, not the gate's logic. That is the
+    // realistic shape of the failure: nobody breaks ed25519, somebody
+    // ships a number the physical robot cannot survive.
+    assert!(r.seat_granted, "the seat genuinely authorized it");
+
+    // the body refused anyway, and said why
+    assert_eq!(
+        r.body_refused,
+        Some(Refusal::WouldBreakInvariant),
+        "the body's own geometry is what refused"
+    );
+    assert!(
+        r.body_refused.unwrap().is_a_disagreement(),
+        "this is the body disagreeing with the seat about physics, \
+         which is a different thing from a schema mismatch and the \
+         entity should learn from it differently"
+    );
+
+    // and nothing moved
+    assert_eq!(r.samples_played, 0);
+}
+
+#[test]
+fn the_same_command_on_a_healthy_body_is_accepted() {
+    // the control for the test above: the command is not intrinsically
+    // bad, the *body* is different
+    let mut ok = healthy();
+    let (seat, body) = ok.ask(
+        v("legs.walk"),
+        &[("speed", 0.08), ("heading", 0.0)],
+        Instant(0),
+    );
+    assert!(seat.is_granted());
+    assert!(matches!(body, Some(Report::Accepted { .. })));
+}
+
+#[test]
+fn the_body_refuses_a_crawl_the_seats_schema_permits() {
+    // the seat's schema says 0.0–0.12 m/s. The body says a gait has a
+    // slowest usable cycle. Both are right about their own domain, and
+    // the body is the one that gets the last word.
+    let mut s = healthy();
+    let (seat, body) = s.ask(
+        v("legs.walk"),
+        &[
+            ("speed", (TOP_SPEED_MPS * MIN_GAIT_SPEED * 0.5) as f64),
+            ("heading", 0.0),
+        ],
+        Instant(0),
+    );
+    assert!(seat.is_granted(), "the seat's schema permits it");
+    assert!(
+        matches!(
+            body,
+            Some(Report::Refused {
+                refusal: Refusal::OutsideEnvelope,
+                disagreement: true,
+                ..
+            })
+        ),
+        "{body:?}"
+    );
+}
+
+#[test]
+fn a_body_that_has_changed_underneath_the_seat_refuses_progressively() {
+    // the interesting middle ground: as the centre of mass moves aft,
+    // there is a point where the body starts refusing what it used to
+    // accept, and it is the body that notices
+    let mut accepted_at = Vec::new();
+    for aft_mm in [0.0f32, 20.0, 40.0, 60.0, 80.0] {
+        let mut geom = LegGeom::default();
+        geom.com = Vec2::new(-aft_mm, 0.0);
+        let mut s = Stack::assemble(geom, Faults::PERFECT);
+        let (seat, body) = s.ask(
+            v("legs.walk"),
+            &[("speed", 0.08), ("heading", 0.0)],
+            Instant(0),
+        );
+        assert!(seat.is_granted(), "the seat never changes its mind");
+        accepted_at.push((aft_mm, matches!(body, Some(Report::Accepted { .. }))));
+    }
+
+    assert!(accepted_at[0].1, "a balanced body walks");
+    assert!(
+        !accepted_at.last().unwrap().1,
+        "a badly tail-heavy body does not"
+    );
+    // and the transition is monotone: once it starts refusing it does
+    // not start accepting again as the problem gets worse
+    let first_refusal = accepted_at.iter().position(|(_, ok)| !ok).unwrap();
+    assert!(
+        accepted_at[first_refusal..].iter().all(|(_, ok)| !ok),
+        "{accepted_at:?}"
+    );
+}
+
+// ---------- the gate is still the gate ----------
+
+#[test]
+fn the_seat_still_refuses_what_it_should_before_anything_reaches_the_wire() {
+    let mut s = healthy();
+
+    // out of the schema's bounds: refused at the seat, and the body
+    // never hears about it
+    let (seat, body) = s.ask(v("legs.walk"), &[("speed", 2.0), ("heading", 0.0)], Instant(0));
+    assert!(!seat.is_granted());
+    assert!(body.is_none(), "nothing went down the wire");
+
+    // a verb no limb advertises
+    let (seat, body) = s.ask(v("arm.grasp"), &[], Instant(0));
+    assert!(!seat.is_granted());
+    assert!(body.is_none());
+}
+
+#[test]
+fn a_denial_at_the_seat_names_its_stage() {
+    let mut s = healthy();
+    let (seat, _) = s.ask(v("legs.walk"), &[("speed", 9.0), ("heading", 0.0)], Instant(0));
+    match seat {
+        brainos_host::fullstack::SeatVerdict::Denied { stage, code } => {
+            assert_eq!(stage, "validate");
+            assert_eq!(code, "out-of-bounds");
+        }
+        other => panic!("expected a denial, got {other:?}"),
+    }
+}
+
+// ---------- the wire, in the middle ----------
+
+#[test]
+fn a_bad_link_loses_commands_and_never_delivers_a_wrong_one() {
+    let mut s = Stack::assemble(LegGeom::default(), Faults::NOISY);
+    let mut heard = 0;
+    for i in 0..60u64 {
+        let (seat, body) = s.ask(v("legs.stand"), &[("height", 0.0)], Instant(i * 1_000));
+        assert!(seat.is_granted());
+        if body.is_some() {
+            heard += 1;
+        }
+    }
+    assert!(heard < 60, "the fault model did nothing");
+    assert!(heard > 30, "the fault model ate everything");
+    assert!(
+        s.limb_wire.frames_refused > 0,
+        "corruption and replays should have been caught"
+    );
+    // whatever arrived, the body is not in a stopped state from having
+    // acted on nonsense
+    assert_ne!(s.body.state(), State::Stopped);
+}
+
+#[test]
+fn a_replayed_command_does_not_make_the_body_act_twice() {
+    let mut s = healthy();
+    let (seat, first) = s.ask(v("legs.stand"), &[("height", 0.0)], Instant(0));
+    assert!(seat.is_granted());
+    assert!(first.is_some());
+
+    // the same frame, resent by an attacker who captured it
+    let before = s.limb_wire.replays_refused;
+    let framed = s
+        .seat_wire
+        .send(
+            brainos_transport::frame::Kind::Command,
+            &brainos_bodyd::protocol::Wire::encode_command(
+                &brainos_bodyd::protocol::Command::new(v("legs.stand")).arg("height", 0.0),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+    s.link.a_sends(framed.clone());
+    s.link.a_sends(framed);
+    s.link.settle();
+
+    let mut delivered = 0;
+    while let Some(raw) = s.link.b_receives() {
+        if s.limb_wire.receive(&raw).is_ok() {
+            delivered += 1;
+        }
+    }
+    assert_eq!(delivered, 1, "each command exactly once");
+    assert!(s.limb_wire.replays_refused > before);
+}
+
+// ---------- stopping ----------
+
+#[test]
+fn losing_the_seat_mid_gait_stops_the_body() {
+    let mut s = healthy();
+    let (_, body) = s.ask(
+        v("legs.walk"),
+        &[("speed", 0.08), ("heading", 0.0)],
+        Instant(0),
+    );
+    assert!(matches!(body, Some(Report::Accepted { .. })));
+
+    // the seat goes silent: `play_out` is not used, because it pets the
+    // link on every pass
+    let mut t = 0u64;
+    let mut stopped = None;
+    for _ in 0..50 {
+        let pass = s.body.tick(
+            Instant(t),
+            brainos_bodyd::runtime::Measured {
+                rail_v: Some(7.4),
+                current_a: Some(0.42),
+                tilt_deg: Some(1.2),
+                hottest_c: Some(38.0),
+            },
+        );
+        if pass.state == State::Stopped {
+            stopped = pass.stop.map(|x| x.reason);
+            break;
+        }
+        t += 50_000;
+    }
+    assert_eq!(stopped, Some(StopReason::LinkLost));
+}
+
+#[test]
+fn the_body_stops_when_it_tips_even_mid_motion() {
+    let mut s = healthy();
+    s.ask(
+        v("legs.walk"),
+        &[("speed", 0.08), ("heading", 0.0)],
+        Instant(0),
+    );
+    // partway through, the body is tilted past the envelope
+    let mut t = 0u64;
+    for _ in 0..5 {
+        s.body.heard_from_seat(Instant(t));
+        s.body.tick(
+            Instant(t),
+            brainos_bodyd::runtime::Measured {
+                rail_v: Some(7.4),
+                current_a: Some(0.42),
+                tilt_deg: Some(1.0),
+                hottest_c: Some(38.0),
+            },
+        );
+        t += 40_000;
+    }
+    s.body.heard_from_seat(Instant(t));
+    let pass = s.body.tick(
+        Instant(t),
+        brainos_bodyd::runtime::Measured {
+            rail_v: Some(7.4),
+            current_a: Some(0.42),
+            tilt_deg: Some(35.0), // the envelope allows ±20
+            hottest_c: Some(38.0),
+        },
+    );
+    assert_eq!(pass.state, State::Stopped);
+    assert_eq!(
+        pass.stop.unwrap().violation.unwrap().channel,
+        Channel::Tilt
+    );
+}
+
+// ---------- the narration ----------
+
+#[test]
+fn the_narrated_run_covers_every_step() {
+    let lines = brainos_host::fullstack::run();
+    let steps: Vec<&str> = lines.iter().map(|l| l.step).collect();
+    for expected in ["assemble", "envelope", "walk", "play", "creep", "subverted", "bad link"] {
+        assert!(steps.contains(&expected), "{expected} is missing");
+    }
+    let all: String = lines
+        .iter()
+        .map(|l| l.text.clone())
+        .collect::<Vec<_>>()
+        .join(" ");
+    assert!(all.contains("would-break-invariant"));
+    assert!(all.contains("samples moved=0"));
+    assert!(all.contains("checked twice"));
+}
+
+#[test]
+fn the_narrated_run_is_reproducible() {
+    let a: Vec<String> = brainos_host::fullstack::run()
+        .into_iter()
+        .map(|l| l.text)
+        .collect();
+    let b: Vec<String> = brainos_host::fullstack::run()
+        .into_iter()
+        .map(|l| l.text)
+        .collect();
+    assert_eq!(a, b);
+}

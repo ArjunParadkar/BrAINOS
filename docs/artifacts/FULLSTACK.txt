@@ -1,0 +1,17 @@
+
+BrAInOS — the whole stack
+─────────────────────────
+  [assemble  ] entity 0d755075..e3b0 ↔ mini-blur 3992b139..7842 over an attested wire; the body is calibrated from the entity's own record
+  [envelope  ] seat granted angle ±30°, current ≤3 A; the body intersected it with its own and kept ±28°
+  [walk      ] seat: granted · body: accepted 48 samples over 1776 ms, worst tip-over margin 24.8 mm
+  [play      ] 48 samples played, finished — every one checked against the envelope and the tip-over invariant before it was applied
+  [creep     ] a crawl the seat's schema permits: seat granted · body outside-envelope — a robot creeping is less stable than a robot walking, and the body is the one that knows
+  [subverted ] a robot whose battery moved aft, with the seat's schema unchanged: seat granted=true · body refused=would-break-invariant · samples moved=0
+  [subverted ] the token was genuine and the wire was authentic. The body refused because its own geometry said the motion was a fall — the same envelope, checked twice.
+  [bad link  ] 40 commands over a link that drops, corrupts, duplicates and reorders: the body heard 39, refused 1 as forged or replayed, and never acted on a wrong one
+
+  Everything in that path is the shipping code: the gait is the one the
+  ESP32-S3 firmware plays, the tip-over check is the convex-hull support
+  polygon, and the wire is authenticated and replay-protected. What is
+  simulated is the servo.
+

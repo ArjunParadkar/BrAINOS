@@ -18,6 +18,7 @@ fn main() -> ExitCode {
         "demo" => demo(),
         "verify" => verify(),
         "wire" => wire(),
+        "stack" => stack(),
         "stat" => stat(),
         "help" | "-h" | "--help" => {
             usage();
@@ -43,6 +44,8 @@ usage: brainos <command>
            bounded domain. Run this with --release; it is ~26,000
            ed25519 operations and debug builds take minutes.
   wire     the transport carrying commands over a deliberately bad link
+  stack    the whole path: entity → gate → wire → body → the real gait,
+           including a subverted seat that the body refuses anyway
   stat     what this build contains
 "
     );
@@ -107,6 +110,20 @@ fn wire() -> ExitCode {
         println!("  [{:<10}] {}", line.step, line.text);
     }
     println!();
+    ExitCode::SUCCESS
+}
+
+fn stack() -> ExitCode {
+    rule("BrAInOS — the whole stack");
+    for line in brainos_host::fullstack::run() {
+        println!("  [{:<10}] {}", line.step, line.text);
+    }
+    println!(
+        "\n  Everything in that path is the shipping code: the gait is the one the
+  ESP32-S3 firmware plays, the tip-over check is the convex-hull support
+  polygon, and the wire is authenticated and replay-protected. What is
+  simulated is the servo.\n"
+    );
     ExitCode::SUCCESS
 }
 

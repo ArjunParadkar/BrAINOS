@@ -16,6 +16,7 @@
 pub mod clock;
 pub mod store;
 pub mod demo;
+pub mod fullstack;
 
 pub use clock::SystemClock;
 pub use store::{FileStore, StoreError};
