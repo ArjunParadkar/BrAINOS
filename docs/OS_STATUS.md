@@ -32,7 +32,7 @@ cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 698 tests
+cargo test --workspace --release              # 702 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -329,8 +329,38 @@ three-sigma blip on a tilt sensor interrupted a human because tilt
 matters on a body that can fall. Consequence scales evidence now; it
 does not create it.
 
-And one finding that is not a bug: **consolidation never runs during a
-busy day.** A workshop does not give an entity two hundred consecutive
+### And on the board Phase 0 actually runs on
+
+§5 says the bound is a property of the body rather than of who the
+entity is. That is easy to write and worth checking: an entity that
+notices what matters with four thousand episodes of room and misses it
+with two hundred and fifty-six is an entity whose attention was paid for
+by its memory, and Phase 0 runs on the small one.
+
+One day does not test it — the entity ends with 201 memories and the
+embedded bound is 256, so the bound never bites, and there is a test
+asserting that so nobody shortens the comparison and reads a vacuous
+pass as a result. Ten days do:
+
+| | workstation | ESP32-S3 |
+|---|---|---|
+| memories at the end | 1,983 | **260** |
+| faults noticed on the first | 1 | 1 |
+| human aware of what mattered | 98% | 98% |
+| interrupt precision | 98% | 98% |
+| interruptions per 1k ticks | 2 | 2 |
+| could be left running | yes | yes |
+
+The board keeps 13% of what the workstation keeps and loses **nothing**
+in noticing. That is the claim §5 needs and it is not obvious: attention
+is a property of the ambient loop — the damping, the severity bands,
+consequence scaling evidence rather than adding to it — rather than of
+how much is remembered. What the small body loses is *recall*, and it
+loses it in the order salience decides.
+
+### And one finding that is not a bug
+
+**Consolidation never runs during a busy day.** A workshop does not give an entity two hundred consecutive
 quiet ticks, and rewriting memory while a gait loop runs is exactly what
 the quiet check exists to prevent. The dreaming happens when the robot
 is put away, which is where the architecture's word for it came from.

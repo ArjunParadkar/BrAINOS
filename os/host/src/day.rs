@@ -263,8 +263,43 @@ fn happening(rng: &mut Drbg) -> Happening {
 
 /// Run a day.
 pub fn run(ticks: u64) -> Day {
+    run_on(ticks, Body::Workstation)
+}
+
+/// Which body the entity is thinking in.
+///
+/// The same day, on two very different budgets. §5 says the bound is a
+/// property of the body rather than of who the entity is, and that is
+/// easy to write and worth checking: an entity that notices what
+/// matters with four thousand episodes of room and misses it with two
+/// hundred and fifty-six is an entity whose attention was paid for by
+/// its memory, and Phase 0 runs on the small one.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Body {
+    /// default bounds — a laptop, a workstation, a robot with a real
+    /// computer in it
+    Workstation,
+    /// what actually fits in an ESP32-S3's SRAM: 256 episodes, a
+    /// 32-record audit window, and leaves handed off every couple of
+    /// minutes
+    Board,
+}
+
+impl Body {
+    pub const fn name(self) -> &'static str {
+        match self {
+            Body::Workstation => "workstation bounds",
+            Body::Board => "ESP32-S3 bounds",
+        }
+    }
+}
+
+pub fn run_on(ticks: u64, body_kind: Body) -> Day {
     let mut rng = Drbg::deterministic(b"a working day");
     let mut e = Entity::new(BrainKey::from_seed(&[0x5A; 32]), Tick(0));
+    if body_kind == Body::Board {
+        e.for_embedded_body();
+    }
     e.wake(None, None, Tick(1)).expect("a fresh entity wakes");
 
     let body = e

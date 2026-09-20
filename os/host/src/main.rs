@@ -530,6 +530,8 @@ fn stack() -> ExitCode {
 }
 
 fn day() -> ExitCode {
+    use brainos_host::day::Body;
+
     rule("BrAInOS — a day in the life");
     println!(
         "  Not \"does this work\" but \"can this be left running\". Twenty thousand
@@ -543,8 +545,82 @@ fn day() -> ExitCode {
     for (step, text) in brainos_host::day::narrate(&d) {
         println!("  [{:<12}] {}", step, text);
     }
+
+    rule("Ten of those days, on the board Phase 0 runs on");
+    println!(
+        "  §5 says the bound is a property of the body rather than of who the
+  entity is. That is easy to write and worth checking, because an entity
+  that notices what matters with four thousand episodes of room and
+  misses it with two hundred and fifty-six is an entity whose attention
+  was paid for by its memory — and Phase 0 runs on the small one.
+
+  One day does not test it: at twenty thousand ticks the entity holds
+  201 memories and the embedded bound of 256 never bites. So this is ten
+  of them, which is where the small body starts forgetting.\n"
+    );
+    let long_run = 200_000;
+    let w = brainos_host::day::run_on(long_run, Body::Workstation);
+    let b = brainos_host::day::run_on(long_run, Body::Board);
+    println!("    {:<28} {:>14} {:>14}", "", "workstation", "ESP32-S3");
+    let row = |what: &str, a: String, c: String| {
+        println!("    {:<28} {:>14} {:>14}", what, a, c);
+    };
+    row(
+        "memories at the end",
+        w.memories.to_string(),
+        b.memories.to_string(),
+    );
+    row(
+        "faults noticed on the first",
+        format!("{}", w.worst_first_notice()),
+        format!("{}", b.worst_first_notice()),
+    );
+    row(
+        "human aware of what mattered",
+        format!("{}%", w.awareness_pct()),
+        format!("{}%", b.awareness_pct()),
+    );
+    row(
+        "interrupt precision",
+        format!("{}%", w.interrupt_precision_pct()),
+        format!("{}%", b.interrupt_precision_pct()),
+    );
+    row(
+        "interruptions per 1k ticks",
+        format!("{}", w.interruptions_per_kilotick),
+        format!("{}", b.interruptions_per_kilotick),
+    );
+    row(
+        "escalation budget left",
+        format!("{}%", w.budget_left_pct),
+        format!("{}%", b.budget_left_pct),
+    );
+    row(
+        "could be left running",
+        format!("{}", w.could_be_left_running()),
+        format!("{}", b.could_be_left_running()),
+    );
+
+    let bound_bit = b.memories < w.memories;
     println!();
-    if d.could_be_left_running() {
+    if !bound_bit {
+        println!(
+            "  THE BOUND NEVER BIT: both bodies ended with the same number of memories,
+  so this comparison says nothing and should not be quoted.\n"
+        );
+    } else {
+        println!(
+            "  The board keeps {}% of what the workstation keeps and loses nothing in
+  noticing. That is the claim §5 needs and it is not obvious: attention
+  is a property of the ambient loop — the damping, the severity bands,
+  consequence scaling evidence — rather than of how much is remembered.
+  What the small body loses is *recall*, and it loses it in the order
+  salience decides.\n",
+            (b.memories * 100) / w.memories.max(1)
+        );
+    }
+
+    if d.could_be_left_running() && b.could_be_left_running() && bound_bit {
         ExitCode::SUCCESS
     } else {
         ExitCode::FAILURE

@@ -215,3 +215,90 @@ fn the_narration_reports_the_numbers_that_decide_the_verdict() {
     assert!(all.contains("firehose"));
     assert!(all.contains("put away"));
 }
+
+// ---------------------------------------------------------------------
+// the same days, on the board Phase 0 actually runs on
+// ---------------------------------------------------------------------
+//
+// §5 says the bound is a property of the body rather than of who the
+// entity is. That is easy to write. An entity that notices what matters
+// with four thousand episodes of room and misses it with two hundred
+// and fifty-six is an entity whose attention was paid for by its
+// memory, and Phase 0 runs on the small one.
+
+use brainos_host::day::{run_on, Body};
+
+const LONG: u64 = 200_000;
+
+/// One day does not test the bound at all — the entity ends with 201
+/// memories and the embedded cap is 256. Asserted so that nobody
+/// shortens the comparison back to a day and reads a vacuous pass as a
+/// result.
+#[test]
+fn a_single_day_does_not_fill_a_small_body() {
+    let short = run_on(20_000, Body::Board);
+    let wide = run_on(20_000, Body::Workstation);
+    assert_eq!(
+        short.memories, wide.memories,
+        "one day now fills the embedded bound, so the ten-day comparison should be \
+         reconsidered — it was chosen because a day does not"
+    );
+}
+
+#[test]
+fn ten_days_do_fill_it() {
+    let board = run_on(LONG, Body::Board);
+    let workstation = run_on(LONG, Body::Workstation);
+    assert!(
+        board.memories < workstation.memories,
+        "the bound never bit ({} vs {}), so the comparison below says nothing",
+        board.memories,
+        workstation.memories
+    );
+    assert!(
+        board.memories * 4 < workstation.memories,
+        "the board kept {} of {} — not enough of a difference for the comparison \
+         to be interesting",
+        board.memories,
+        workstation.memories
+    );
+}
+
+/// The result: what the small body loses is recall, not attention.
+#[test]
+fn a_small_body_loses_recall_and_not_attention() {
+    let board = run_on(LONG, Body::Board);
+    let workstation = run_on(LONG, Body::Workstation);
+
+    assert_eq!(
+        board.worst_first_notice(),
+        workstation.worst_first_notice(),
+        "the board took longer to notice a fault than the workstation did"
+    );
+    assert!(
+        board.awareness_pct() + 5 >= workstation.awareness_pct(),
+        "awareness fell from {}% to {}% on the small body",
+        workstation.awareness_pct(),
+        board.awareness_pct()
+    );
+    assert!(
+        board.interrupt_precision_pct() + 5 >= workstation.interrupt_precision_pct(),
+        "interrupt precision fell from {}% to {}% on the small body",
+        workstation.interrupt_precision_pct(),
+        board.interrupt_precision_pct()
+    );
+    assert!(
+        board.interruptions_per_kilotick <= workstation.interruptions_per_kilotick + 2,
+        "the small body became more interrupting: {} vs {} per 1k ticks",
+        board.interruptions_per_kilotick,
+        workstation.interruptions_per_kilotick
+    );
+}
+
+#[test]
+fn a_small_body_can_still_be_left_running() {
+    assert!(
+        run_on(LONG, Body::Board).could_be_left_running(),
+        "an entity on the board it ships on could not be left running for ten days"
+    );
+}

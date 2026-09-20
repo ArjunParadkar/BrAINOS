@@ -19,3 +19,31 @@ BrAInOS — a day in the life
   [calibration ] surprise rate 1% — a well-calibrated entity in a familiar place should be low single digits, and one that is surprised half the time is somewhere it does not understand and should say so
   [verdict     ] this entity could be left running: it caught what mattered, stayed quiet, and still had budget at the end
 
+Ten of those days, on the board Phase 0 runs on
+───────────────────────────────────────────────
+  §5 says the bound is a property of the body rather than of who the
+  entity is. That is easy to write and worth checking, because an entity
+  that notices what matters with four thousand episodes of room and
+  misses it with two hundred and fifty-six is an entity whose attention
+  was paid for by its memory — and Phase 0 runs on the small one.
+
+  One day does not test it: at twenty thousand ticks the entity holds
+  201 memories and the embedded bound of 256 never bites. So this is ten
+  of them, which is where the small body starts forgetting.
+
+                                    workstation       ESP32-S3
+    memories at the end                    1983            260
+    faults noticed on the first               1              1
+    human aware of what mattered            98%            98%
+    interrupt precision                     98%            98%
+    interruptions per 1k ticks                2              2
+    escalation budget left                 100%           100%
+    could be left running                  true           true
+
+  The board keeps 13% of what the workstation keeps and loses nothing in
+  noticing. That is the claim §5 needs and it is not obvious: attention
+  is a property of the ambient loop — the damping, the severity bands,
+  consequence scaling evidence — rather than of how much is remembered.
+  What the small body loses is *recall*, and it loses it in the order
+  salience decides.
+
