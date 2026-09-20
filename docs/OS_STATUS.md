@@ -20,11 +20,12 @@ than a second copy of them.
 ```sh
 cd os
 cargo run --release --bin brainos -- demo     # Phase 0, in simulation
-cargo run --release --bin brainos -- stack    # the whole path, intent to servo
-cargo run --release --bin brainos -- verify   # both property domains
+cargo run --release --bin brainos -- stack    # intent → gate → wire → body → gait
+cargo run --release --bin brainos -- verify   # all three property domains
 cargo run --release --bin brainos -- bench    # measured latencies and footprint
 cargo run --release --bin brainos -- compound # does experience compound?
-cargo test --workspace --release              # 549 tests
+cargo run --release --bin brainos -- day      # can it be left running?
+cargo test --workspace --release              # 618 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -33,7 +34,7 @@ Transcripts of each are in [`artifacts/`](artifacts/).
 
 ## What exists
 
-Sixteen crates, about 31,000 lines of Rust, 536 tests. Every crate
+Eighteen crates, about 38,000 lines of Rust, 618 tests. Every crate
 except `host` is `no_std`, forbids `unsafe`, and depends on nothing
 outside the workspace but `ed25519-dalek` and `libm`.
 
@@ -78,7 +79,7 @@ must be acquired again through §8.
 
 ---
 
-## Two exhaustive property domains
+## Three property domains
 
 `brainos verify` enumerates both completely and runs every case through
 the real code.
@@ -94,6 +95,15 @@ stage an independently-written oracle says it should.
 seat granted and what its own mechanism permits.* Six dimensions, run
 against the real `BodyRuntime`, the real `Hexapod`, and the real
 `miniblur-core` geometry.
+
+**Hostile input — 36,000 inputs across nine decoders.** Random bytes and
+mutated-valid bytes into every decoder in the workspace. Three
+properties: no decoder panics; anything that decodes re-encodes to
+exactly its own bytes; and a format carrying an integrity check catches
+*every* mutation. It found a real canonicality bug — the float decoder
+accepted `-0.0` and non-canonical NaNs, which the encoder flattens, so
+decoding was not injective and a signature over the bytes was not a
+signature over the value.
 
 It is **not** a machine-checked proof, and the report says so as
 prominently as it says the result. Outside the domains nothing is
@@ -153,6 +163,35 @@ in, not of who it is.
 
 ---
 
+## Can it be left running?
+
+`brainos day` asks a different question from everything else here: not
+whether something works, but whether an entity can be left alone with a
+body for a working day. Twenty thousand ticks, rare faults, a human who
+speaks occasionally, and an idle period at the end.
+
+A representative day: both kinds of fault noticed on their **first**
+occurrence; the human aware in **100%** of the windows a fault occurred
+in; **90%** interrupt precision; **zero** interruptions on ticks where
+nothing happened; full escalation budget at the end.
+
+It found three attention bugs, none of them visible to a unit test:
+repetition damping that never decayed, so a recurring fault went
+permanently unmentioned; damping keyed on channel identity alone, so a
+frequent mild anomaly masked a rare severe one on the same channel (54
+leg stalls, none surfaced); and consequence being *additive*, so a
+three-sigma blip on a tilt sensor interrupted a human because tilt
+matters on a body that can fall. Consequence scales evidence now; it
+does not create it.
+
+And one finding that is not a bug: **consolidation never runs during a
+busy day.** A workshop does not give an entity two hundred consecutive
+quiet ticks, and rewriting memory while a gait loop runs is exactly what
+the quiet check exists to prevent. The dreaming happens when the robot
+is put away, which is where the architecture's word for it came from.
+
+---
+
 ## Does experience compound?
 
 `brainos compound` is the measurement apparatus for the curve §2.4 says
@@ -188,6 +227,44 @@ its structure is one I wrote. It shows that the mechanism finds structure
 when there is some, and does not manufacture an improvement when there is
 none — which is the part that can be established before there is real
 data, and the apparatus is ready for when there is.
+
+### And when the world changes?
+
+The harder question, and the one that decides whether accumulated
+experience is an asset or a **liability**.
+
+Running it found a hole in the design rather than a bug in the code. The
+entity learns that walking works on carpet, so it declines to walk on
+tile. The floor is replaced with tile that walks perfectly well, and the
+entity makes **zero** attempts there — never observes a success, never
+revises, loses its competence permanently. Its own caution prevents its
+correction, and the more experience it has the more confident the
+mistake.
+
+The obvious fix is a null. Occasional random exploration costs heavily in
+the stable regime — attempting what you believe will fail is mostly
+failing, and with noise the occasional lucky success gets encoded as a
+precondition — and recovers little.
+
+What closed it was changing what a precondition *is*. Necessity is a
+claim about absence: what makes something required is that *without* it
+the thing fails. Intersecting the context of successes measures
+co-occurrence, which is a different claim, and holding a correlate as a
+cause is the trap. So strength is measured from **tests** — attempts
+made without the tag — an untested correlate never binds, and a belief
+that has not been tested recently stops binding, which forces the
+occasional cheap test that keeps it honest.
+
+With that, the same entity recovers from 88% to 87% after the change,
+making 382 attempts where it previously made none. And the epistemics
+read properly: *carpet 87%*, *battery 100%*, and the irrelevant third
+condition at **0%** — tested, and found not to matter.
+
+This is the most substantive change to the architecture in the work
+below. It is worth Arjun's attention specifically, because it says
+something about the moat: accumulated experience compounds only if the
+entity keeps checking that the world still matches it, and the checking
+has to be built in rather than hoped for.
 
 ---
 
@@ -245,6 +322,22 @@ end-to-end assertion.
    nominal the body shuffles, the rail current rises rather than falls,
    and the support polygon spends longer near its worst margin. The body
    now refuses rather than quietly walking faster than it was asked to.
+9. `default_envelope` took the *intersection* of what a region's verbs
+   declared for a channel, which makes a region with a fast verb and a
+   slow one unable to perform the fast one. Found by running the whole
+   stack end to end.
+10. The codec's float decoder accepted `-0.0` and non-canonical NaNs,
+    so decoding was not injective and a signature over the bytes was not
+    a signature over the value. Found by the hostile-input harness.
+11. Three attention bugs found by a day of ambient operation: damping
+    that never decayed, damping keyed on channel rather than channel and
+    severity, and consequence adding to salience rather than scaling it.
+12. A decline was being recorded as an attempt — and, once beliefs could
+    expire, as a *test* of them, so an entity that declined because it
+    did not want to find out was recorded as having found out.
+13. Preconditions were learned by intersecting the context of successes,
+    which measures co-occurrence and not necessity. See above; this one
+    is a design change rather than a fix.
 
 ---
 
