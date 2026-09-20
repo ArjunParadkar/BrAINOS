@@ -31,6 +31,12 @@ dependencies = [
 [[package]]
 name = "brainos-cognition"
 version = "0.3.0"
+dependencies = [
+ "brainos-abi",
+ "brainos-crypto",
+ "brainos-memory",
+ "brainos-rt",
+]
 
 [[package]]
 name = "brainos-crypto"
@@ -43,6 +49,16 @@ dependencies = [
 [[package]]
 name = "brainos-entity"
 version = "0.3.0"
+dependencies = [
+ "brainos-abi",
+ "brainos-body",
+ "brainos-cognition",
+ "brainos-crypto",
+ "brainos-kira",
+ "brainos-memory",
+ "brainos-rt",
+ "brainos-worlds",
+]
 
 [[package]]
 name = "brainos-export"
@@ -93,6 +109,10 @@ version = "0.3.0"
 [[package]]
 name = "brainos-worlds"
 version = "0.3.0"
+dependencies = [
+ "brainos-abi",
+ "brainos-memory",
+]
 
 [[package]]
 name = "cfg-if"

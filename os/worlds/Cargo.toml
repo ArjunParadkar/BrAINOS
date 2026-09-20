@@ -3,8 +3,11 @@ name = "brainos-worlds"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "The three worlds — self, internet, human — and the filtering the entity does on its human's behalf."
 
 [lib]
 doctest = false
 
 [dependencies]
+brainos-abi = { workspace = true }
+brainos-memory = { workspace = true }

@@ -117,6 +117,12 @@ pub struct Index {
     lengths: Vec<(NodeId, u16)>,
     total_len: u64,
     docs: u32,
+    /// what the graph looked like when this was built. Two numbers are
+    /// enough: nodes are only ever appended with increasing ids or
+    /// removed, so a changed count or a changed highest id means the
+    /// index no longer describes the graph.
+    built_nodes: usize,
+    built_high_water: u64,
 }
 
 impl Default for Index {
@@ -132,6 +138,8 @@ impl Index {
             lengths: Vec::new(),
             total_len: 0,
             docs: 0,
+            built_nodes: 0,
+            built_high_water: 0,
         }
     }
 
@@ -158,7 +166,31 @@ impl Index {
             a.0.cmp(&b.0).then(a.1 .0.cmp(&b.1 .0))
         });
         idx.lengths.sort_unstable_by_key(|l| l.0 .0);
+        idx.built_nodes = graph.len();
+        idx.built_high_water = graph.nodes().last().map(|n| n.id.0).unwrap_or(0);
         idx
+    }
+
+    /// Does this index still describe that graph?
+    ///
+    /// This exists because the alternative — rebuilding on every write —
+    /// is wasteful, and the alternative to *that* is an index that
+    /// silently goes stale. A stale index is the worst of the three: the
+    /// entity confidently does not remember something it knows, and
+    /// nothing anywhere reports an error.
+    pub fn is_stale(&self, graph: &StateGraph) -> bool {
+        self.built_nodes != graph.len()
+            || self.built_high_water != graph.nodes().last().map(|n| n.id.0).unwrap_or(0)
+    }
+
+    /// Rebuild if, and only if, the graph has moved on.
+    pub fn refresh(&mut self, graph: &StateGraph) -> bool {
+        if self.is_stale(graph) {
+            *self = Index::build(graph);
+            true
+        } else {
+            false
+        }
     }
 
     fn add(&mut self, node: &Node) {

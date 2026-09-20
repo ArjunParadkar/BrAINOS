@@ -3,8 +3,13 @@ name = "brainos-cognition"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "Domain 4 — escalating cognitive resources, tiered placement, and the ambient sense-predict-error-attend loop. Never 'agents'."
 
 [lib]
 doctest = false
 
 [dependencies]
+brainos-abi = { workspace = true }
+brainos-crypto = { workspace = true }
+brainos-memory = { workspace = true }
+brainos-rt = { workspace = true }
