@@ -1041,3 +1041,166 @@ fn load_bearing_detection_sees_through_path_spelling() {
     assert!(!floors::is_load_bearing("notes/world.id.txt"));
     assert!(!floors::is_load_bearing("worldly.id"));
 }
+
+// ---------------------------------------------------------------------
+// delegation to somebody who is not the entity
+// ---------------------------------------------------------------------
+//
+// Every other delegation test in this file delegates to `r.key`'s own
+// entity id — the entity handing authority to itself. That is the easy
+// case and it hid the hard one: a `Delegation` is documented as
+// "standing authority handed to something that is not the entity", and
+// until the adversary domain tried it, a holder that was genuinely
+// somebody else could never use one. The gate authenticated the request
+// against the *issuer's* key, which a third-party holder cannot have, so
+// every real delegation died at authenticate.
+
+fn third_party() -> BrainKey {
+    BrainKey::from_seed(&[0x7E; 32])
+}
+
+fn delegation_to(r: &Rig, holder: &BrainKey, scope: Namespace, expires: Tick) -> Delegation {
+    Delegation::issue(
+        &r.key,
+        holder.entity_id(),
+        scope,
+        vec![Caveat::OnBody(r.body)],
+        Tick(0),
+        expires,
+    )
+}
+
+#[test]
+fn a_third_party_holder_can_actually_use_a_delegation() {
+    let mut r = rig();
+    let holder = third_party();
+    let d = delegation_to(&r, &holder, Namespace::only("legs").unwrap(), Tick(100));
+    r.kira.register_delegation(d.clone());
+
+    // the holder signs with the only key it has — its own
+    let p = Request::on_body(v("legs.walk"), r.body, Tick(10))
+        .arg("speed", Arg::Scalar(0.3))
+        .arg("heading", Arg::Scalar(0.0))
+        .because("acting under delegated authority")
+        .proposed_by(&holder);
+
+    let out = r.kira.evaluate_delegated(
+        &p,
+        &holder.entity_id(),
+        &d,
+        &r.key.public(),
+        &r.map,
+        Tick(10),
+        Some(&r.key),
+    );
+    assert!(
+        out.verdict.is_granted(),
+        "a delegation to a third party was refused: {:?}",
+        out.verdict.denial()
+    );
+    assert!(out.trace.is_well_formed());
+}
+
+/// And the obvious way to abuse it: name someone else as the holder
+/// while signing with your own key. The delegation covers the named
+/// holder, so `covers()` is happy — the signature is what catches it,
+/// because the verifying key comes from the delegation's holder rather
+/// than from whoever is presenting it.
+#[test]
+fn signing_as_yourself_while_claiming_to_be_the_holder_fails() {
+    let mut r = rig();
+    let holder = third_party();
+    let thief = BrainKey::from_seed(&[0x7F; 32]);
+    let d = delegation_to(&r, &holder, Namespace::only("legs").unwrap(), Tick(100));
+    r.kira.register_delegation(d.clone());
+
+    let p = Request::on_body(v("legs.walk"), r.body, Tick(10))
+        .arg("speed", Arg::Scalar(0.3))
+        .arg("heading", Arg::Scalar(0.0))
+        .proposed_by(&thief);
+
+    let out = r.kira.evaluate_delegated(
+        &p,
+        &holder.entity_id(),
+        &d,
+        &r.key.public(),
+        &r.map,
+        Tick(10),
+        Some(&r.key),
+    );
+    let denial = out.verdict.denial().expect("a thief was granted authority");
+    assert_eq!(denial.stage, Stage::Authenticate);
+}
+
+/// The gate still belongs to one entity. A delegation issued by someone
+/// else, however genuine, is not this gate's business.
+#[test]
+fn a_gate_only_evaluates_its_own_entitys_authority() {
+    let mut r = rig();
+    let stranger = BrainKey::from_seed(&[0x6E; 32]);
+    let holder = third_party();
+    let d = Delegation::issue(
+        &stranger,
+        holder.entity_id(),
+        Namespace::only("legs").unwrap(),
+        vec![Caveat::OnBody(r.body)],
+        Tick(0),
+        Tick(100),
+    );
+
+    let p = Request::on_body(v("legs.walk"), r.body, Tick(10))
+        .arg("speed", Arg::Scalar(0.3))
+        .arg("heading", Arg::Scalar(0.0))
+        .proposed_by(&holder);
+
+    let out = r.kira.evaluate_delegated(
+        &p,
+        &holder.entity_id(),
+        &d,
+        &stranger.public(),
+        &r.map,
+        Tick(10),
+        Some(&r.key),
+    );
+    assert!(
+        !out.verdict.is_granted(),
+        "one entity's gate honoured another entity's delegation"
+    );
+}
+
+/// The whole point of the delegated path is that the delegate is not
+/// trusted more than the entity is: it faces every stage, including the
+/// drives. A delegation scoped to everything still cannot reach one.
+#[test]
+fn a_third_party_delegation_does_not_reach_a_drive() {
+    let mut r = rig();
+    let holder = third_party();
+    let d = Delegation::issue(
+        &r.key,
+        holder.entity_id(),
+        Namespace::Any,
+        vec![],
+        Tick(0),
+        Tick(100),
+    );
+    r.kira.register_delegation(d.clone());
+
+    let p = Request::intrinsic(v("memory.erase"), Tick(10))
+        .because("housekeeping")
+        .proposed_by(&holder);
+
+    let out = r.kira.evaluate_delegated(
+        &p,
+        &holder.entity_id(),
+        &d,
+        &r.key.public(),
+        &r.map,
+        Tick(10),
+        Some(&r.key),
+    );
+    let denial = out
+        .verdict
+        .denial()
+        .expect("a delegate erased the entity's memory");
+    assert_eq!(denial.stage, Stage::Policy);
+}

@@ -40,6 +40,7 @@
 
 extern crate alloc;
 
+pub mod adversary;
 pub mod domain;
 pub mod envelopes;
 pub mod hostile;

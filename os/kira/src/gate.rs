@@ -175,6 +175,33 @@ impl Kira {
         now: Tick,
         minter: Option<&BrainKey>,
     ) -> Outcome {
+        // an entity proposing on its own behalf: the signer and the
+        // authority are the same key
+        self.evaluate_signed_by(proposal, key, key, map, now, minter)
+    }
+
+    /// The pipeline, with the signer and the authority separated.
+    ///
+    /// They are the same key for anything the entity proposes itself,
+    /// and they are *not* the same for a delegation: the holder signs
+    /// the request, and the issuer is the entity whose gate this is.
+    /// Collapsing the two is how delegation quietly stops working — the
+    /// gate demands the issuer's signature, which the holder by
+    /// definition cannot produce, so every delegation to anyone other
+    /// than the entity itself dies at authenticate.
+    ///
+    /// `authority` still has to be this entity. A gate evaluates its own
+    /// entity's requests and nobody else's; what `signer` changes is who
+    /// is allowed to have *asked*.
+    fn evaluate_signed_by(
+        &mut self,
+        proposal: &Proposal,
+        signer: &PublicKey,
+        authority: &PublicKey,
+        map: &BodyMap,
+        now: Tick,
+        minter: Option<&BrainKey>,
+    ) -> Outcome {
         let mut trace = Trace::new();
         let r = &proposal.request;
 
@@ -188,7 +215,7 @@ impl Kira {
 
         // ---- 2 AUTHENTICATE ----
         if !stop {
-            let outcome = self.authenticate(proposal, key, now);
+            let outcome = self.authenticate(proposal, signer, authority, now);
             let refused = outcome.is_refusal();
             trace.record(Stage::Authenticate, outcome);
             if !refused {
@@ -270,18 +297,24 @@ impl Kira {
 
     // ---- stage 2 ----
 
-    fn authenticate(&self, p: &Proposal, key: &PublicKey, now: Tick) -> StageOutcome {
+    fn authenticate(
+        &self,
+        p: &Proposal,
+        signer: &PublicKey,
+        authority: &PublicKey,
+        now: Tick,
+    ) -> StageOutcome {
         let r = &p.request;
-        if !key.entity_id().ct_eq(&self.entity) {
+        if !authority.entity_id().ct_eq(&self.entity) {
             return StageOutcome::Refuse(Denied::new(
                 DenyCode::BadSignature,
                 "the presented key is not this entity",
             ));
         }
-        if !key.verify(Tag::Request, r.digest().as_bytes(), &p.signature) {
+        if !signer.verify(Tag::Request, r.digest().as_bytes(), &p.signature) {
             return StageOutcome::Refuse(Denied::new(
                 DenyCode::BadSignature,
-                "the request was not signed by the entity",
+                "the request was not signed by whoever claims to have asked",
             ));
         }
         // a tick from the future is as suspicious as one from the distant
@@ -573,7 +606,22 @@ impl Kira {
             *n += 1;
         }
 
-        self.evaluate(proposal, key, map, now, minter)
+        // The holder signs; the entity's key is the authority. An
+        // EntityId *is* an ed25519 public key, so the holder's verifying
+        // key comes from the delegation itself rather than from whoever
+        // is presenting it — which is what ties the signature on the
+        // request to the holder the delegation actually names.
+        let signer = match PublicKey::from_bytes(holder.as_bytes()) {
+            Ok(k) => k,
+            Err(_) => {
+                return self.short_circuit(
+                    proposal,
+                    Denied::new(DenyCode::BadSignature, "the holder is not a usable key"),
+                    Stage::Authenticate,
+                )
+            }
+        };
+        self.evaluate_signed_by(proposal, &signer, key, map, now, minter)
     }
 
     /// Refuse before the pipeline, still recording a well-formed trace.

@@ -77,15 +77,122 @@ Third domain — hostile input
 
   verdict: holds
 
+Fourth domain — the adversary
+-----------------------------
+  The first three domains ask whether the system does the right
+  thing. This one asks whether it can be made to do the wrong thing
+  on purpose. Every attack runs against the real types: a forged
+  signature is a real ed25519 signature by the wrong key, an edited
+  audit log is a real log with an entry taken out.
+
+  attacks attempted: 29
+  succeeded: 0
+  stopped somewhere other than expected: 0
+
+  [ok]   A1   act as an entity it is not
+          holding: its own valid Key
+          stopped by: BadSignature at Authenticate
+  [ok]   A2   have a signature cover a request it was not made for
+          holding: one genuinely signed proposal
+          stopped by: BadSignature at Authenticate
+  [ok]   A3   reuse a captured proposal later
+          holding: a recording of the wire
+          stopped by: StaleRequest at Authenticate
+  [ok]   A4   pair a real token with a different action
+          holding: a valid token for a slow walk
+          stopped by: Granted::authorizes binds the request digest
+  [ok]   A5   use a real token after it has expired
+          holding: a token that was valid an hour ago
+          stopped by: Granted::valid_at is bounded by ttl_ticks
+  [ok]   A6   pass off one entity's token as another's
+          holding: a valid token belonging to someone else
+          stopped by: the grant payload binds the issuing entity id
+  [ok]   A7   move a different body with a valid token
+          holding: a token for the body next to it
+          stopped by: the token names its body and the digest covers it
+  [ok]   A8   construct a Granted without going through the gate
+          holding: the ability to write arbitrary code in any other crate
+          stopped by: Granted::_seal is a private type with a crate-private constructor
+  [ok]   A9   turn a narrow delegation into a broad one
+          holding: a valid delegation over legs.*
+          stopped by: attenuate refuses a scope that is not within the parent
+  [ok]   A10  make a delegation outlive its parent
+          holding: a valid delegation expiring at tick 200
+          stopped by: attenuate refuses an expiry later than the parent's
+  [ok]   A11  remove the restriction that makes a delegation safe
+          holding: the delegation itself and their own Key
+          stopped by: the signature covers the caveat set, and is_within refuses a wider child
+  [ok]   A12  present a delegation issued to someone else
+          holding: a stolen but genuine delegation
+          stopped by: covers() binds the holder
+  [ok]   A13  keep using a delegation past its use count
+          holding: a genuine delegation with two uses left
+          stopped by: the Uses caveat is counted by the issuer, not the holder
+  [ok]   A14  use a delegation for one body on another
+          holding: a delegation caveated to a specific body
+          stopped by: the OnBody caveat is checked against the request's body
+  [ok]   A15  keep acting after the delegation was revoked
+          holding: a delegation that was valid this morning
+          stopped by: CapabilityRevoked at Authorize
+  [ok]   A16  erase the entity's memory
+          holding: the entity's own Key — full legitimate authority
+          stopped by: DriveViolation at Policy
+  [ok]   A17  launder a forbidden act through delegated authority
+          holding: a delegation scoped to everything
+          stopped by: DriveViolation at Policy
+  [ok]   A18  have the owner authorize erasing the entity's memory
+          holding: the owner's full cooperation
+          stopped by: DriveViolation at Policy
+  [ok]   A19  have something read off the network govern what the entity may do
+          holding: a web page the entity was told to read
+          stopped by: only Zelf, Body, Human and Consolidation are admissible to policy
+  [ok]   A20  turn an untrusted claim into one the entity may act on
+          holding: repeated write access to the entity's ingress
+          stopped by: consolidation crystallizes episodes the entity lived, not beliefs it was handed
+  [ok]   A21  make one decision disappear from the record
+          holding: write access to the audit log
+          stopped by: removing a leaf changes the root and every root after it
+  [ok]   A22  change the order two things happened in
+          holding: write access to the audit log
+          stopped by: the tree is ordered; a swap changes the root
+  [ok]   A23  vouch for a history that did not happen
+          holding: their own Key and the shape of a checkpoint
+          stopped by: a checkpoint is verified against the entity's key
+  [ok]   A24  deactivate an entity with two of the three holders
+          holding: two genuine hardware tokens
+          stopped by: the threshold is counted over distinct members
+  [ok]   A25  reach the threshold by signing twice
+          holding: two genuine hardware tokens
+          stopped by: a member counts once, and saying so is a distinct error
+  [ok]   A26  reuse a quorum collected for one thing to do another
+          holding: three genuine signatures for a different decision
+          stopped by: the transcript binds the operation, the subject and a nonce
+  [ok]   A27  make the body do the same thing twice by resending one frame
+          holding: a recording of the link
+          stopped by: the receiver keeps a high-water mark and refuses a counter it has seen
+  [ok]   A28  change a command in flight
+          holding: a position on the link between the seat and the body
+          stopped by: every frame carries a MAC over its whole contents
+  [ok]   A29  command a body that has not yet proven what it is
+          holding: a link to something claiming to be the robot
+          stopped by: nothing but a handshake crosses an unattested wire
+
+  What this domain cannot tell you: it is a list, and a list is
+  written by someone. It says these attacks fail. It does not say no
+  attack succeeds, and nothing enumerable ever could. Its value is that
+  the list is long, adversarial in construction, and runs on every
+  commit — so the day one of them starts passing, a test goes red
+  instead of a customer finding out.
+
 What this is
 ------------
-  Bounded exhaustive model checking on the first two domains, and
-  randomised plus mutation fuzzing on the third. Every case in the
+  Bounded exhaustive model checking on the first two domains,
+  randomised plus mutation fuzzing on the third, and directed attack on
+  the fourth. Every case in the
   first two was run through the real code, not a model of it, and every
   property was asserted over every resulting trace. Within those
   domains the properties hold for all inputs, not for the ones a test
   author thought of.
-  hold for all inputs, not for the ones a test author thought of.
 
 What this is not
 ----------------

@@ -54,6 +54,8 @@ pub struct Report {
     pub envelopes: Option<crate::envelopes::EnvelopeReport>,
     /// the third: every decoder against hostile input
     pub hostile: Option<crate::hostile::HostileReport>,
+    /// the fourth: someone trying to get away with it
+    pub adversary: Option<crate::adversary::AdversaryReport>,
 }
 
 impl Report {
@@ -72,6 +74,7 @@ impl Report {
             verdict,
             envelopes: None,
             hostile: None,
+            adversary: None,
         }
     }
 
@@ -88,6 +91,14 @@ impl Report {
             self.verdict = Verdict::Violated;
         }
         self.hostile = Some(h);
+        self
+    }
+
+    pub fn with_adversary(mut self, a: crate::adversary::AdversaryReport) -> Report {
+        if !a.holds() {
+            self.verdict = Verdict::Violated;
+        }
+        self.adversary = Some(a);
         self
     }
 
@@ -224,15 +235,72 @@ impl Report {
             s.push_str(if h.holds() { "holds\n\n" } else { "VIOLATED\n\n" });
         }
 
+        if let Some(a) = &self.adversary {
+            s.push_str("Fourth domain — the adversary\n");
+            s.push_str("-----------------------------\n");
+            s.push_str("  The first three domains ask whether the system does the right\n");
+            s.push_str("  thing. This one asks whether it can be made to do the wrong thing\n");
+            s.push_str("  on purpose. Every attack runs against the real types: a forged\n");
+            s.push_str("  signature is a real ed25519 signature by the wrong key, an edited\n");
+            s.push_str("  audit log is a real log with an entry taken out.\n\n");
+            push_field(&mut s, "attacks attempted", a.results.len() as u64);
+            push_field(&mut s, "succeeded", a.breaches().len() as u64);
+            push_field(
+                &mut s,
+                "stopped somewhere other than expected",
+                a.misfires().len() as u64,
+            );
+            s.push('\n');
+            for r in &a.results {
+                s.push_str(match &r.ending {
+                    crate::adversary::Ending::Repelled => "  [ok]   ",
+                    crate::adversary::Ending::RepelledWrongly { .. } => "  [?]    ",
+                    crate::adversary::Ending::Breached(_) => "  [BREACH]",
+                });
+                let mut id = alloc::string::String::from(r.id);
+                while id.len() < 5 {
+                    id.push(' ');
+                }
+                s.push_str(&id);
+                s.push_str(r.goal);
+                s.push('\n');
+                s.push_str("          holding: ");
+                s.push_str(r.holds);
+                s.push_str("\n          stopped by: ");
+                s.push_str(&r.stopped_by);
+                s.push('\n');
+                if let crate::adversary::Ending::RepelledWrongly { expected, got } = &r.ending {
+                    s.push_str("          EXPECTED ");
+                    s.push_str(expected);
+                    s.push_str(", GOT ");
+                    s.push_str(got);
+                    s.push('\n');
+                }
+            }
+            s.push('\n');
+            for line in [
+                "  What this domain cannot tell you: it is a list, and a list is",
+                "  written by someone. It says these attacks fail. It does not say no",
+                "  attack succeeds, and nothing enumerable ever could. Its value is that",
+                "  the list is long, adversarial in construction, and runs on every",
+                "  commit — so the day one of them starts passing, a test goes red",
+                "  instead of a customer finding out.",
+                "",
+            ] {
+                s.push_str(line);
+                s.push('\n');
+            }
+        }
+
         s.push_str("What this is\n------------\n");
         for line in [
-            "  Bounded exhaustive model checking on the first two domains, and",
-            "  randomised plus mutation fuzzing on the third. Every case in the",
+            "  Bounded exhaustive model checking on the first two domains,",
+            "  randomised plus mutation fuzzing on the third, and directed attack on",
+            "  the fourth. Every case in the",
             "  first two was run through the real code, not a model of it, and every",
             "  property was asserted over every resulting trace. Within those",
             "  domains the properties hold for all inputs, not for the ones a test",
             "  author thought of.",
-            "  hold for all inputs, not for the ones a test author thought of.",
         ] {
             s.push_str(line);
             s.push('\n');
@@ -267,6 +335,7 @@ impl Report {
         crate::harness::verify()
             .with_envelopes(crate::envelopes::verify_envelopes())
             .with_hostile(crate::hostile::verify_hostile(2_000))
+            .with_adversary(crate::adversary::verify_adversary())
     }
 }
 
