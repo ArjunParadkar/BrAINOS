@@ -47,6 +47,7 @@ pub mod envelopes;
 pub mod hostile;
 pub mod harness;
 pub mod properties;
+pub mod regions;
 pub mod report;
 
 pub use domain::{Case, Domain, Scenario};

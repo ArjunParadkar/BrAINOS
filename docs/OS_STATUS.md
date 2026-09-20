@@ -72,7 +72,7 @@ than a second copy of them.
 cd os
 cargo run --release --bin brainos -- demo     # Phase 0, in simulation
 cargo run --release --bin brainos -- stack    # intent → gate → wire → body → gait
-cargo run --release --bin brainos -- verify   # all five property domains
+cargo run --release --bin brainos -- verify   # all six property domains
 cargo run --release --bin brainos -- bench    # measured latencies and footprint
 cargo run --release --bin brainos -- compound # does experience compound?
 cargo run --release --bin brainos -- fleet    # does it transfer between entities?
@@ -83,7 +83,7 @@ cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 721 tests
+cargo test --workspace --release              # 725 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -107,7 +107,7 @@ outside the workspace but `ed25519-dalek` and `libm`.
 | §8 acquisition | `body`, `adapters` | the five-step protocol as a state machine, and ROS 2 / MHS bridges into steps 1–3 |
 | §3.8 three worlds | `worlds` | self / human / internet postures, bounded sessions, ingress tainting, and the adversarial filter the entity runs on its human's behalf |
 | Stage 4 | `entity` | one Key, one state graph, every body at once; arbitration; the life record |
-| Stage 6 (part) | `proof` | five property domains: three exhaustive, one fuzzed, one adversarial |
+| Stage 6 (part) | `proof` | six property domains: four exhaustive, one fuzzed, one adversarial |
 | Stage 7 | `fleet` | a registry that cannot command, a marketplace that cannot push, hosts that hold nothing |
 | freedom principle | `export`, `tools/read-export` | entity export v3, and a reader that depends on no BrAInOS crate |
 | — | `abi`, `transport`, `nostd`, `host` | vocabulary, the wire, the `no_std` canary, and the only crate with an operating system underneath it |
@@ -138,7 +138,7 @@ must be acquired again through §8.
 
 ---
 
-## Five property domains
+## Six property domains
 
 `brainos verify` enumerates the first two completely and runs every case
 through the real code.
@@ -210,6 +210,26 @@ four kept the newest write, 542 fell back cleanly, none lost anything
 that had been committed, and none produced a state the entity had never
 been in. Separately, every single-bit flip in a complete record is
 caught by the CRC or the signature; 418 sampled, none slipped.
+
+**A body made of several parts — 240 cases.** Written after the ROS 2
+run found a fail-open defect, and written to cover the *class* rather
+than the instance: a per-part fact stored per-body is a mistake that
+recurs, and a regression test would have covered the one shape that was
+found. Four parts with deliberately overlapping ranges on a shared
+channel, on bodies of one to four parts, against every part's boundaries
+and a little either side. The property is that a command is permitted
+exactly when it is inside the envelope of *the region it belongs to* —
+not the body's, not the widest, not the narrowest — checked against an
+independently written oracle.
+
+135 of the 240 cases are ones where the parts disagree about the value,
+which is what makes the domain able to tell one envelope from another;
+a domain where every probe was legal or illegal for every part at once
+would pass whatever envelope was consulted. And because a property
+domain is worth exactly as much as its ability to fail, the same domain
+is run against a policy built the old way — one envelope for the whole
+body — and a test asserts it comes back *violated*, in both the
+fail-closed and the fail-open direction.
 
 It is **not** a machine-checked proof, and the report says so as
 prominently as it says the result. Outside the domains nothing is

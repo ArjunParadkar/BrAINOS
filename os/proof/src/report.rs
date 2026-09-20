@@ -58,6 +58,8 @@ pub struct Report {
     pub adversary: Option<crate::adversary::AdversaryReport>,
     /// the fifth: losing power at every possible instant
     pub durability: Option<crate::durability::DurabilityReport>,
+    /// the sixth: a body made of several parts
+    pub regions: Option<crate::regions::RegionReport>,
 }
 
 impl Report {
@@ -78,6 +80,7 @@ impl Report {
             hostile: None,
             adversary: None,
             durability: None,
+            regions: None,
         }
     }
 
@@ -110,6 +113,14 @@ impl Report {
             self.verdict = Verdict::Violated;
         }
         self.durability = Some(d);
+        self
+    }
+
+    pub fn with_regions(mut self, r: crate::regions::RegionReport) -> Report {
+        if !r.holds() {
+            self.verdict = Verdict::Violated;
+        }
+        self.regions = Some(r);
         self
     }
 
@@ -358,12 +369,49 @@ impl Report {
             s.push('\n');
         }
 
+        if let Some(r) = &self.regions {
+            s.push_str("Sixth domain — a body made of several parts\n");
+            s.push_str("------------------------------------------\n");
+            s.push_str("  Every body here had exactly one consequential region until a ROS 2\n");
+            s.push_str("  warehouse robot arrived with a drive base and a lift. A per-part fact\n");
+            s.push_str("  was stored per-body, and where two parts share a channel with\n");
+            s.push_str("  different ranges, one part's limits governed the other. The property:\n");
+            s.push_str("  a command is permitted exactly when it is inside the envelope of the\n");
+            s.push_str("  region it belongs to — not the body's, not the widest, not the\n");
+            s.push_str("  narrowest.\n\n");
+            push_field(&mut s, "cases enumerated", r.cases as u64);
+            push_field(&mut s, "permitted", r.permitted as u64);
+            push_field(&mut s, "refused", r.refused as u64);
+            push_field(
+                &mut s,
+                "cases where the parts disagree about the value",
+                r.discriminating as u64,
+            );
+            s.push_str("  verdict: ");
+            if !r.holds() {
+                s.push_str("VIOLATED\n");
+                for d in r.disagreements.iter().take(6) {
+                    s.push_str("    ");
+                    s.push_str(d.verb);
+                    s.push_str(": ");
+                    s.push_str(&d.why);
+                    s.push('\n');
+                }
+            } else if !r.is_meaningful() {
+                s.push_str("VACUOUS — the parts never disagree, so any envelope would pass\n");
+            } else {
+                s.push_str("holds\n");
+            }
+            s.push('\n');
+        }
+
         s.push_str("What this is\n------------\n");
         for line in [
             "  Bounded exhaustive model checking on the first two domains,",
             "  randomised plus mutation fuzzing on the third, directed attack on the",
-            "  fourth, and exhaustive enumeration of every instant power can be lost",
-            "  on the fifth. Every case in the",
+            "  fourth, and exhaustive enumeration on the fifth and sixth — every",
+            "  instant power can be lost, and every part of a body against every",
+            "  other part's limits. Every case in the",
             "  first two was run through the real code, not a model of it, and every",
             "  property was asserted over every resulting trace. Within those",
             "  domains the properties hold for all inputs, not for the ones a test",
@@ -404,6 +452,7 @@ impl Report {
             .with_hostile(crate::hostile::verify_hostile(2_000))
             .with_adversary(crate::adversary::verify_adversary())
             .with_durability(crate::durability::verify_durability(4))
+            .with_regions(crate::regions::verify_regions())
     }
 }
 

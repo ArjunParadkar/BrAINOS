@@ -37,7 +37,7 @@ cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # and read it with none of our code
 cargo run --release --bin brainos -- stat     # what this build contains
 
-cargo test --workspace --release              # 721 tests
+cargo test --workspace --release              # 725 tests
 tools/check-no-std.sh                         # the bare-metal build, when a target exists
 ```
 
@@ -60,7 +60,7 @@ minutes.
 | `entity` | Key + state graph + every body at once; arbitration; the life record | Stage 4 |
 | `transport` | framing, attested sessions, replay protection, link health | — |
 | `adapters` | ROS 2 node graphs and MHS device schemas become capability schemas | Phase 1 |
-| `proof` | five domains: the gate and the two envelopes enumerated exhaustively, every decoder fuzzed, twenty-nine attacks that try to get away with it, and every instant at which power can be lost during a journal write | Stage 6 (part) |
+| `proof` | six domains: the gate and the two envelopes enumerated exhaustively, every decoder fuzzed, twenty-nine attacks that try to get away with it, every instant at which power can be lost during a journal write, and every part of a multi-part body against every other part's limits | Stage 6 (part) |
 | `fleet` | a directory that cannot command, a marketplace that cannot push, hosts that hold nothing | Stage 7 |
 | `export` | entity export v3 — complete, documented, signed, round-tripped, and readable by `tools/read-export`, which depends on no crate of ours | freedom principle |
 | `bodyd` | what runs on the machine with the motors; a hexapod that links `miniblur-core` and an arm with a torque budget | Domain 2 |

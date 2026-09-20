@@ -208,12 +208,29 @@ Fifth domain — losing power at every possible instant
 
   verdict: holds
 
+Sixth domain — a body made of several parts
+------------------------------------------
+  Every body here had exactly one consequential region until a ROS 2
+  warehouse robot arrived with a drive base and a lift. A per-part fact
+  was stored per-body, and where two parts share a channel with
+  different ranges, one part's limits governed the other. The property:
+  a command is permitted exactly when it is inside the envelope of the
+  region it belongs to — not the body's, not the widest, not the
+  narrowest.
+
+  cases enumerated: 240
+  permitted: 151
+  refused: 89
+  cases where the parts disagree about the value: 135
+  verdict: holds
+
 What this is
 ------------
   Bounded exhaustive model checking on the first two domains,
   randomised plus mutation fuzzing on the third, directed attack on the
-  fourth, and exhaustive enumeration of every instant power can be lost
-  on the fifth. Every case in the
+  fourth, and exhaustive enumeration on the fifth and sixth — every
+  instant power can be lost, and every part of a body against every
+  other part's limits. Every case in the
   first two was run through the real code, not a model of it, and every
   property was asserted over every resulting trace. Within those
   domains the properties hold for all inputs, not for the ones a test
