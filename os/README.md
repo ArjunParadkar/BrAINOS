@@ -38,7 +38,7 @@ cargo run -p read-export --release -- FILE         # and read it with none of ou
 cargo run --release --bin brainos -- stat     # what this build contains
 
 cargo test --workspace --release              # 725 tests
-tools/check-no-std.sh                         # the bare-metal build, when a target exists
+tools/check-no-std.sh                         # the bare-metal build: aarch64-unknown-uefi
 ```
 
 `--release` matters for `verify` and for the full suite: the property
@@ -72,7 +72,10 @@ minutes.
 Inherited from Part 0 and §3.9, and not negotiable here.
 
 - **`no_std` first.** Every crate below `host` compiles with nothing
-  beneath it. The platforms that eventually matter will not have Linux.
+  beneath it. The platforms that eventually matter will not have Linux —
+  and this is checked by building, not asserted: `tools/check-no-std.sh`
+  builds the canary for `aarch64-unknown-uefi`, a target with no
+  operating system.
 - **Near-zero dependencies.** `ed25519-dalek` for the Key, because
   hand-rolling a signature scheme is how you get one with a bug in it.
   Everything else — hashes, codecs, schedulers, indexes, the JSON reader,

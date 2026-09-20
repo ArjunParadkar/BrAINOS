@@ -57,6 +57,14 @@ they counted skills rather than asking what the skills knew.
 §2.4 makes age the x-axis of the curve the moat becomes visible on, and
 it was settable by the one party with an interest in setting it.
 
+**And one thing that was wrong in this document rather than in the
+code.** The `no_std` claim has been labelled "checked at source level
+only, no bare target installed" since the workspace was built. There
+were two installed the whole time; the check script asked the
+distribution's `rustc`, which has none, instead of the rustup toolchain
+next to it, which has both. Every crate below `host` builds for
+`aarch64-unknown-uefi` — a machine with no operating system.
+
 Everything below is the detail. The critical-path item is unchanged and
 is not software: **Mini-Blur has never been powered on.** Stages 1–2 and the Phase 0 work are exactly as they were and
 still pass. `os/bodyd` *links* `miniblur/core`, so the hexapod's
@@ -771,15 +779,39 @@ worth saying precisely: *everything between the human and the servo is
 built, tested and demonstrable on a laptop today.* The servo has not
 moved.
 
-**The `no_std` claim is checked at source level, not by a bare-metal
-build.** `cargo test -p brainos-nostd-check` verifies that no crate
-below `host` mentions `std`, that every one declares `no_std` and
-forbids `unsafe`, and that the external dependency list is still two
-crates long. The stronger check — building the canary for a target with
-no operating system — needs `rustup target add` and no bare target is
-installed on this machine. `os/tools/check-no-std.sh` runs it when one
-is, and exits 2 rather than 0 when none is, so a check that did not
-happen cannot report success.
+**The `no_std` claim is now checked by a real build, and was not
+before.** Every crate below `host` compiles for
+`aarch64-unknown-uefi` — a target with no operating system underneath
+it:
+
+```
+── building the canary for aarch64-unknown-uefi
+   ok
+no_std verified against: aarch64-unknown-uefi
+```
+
+This was documented as unverifiable on this machine for the whole
+project, and the reason was a scripting mistake rather than a missing
+target. `os/tools/check-no-std.sh` asked `rustc` whether a target was
+installed, and the `rustc` on `PATH` is the distribution's — which has
+none. The *rustup* toolchain next to it has both UEFI targets. The
+script now asks both.
+
+The source-level check still runs and is still worth having: `cargo test
+-p brainos-nostd-check` verifies that no crate below `host` mentions
+`std`, that every one declares `no_std` and forbids `unsafe`, and that
+the external dependency list is still two crates long. That is what
+catches the discipline breaking in review; the build is what catches it
+breaking in fact.
+
+`x86_64-unknown-uefi` does not build, and it is worth saying exactly
+why, because it is not ours. The build dies inside `sha2` with
+`rustc-LLVM ERROR: Do not know how to split the result of this
+operator!` — its x86 intrinsic path meeting a target LLVM cannot lower
+it for. `sha2` arrives transitively through `ed25519-dalek`; BrAInOS's
+own SHA-256 is written from FIPS 180-4 in `brainos-crypto` and is what
+every digest in the system actually uses. Every BrAInOS crate compiles
+for that target too — the failure is downstream of all of them.
 
 **The ROS 2 adapter is brittle on purpose, and more so than this
 document used to say.** A ROS topic declares a message *type* and
