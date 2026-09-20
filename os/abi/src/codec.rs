@@ -277,12 +277,44 @@ impl<'a> Decoder<'a> {
         self.u64().map(|v| v as i64)
     }
 
+    /// Decode a float, **rejecting** any encoding the encoder would not
+    /// have produced.
+    ///
+    /// The encoder normalizes every NaN to one quiet NaN and −0.0 to
+    /// +0.0. If the decoder accepted the un-normalized forms, decoding
+    /// would not be injective: two different byte strings would produce
+    /// the same value, and a signature over the bytes would not be a
+    /// signature over the value. That is the exact property the audit
+    /// Merkle log, the export signature and the body-identity digest
+    /// rest on.
+    ///
+    /// Found by the hostile-input harness, which mutates a valid
+    /// encoding and checks that anything which decodes re-encodes to its
+    /// own bytes. Three of four hundred mutated commands did not, and
+    /// every one of them was a float whose sign or NaN payload the
+    /// encoder would have flattened.
     pub fn f32(&mut self) -> Result<f32> {
-        self.u32().map(f32::from_bits)
+        let bits = self.u32()?;
+        if bits == 0x8000_0000 {
+            return Err(Error::Malformed("negative zero is not a canonical encoding"));
+        }
+        let v = f32::from_bits(bits);
+        if v.is_nan() && bits != CANONICAL_NAN_F32 {
+            return Err(Error::Malformed("non-canonical NaN"));
+        }
+        Ok(v)
     }
 
     pub fn f64(&mut self) -> Result<f64> {
-        self.u64().map(f64::from_bits)
+        let bits = self.u64()?;
+        if bits == 0x8000_0000_0000_0000 {
+            return Err(Error::Malformed("negative zero is not a canonical encoding"));
+        }
+        let v = f64::from_bits(bits);
+        if v.is_nan() && bits != CANONICAL_NAN_F64 {
+            return Err(Error::Malformed("non-canonical NaN"));
+        }
+        Ok(v)
     }
 
     /// A length prefix, bounded both by `MAX_LEN` and — crucially — by

@@ -410,3 +410,150 @@ fn the_envelope_oracle_and_the_runtime_agree_case_by_case() {
         );
     }
 }
+
+// =====================================================================
+// hostile input
+// =====================================================================
+
+use brainos_proof::hostile::{targets, verify_hostile};
+
+#[test]
+fn no_decoder_panics_on_hostile_input() {
+    // The bar: there is no input for which the right answer is a panic.
+    // A panic in a decoder is a denial of service, and on a body it is a
+    // fall. This test passing *is* the assertion — if any target panics,
+    // the harness does not return.
+    let report = verify_hostile(2_000);
+    assert!(report.total_inputs > 30_000, "{}", report.total_inputs);
+}
+
+#[test]
+fn anything_that_decodes_re_encodes_to_exactly_its_own_bytes() {
+    // The property the audit Merkle log, the export signature and the
+    // body-identity digest all rest on. A value that could arrive two
+    // ways would make a signature over it prove nothing about the value.
+    let report = verify_hostile(2_000);
+    for t in &report.targets {
+        assert!(
+            t.is_canonical(),
+            "{}: {} of {} accepted inputs did not re-encode to their own bytes",
+            t.name,
+            t.not_canonical,
+            t.accepted
+        );
+    }
+    assert!(report.holds());
+}
+
+#[test]
+fn the_fuzzing_reaches_past_the_length_checks() {
+    // For a plain format, mutated-valid input is what gets to the logic;
+    // a target where nothing was ever accepted has had its magic number
+    // tested and nothing else.
+    let report = verify_hostile(2_000);
+    let shallow = report.shallow();
+    assert!(
+        shallow.is_empty(),
+        "these targets were not reached: {shallow:?}"
+    );
+    for t in report.targets.iter().filter(|t| !t.integrity_protected) {
+        assert!(
+            t.accepted_from_mutation > 0,
+            "{} accepted nothing from mutated-valid input",
+            t.name
+        );
+    }
+}
+
+#[test]
+fn an_integrity_check_catches_every_single_mutation() {
+    // The inverted expectation, and the stronger property. A frame
+    // carries a 128-bit MAC and a journal record a CRC over everything
+    // including its header; flipping any bit in either must make it
+    // undecodable. Mutation getting through would mean the check is not
+    // doing its job.
+    let report = verify_hostile(3_000);
+    for t in report.targets.iter().filter(|t| t.integrity_protected) {
+        assert_eq!(
+            t.accepted_from_mutation, 0,
+            "{}: {} of {} mutated inputs got past the integrity check",
+            t.name, t.accepted_from_mutation, t.tried
+        );
+        assert!(t.integrity_held());
+    }
+}
+
+#[test]
+fn random_bytes_are_almost_never_a_valid_structure() {
+    // The other direction: if random bytes were routinely accepted, the
+    // decoder would not be checking anything. A frame with a MAC should
+    // essentially never appear by chance.
+    let report = verify_hostile(2_000);
+    let frame = report
+        .targets
+        .iter()
+        .find(|t| t.name == "transport::Frame")
+        .unwrap();
+    // every acceptance must have come from mutation, not from noise
+    assert_eq!(
+        frame.accepted, frame.accepted_from_mutation,
+        "random bytes produced a frame with a valid MAC, which should be \
+         a 2^-128 event"
+    );
+}
+
+#[test]
+fn the_fuzzing_is_deterministic() {
+    assert_eq!(verify_hostile(200), verify_hostile(200));
+}
+
+#[test]
+fn every_target_says_what_it_reads() {
+    for t in targets() {
+        assert!(!t.name.is_empty());
+        assert!(
+            t.reads.len() > 15,
+            "{}: a target with no explanation is a line of coverage",
+            t.name
+        );
+        // and its seed is a genuinely valid encoding, or the mutation
+        // generator is mutating garbage
+        let seed = (t.seed_value)();
+        assert!(!seed.is_empty(), "{}", t.name);
+    }
+}
+
+#[test]
+fn every_seed_value_actually_decodes() {
+    // The mutation generator starts from these. A seed that does not
+    // decode means that target's mutation pass is fuzzing noise.
+    for t in targets() {
+        let seed = (t.seed_value)();
+        assert!(
+            (t.decode)(&seed),
+            "{}'s seed value does not decode, so its mutation pass tests nothing",
+            t.name
+        );
+    }
+}
+
+#[test]
+fn a_journal_record_from_hostile_storage_never_half_decodes() {
+    // Journal slots sit on storage the robot's owner can physically
+    // reach. A torn or edited record must produce an error, never a
+    // partially-populated Record that something then treats as memory.
+    //
+    // Every one of several thousand mutations is caught by the CRC —
+    // which is the whole reason the CRC seals the header and the
+    // generation alongside the payload, so a flipped bit anywhere
+    // invalidates the slot rather than silently reordering history.
+    let report = verify_hostile(3_000);
+    let journal = report
+        .targets
+        .iter()
+        .find(|t| t.name == "memory::journal::Record")
+        .unwrap();
+    assert!(journal.is_canonical());
+    assert_eq!(journal.accepted_from_mutation, 0);
+    assert!(journal.tried >= 6_000);
+}

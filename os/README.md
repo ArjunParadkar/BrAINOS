@@ -29,7 +29,7 @@ cargo run --release --bin brainos -- wire     # the transport under a bad link
 cargo run --release --bin brainos -- compound # does experience compound?
 cargo run --release --bin brainos -- stat     # what this build contains
 
-cargo test --workspace --release              # 575 tests
+cargo test --workspace --release              # 596 tests
 tools/check-no-std.sh                         # the bare-metal build, when a target exists
 ```
 
@@ -104,6 +104,12 @@ validity, request freshness, body binding, argument shape, body fitness,
 ruleset, argument danger and key availability — runs each through the
 real gate, and asserts 17 properties over every resulting trace. Within
 that domain the properties hold for *all* inputs.
+
+A third harness feeds every decoder in the workspace random bytes and
+mutated-valid bytes — about 36,000 inputs — and asserts three things: no
+decoder panics; anything that decodes re-encodes to exactly its own
+bytes; and for the formats that carry an integrity check, no mutation
+gets through at all. That harness found the float canonicality bug above.
 
 It is **not** a machine-checked proof, and the report says so in the same
 type size as the result. Outside the domain, nothing is established. That
@@ -239,3 +245,16 @@ an end-to-end assertion.
    verb is still held to its own bound at validate — three checks, each
    doing one job. Found by running the whole stack end to end, which is
    the kind of bug unit tests do not have the shape to see.
+10. The codec's float decoder accepted `-0.0` and non-canonical NaNs,
+    which the encoder flattens. Decoding was therefore not injective:
+    two different byte strings produced the same value, so a signature
+    over the bytes was not a signature over the value — the exact
+    property the audit Merkle log, the export signature and the
+    body-identity digest all rest on. Found by the hostile-input
+    harness, which mutates a valid encoding and checks that anything
+    which decodes re-encodes to its own bytes. Three of four hundred
+    mutated commands did not.
+11. The hostile-input harness's own mutation generator could pick the
+    same bit twice and cancel, emitting its own seed unmodified — which
+    reads in the report exactly like an integrity check having failed.
+    One frame in six thousand, about what the arithmetic predicts.

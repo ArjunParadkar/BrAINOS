@@ -42,6 +42,7 @@ extern crate alloc;
 
 pub mod domain;
 pub mod envelopes;
+pub mod hostile;
 pub mod harness;
 pub mod properties;
 pub mod report;
@@ -49,5 +50,6 @@ pub mod report;
 pub use domain::{Case, Domain, Scenario};
 pub use harness::{run, run_all, verify};
 pub use envelopes::{verify_envelopes, EnvelopeCase, EnvelopeDomain};
+pub use hostile::{verify_hostile, HostileReport};
 pub use properties::{check_all, Property, PropertyResult, PROPERTIES};
 pub use report::{Coverage, Report, Verdict};

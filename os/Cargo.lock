@@ -162,11 +162,14 @@ name = "brainos-proof"
 version = "0.3.0"
 dependencies = [
  "brainos-abi",
+ "brainos-adapters",
  "brainos-body",
  "brainos-bodyd",
  "brainos-crypto",
  "brainos-kira",
+ "brainos-memory",
  "brainos-rt",
+ "brainos-transport",
  "miniblur-core",
 ]
 

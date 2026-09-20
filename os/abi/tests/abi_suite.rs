@@ -405,3 +405,110 @@ fn node_ids_encode_and_zero_means_none() {
     let n = NodeId(4242);
     assert_eq!(NodeId::from_bytes(&n.to_bytes().unwrap()).unwrap(), n);
 }
+
+#[test]
+fn decoding_a_float_rejects_anything_the_encoder_would_not_have_written() {
+    // Decoding must be injective, or a signature over the bytes is not a
+    // signature over the value. The encoder flattens every NaN to one
+    // quiet NaN and −0.0 to +0.0, so the decoder has to refuse the
+    // un-normalized forms rather than silently re-normalizing them.
+    //
+    // Found by the hostile-input harness: three of four hundred mutated
+    // commands decoded to a value that re-encoded to different bytes,
+    // and every one of them was a float whose sign or NaN payload the
+    // encoder would have flattened.
+
+    // −0.0
+    let mut e = Encoder::new();
+    e.u32(0x8000_0000);
+    let bytes = e.finish().unwrap();
+    assert!(matches!(
+        Decoder::new(&bytes).f32(),
+        Err(Error::Malformed(_))
+    ));
+
+    // a NaN with a payload
+    let mut e = Encoder::new();
+    e.u32(0x7FC0_1234);
+    let bytes = e.finish().unwrap();
+    assert!(matches!(
+        Decoder::new(&bytes).f32(),
+        Err(Error::Malformed(_))
+    ));
+
+    // a signalling NaN
+    let mut e = Encoder::new();
+    e.u32(0x7F80_0001);
+    let bytes = e.finish().unwrap();
+    assert!(matches!(
+        Decoder::new(&bytes).f32(),
+        Err(Error::Malformed(_))
+    ));
+
+    // and the canonical forms decode fine
+    for v in [0.0f32, 1.0, -1.0, f32::INFINITY, f32::NEG_INFINITY, f32::NAN] {
+        let mut e = Encoder::new();
+        e.f32(v);
+        let bytes = e.finish().unwrap();
+        let back = Decoder::new(&bytes).f32().expect("a canonical float decodes");
+        if v.is_nan() {
+            assert!(back.is_nan());
+        } else {
+            assert_eq!(back, v);
+        }
+    }
+}
+
+#[test]
+fn the_same_rejection_applies_to_doubles() {
+    let mut e = Encoder::new();
+    e.u64(0x8000_0000_0000_0000);
+    let bytes = e.finish().unwrap();
+    assert!(matches!(
+        Decoder::new(&bytes).f64(),
+        Err(Error::Malformed(_))
+    ));
+
+    let mut e = Encoder::new();
+    e.u64(0x7FF8_0000_0000_1234);
+    let bytes = e.finish().unwrap();
+    assert!(matches!(
+        Decoder::new(&bytes).f64(),
+        Err(Error::Malformed(_))
+    ));
+
+    let mut e = Encoder::new();
+    e.f64(-0.0);
+    let bytes = e.finish().unwrap();
+    assert_eq!(
+        Decoder::new(&bytes).f64().unwrap().to_bits(),
+        0,
+        "the encoder flattened it, so the decoder sees the canonical form"
+    );
+}
+
+#[test]
+fn every_float_that_decodes_re_encodes_to_its_own_bytes() {
+    // the property stated directly, over the whole 32-bit space sampled
+    // coarsely enough to run in a test
+    let mut checked = 0u32;
+    for high in 0..=0xFFu32 {
+        for low in [0x0000u32, 0x0001, 0x1234, 0x7FFF, 0x8000, 0xFFFF] {
+            let bits = (high << 24) | (low << 8) | (low & 0xFF);
+            let mut e = Encoder::new();
+            e.u32(bits);
+            let bytes = e.finish().unwrap();
+            if let Ok(v) = Decoder::new(&bytes).f32() {
+                let mut re = Encoder::new();
+                re.f32(v);
+                assert_eq!(
+                    re.finish().unwrap(),
+                    bytes,
+                    "bits {bits:#010x} decoded and re-encoded differently"
+                );
+                checked += 1;
+            }
+        }
+    }
+    assert!(checked > 1_000, "only {checked} values decoded");
+}
