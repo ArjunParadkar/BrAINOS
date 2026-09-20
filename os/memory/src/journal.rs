@@ -319,6 +319,19 @@ impl Journal {
         self.entity
     }
 
+    /// Copy another journal's position: what generation each segment is
+    /// at and what it last wrote.
+    ///
+    /// Not `Clone`, because a journal is a position on a medium and two
+    /// journals believing they are at the same position is how a slot
+    /// gets written twice. This is explicit, and exists for the
+    /// durability harness, which needs to branch a history to ask what
+    /// happens if the next write does not finish.
+    pub fn adopt_from(&mut self, other: &Journal) {
+        self.generation = other.generation;
+        self.last_digest = other.last_digest;
+    }
+
     pub fn generation(&self, seg: Segment) -> u64 {
         self.generation[seg as usize]
     }

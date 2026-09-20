@@ -56,6 +56,8 @@ pub struct Report {
     pub hostile: Option<crate::hostile::HostileReport>,
     /// the fourth: someone trying to get away with it
     pub adversary: Option<crate::adversary::AdversaryReport>,
+    /// the fifth: losing power at every possible instant
+    pub durability: Option<crate::durability::DurabilityReport>,
 }
 
 impl Report {
@@ -75,6 +77,7 @@ impl Report {
             envelopes: None,
             hostile: None,
             adversary: None,
+            durability: None,
         }
     }
 
@@ -99,6 +102,14 @@ impl Report {
             self.verdict = Verdict::Violated;
         }
         self.adversary = Some(a);
+        self
+    }
+
+    pub fn with_durability(mut self, d: crate::durability::DurabilityReport) -> Report {
+        if !d.holds() {
+            self.verdict = Verdict::Violated;
+        }
+        self.durability = Some(d);
         self
     }
 
@@ -292,11 +303,67 @@ impl Report {
             }
         }
 
+        if let Some(d) = &self.durability {
+            s.push_str("Fifth domain — losing power at every possible instant\n");
+            s.push_str("-----------------------------------------------------\n");
+            s.push_str("  Robots lose power. Not as an edge case — as a normal Tuesday. For a\n");
+            s.push_str("  journal write of n bytes there are n+1 moments it can stop, and every\n");
+            s.push_str("  one is enumerated, on three media models: an unwritten tail that reads\n");
+            s.push_str("  zero, one that still holds the slot's previous contents, and one that\n");
+            s.push_str("  is garbage. The second is the nastiest, because the tail is\n");
+            s.push_str("  valid-looking data sitting immediately after a valid header.\n\n");
+            push_field(&mut s, "power-loss instants enumerated", d.instants as u64);
+            push_field(&mut s, "newest write survived", d.kept_newest as u64);
+            push_field(&mut s, "fell back to the previous good state", d.fell_back as u64);
+            push_field(
+                &mut s,
+                "newborn: first write tore, nothing to come back to",
+                d.started_fresh as u64,
+            );
+            push_field(
+                &mut s,
+                "lost memory that had been committed",
+                d.lost_everything as u64,
+            );
+            s.push('\n');
+            for line in [
+                "  The property is not \"the newest write survives\" — it cannot be, and a",
+                "  system claiming it would be lying. It is weaker and more useful:",
+                "  whatever comes back was actually committed, in full, and is never older",
+                "  than the last write that completed. An entity may lose the last thing it",
+                "  was doing. It may not come back as a mixture of two entities, and it may",
+                "  not come back as an earlier version of itself.",
+                "",
+            ] {
+                s.push_str(line);
+                s.push('\n');
+            }
+            s.push_str("  verdict: ");
+            if !d.holds() {
+                s.push_str("VIOLATED\n");
+                for vln in d.violations.iter().take(8) {
+                    s.push_str("    ");
+                    s.push_str(vln.medium.name());
+                    s.push_str(", torn at byte ");
+                    push_u64(&mut s, vln.torn_at as u64);
+                    s.push_str(": ");
+                    s.push_str(&vln.why);
+                    s.push('\n');
+                }
+            } else if !d.is_meaningful() {
+                s.push_str("VACUOUS — the tears are not where the data is\n");
+            } else {
+                s.push_str("holds\n");
+            }
+            s.push('\n');
+        }
+
         s.push_str("What this is\n------------\n");
         for line in [
             "  Bounded exhaustive model checking on the first two domains,",
-            "  randomised plus mutation fuzzing on the third, and directed attack on",
-            "  the fourth. Every case in the",
+            "  randomised plus mutation fuzzing on the third, directed attack on the",
+            "  fourth, and exhaustive enumeration of every instant power can be lost",
+            "  on the fifth. Every case in the",
             "  first two was run through the real code, not a model of it, and every",
             "  property was asserted over every resulting trace. Within those",
             "  domains the properties hold for all inputs, not for the ones a test",
@@ -336,6 +403,7 @@ impl Report {
             .with_envelopes(crate::envelopes::verify_envelopes())
             .with_hostile(crate::hostile::verify_hostile(2_000))
             .with_adversary(crate::adversary::verify_adversary())
+            .with_durability(crate::durability::verify_durability(4))
     }
 }
 

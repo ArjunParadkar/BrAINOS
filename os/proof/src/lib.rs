@@ -41,6 +41,7 @@
 extern crate alloc;
 
 pub mod adversary;
+pub mod durability;
 pub mod domain;
 pub mod envelopes;
 pub mod hostile;

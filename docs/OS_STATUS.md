@@ -21,7 +21,7 @@ than a second copy of them.
 cd os
 cargo run --release --bin brainos -- demo     # Phase 0, in simulation
 cargo run --release --bin brainos -- stack    # intent → gate → wire → body → gait
-cargo run --release --bin brainos -- verify   # all four property domains
+cargo run --release --bin brainos -- verify   # all five property domains
 cargo run --release --bin brainos -- bench    # measured latencies and footprint
 cargo run --release --bin brainos -- compound # does experience compound?
 cargo run --release --bin brainos -- fleet    # does it transfer between entities?
@@ -29,7 +29,7 @@ cargo run --release --bin brainos -- day      # can it be left running?
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 656 tests
+cargo test --workspace --release              # 662 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -38,7 +38,7 @@ Transcripts of each are in [`artifacts/`](artifacts/).
 
 ## What exists
 
-Eighteen crates plus a standalone tool, about 41,000 lines of Rust, 656
+Eighteen crates plus a standalone tool, about 41,000 lines of Rust, 662
 tests. Every crate
 except `host` is `no_std`, forbids `unsafe`, and depends on nothing
 outside the workspace but `ed25519-dalek` and `libm`.
@@ -53,7 +53,7 @@ outside the workspace but `ed25519-dalek` and `libm`.
 | §8 acquisition | `body`, `adapters` | the five-step protocol as a state machine, and ROS 2 / MHS bridges into steps 1–3 |
 | §3.8 three worlds | `worlds` | self / human / internet postures, bounded sessions, ingress tainting, and the adversarial filter the entity runs on its human's behalf |
 | Stage 4 | `entity` | one Key, one state graph, every body at once; arbitration; the life record |
-| Stage 6 (part) | `proof` | four property domains: two exhaustive, one fuzzed, one adversarial |
+| Stage 6 (part) | `proof` | five property domains: three exhaustive, one fuzzed, one adversarial |
 | Stage 7 | `fleet` | a registry that cannot command, a marketplace that cannot push, hosts that hold nothing |
 | freedom principle | `export`, `tools/read-export` | entity export v3, and a reader that depends on no BrAInOS crate |
 | — | `abi`, `transport`, `nostd`, `host` | vocabulary, the wire, the `no_std` canary, and the only crate with an operating system underneath it |
@@ -84,7 +84,7 @@ must be acquired again through §8.
 
 ---
 
-## Four property domains
+## Five property domains
 
 `brainos verify` enumerates the first two completely and runs every case
 through the real code.
@@ -133,6 +133,29 @@ authority handed to something that is not the entity" and it could not
 be; every delegation test in the suite delegated to the entity's own id,
 so the case never came up. The gate now separates the signer from the
 authority.
+
+**Power loss — 546 instants.** Robots lose power; not as an edge case,
+as a normal Tuesday. §3.7 puts memory in the state graph and nowhere
+else, which makes the journal the single point at which an entity's
+identity can be destroyed. For a write of *n* bytes there are *n+1*
+moments it can stop, and every one is enumerated, on three media models:
+an unwritten tail that reads zero, one that still holds the slot's
+previous contents, and one that is garbage. The second is the nastiest —
+valid-looking data sitting immediately after a valid header — and the
+records are deliberately of differing lengths so that a short write over
+a longer one leaves that tail behind.
+
+The property is not "the newest write survives". It cannot be, and a
+system claiming it would be lying. It is weaker and more useful:
+**whatever comes back was actually committed, in full, and is never
+older than the last write that completed.** An entity may lose the last
+thing it was doing. It may not come back as a mixture of two entities,
+and it may not come back as an earlier version of itself. Across every
+depth of history from an empty medium to six generations, 546 instants:
+four kept the newest write, 542 fell back cleanly, none lost anything
+that had been committed, and none produced a state the entity had never
+been in. Separately, every single-bit flip in a complete record is
+caught by the CRC or the signature; 418 sampled, none slipped.
 
 It is **not** a machine-checked proof, and the report says so as
 prominently as it says the result. Outside the domains nothing is

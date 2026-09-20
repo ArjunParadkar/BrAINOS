@@ -184,11 +184,36 @@ Fourth domain — the adversary
   commit — so the day one of them starts passing, a test goes red
   instead of a customer finding out.
 
+Fifth domain — losing power at every possible instant
+-----------------------------------------------------
+  Robots lose power. Not as an edge case — as a normal Tuesday. For a
+  journal write of n bytes there are n+1 moments it can stop, and every
+  one is enumerated, on three media models: an unwritten tail that reads
+  zero, one that still holds the slot's previous contents, and one that
+  is garbage. The second is the nastiest, because the tail is
+  valid-looking data sitting immediately after a valid header.
+
+  power-loss instants enumerated: 546
+  newest write survived: 4
+  fell back to the previous good state: 542
+  newborn: first write tore, nothing to come back to: 0
+  lost memory that had been committed: 0
+
+  The property is not "the newest write survives" — it cannot be, and a
+  system claiming it would be lying. It is weaker and more useful:
+  whatever comes back was actually committed, in full, and is never older
+  than the last write that completed. An entity may lose the last thing it
+  was doing. It may not come back as a mixture of two entities, and it may
+  not come back as an earlier version of itself.
+
+  verdict: holds
+
 What this is
 ------------
   Bounded exhaustive model checking on the first two domains,
-  randomised plus mutation fuzzing on the third, and directed attack on
-  the fourth. Every case in the
+  randomised plus mutation fuzzing on the third, directed attack on the
+  fourth, and exhaustive enumeration of every instant power can be lost
+  on the fifth. Every case in the
   first two was run through the real code, not a model of it, and every
   property was asserted over every resulting trace. Within those
   domains the properties hold for all inputs, not for the ones a test
