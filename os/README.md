@@ -29,7 +29,7 @@ cargo run --release --bin brainos -- wire     # the transport under a bad link
 cargo run --release --bin brainos -- compound # does experience compound?
 cargo run --release --bin brainos -- stat     # what this build contains
 
-cargo test --workspace --release              # 529 tests
+cargo test --workspace --release              # 575 tests
 tools/check-no-std.sh                         # the bare-metal build, when a target exists
 ```
 
@@ -55,7 +55,7 @@ minutes.
 | `proof` | the properties KIRA must have, checked exhaustively over a bounded domain | Stage 6 (part) |
 | `fleet` | a directory that cannot command, a marketplace that cannot push, hosts that hold nothing | Stage 7 |
 | `export` | entity export v1.0 — complete, documented, signed, round-tripped | freedom principle |
-| `bodyd` | what runs on the machine with the motors; links `miniblur-core` | Domain 2 |
+| `bodyd` | what runs on the machine with the motors; a hexapod that links `miniblur-core` and an arm with a torque budget | Domain 2 |
 | `nostd` | a canary that depends on everything and is unconditionally `#![no_std]` | — |
 | `host` | the only crate allowed an operating system underneath it | — |
 
@@ -228,3 +228,14 @@ an end-to-end assertion.
    occasion that mattered.
 7. `Calibration::is_complete` treated a body with no joints — a speaker,
    a camera, a lab instrument — as permanently incomplete.
+8. The tripod gait has a slowest usable cycle; below it the body shuffles
+   and the rail current rises rather than falls. It now refuses rather
+   than quietly walking faster than it was asked to.
+9. `default_envelope` took the *intersection* of what a region's verbs
+   declared for a channel, which makes a region with a fast verb and a
+   slow one unable to perform the fast one. An arm whose `home` was
+   limited to 60 °/s capped `move_joint` at 60 too, though the
+   manufacturer declared 180. It takes the union now, and the narrow
+   verb is still held to its own bound at validate — three checks, each
+   doing one job. Found by running the whole stack end to end, which is
+   the kind of bug unit tests do not have the shape to see.

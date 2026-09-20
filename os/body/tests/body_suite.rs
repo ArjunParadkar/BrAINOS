@@ -740,9 +740,18 @@ fn a_non_consequential_verb_still_works_on_a_stowed_body() {
 // ---------- envelopes derived from schemas ----------
 
 #[test]
-fn a_derived_envelope_takes_the_tightest_limit_any_verb_declared() {
+fn a_derived_envelope_takes_the_widest_limit_any_verb_declared() {
+    // A region's envelope bounds what the region may ever physically do,
+    // which Domain 2 runs inside at kilohertz. What *this verb* may do
+    // is a different question, enforced at validate against the verb's
+    // own parameter bounds.
+    //
+    // Taking the intersection instead confuses the two, and makes a
+    // region with a fast verb and a slow one unable to perform the fast
+    // one. An end-to-end run caught it: an arm whose `home` is limited
+    // to 60 deg/s capped `move_joint` at 60 too, though the
+    // manufacturer declared 180.
     let mut schema = hexapod_schema();
-    // a second verb on the same region with a tighter angle bound
     schema.declare(
         VerbSpec::new(v("legs.crouch"), RegionClass::Legs, "crouch")
             .with(ParamSpec::scalar("heading", Channel::Angle, -5.0, 5.0)),
@@ -757,13 +766,54 @@ fn a_derived_envelope_takes_the_tightest_limit_any_verb_declared() {
     let angle = env.limit(Channel::Angle).unwrap();
     assert_eq!(
         (angle.min, angle.max),
-        (-5.0, 5.0),
-        "a grant as wide as the loosest verb is wider than anything was checked against"
+        (-30.0, 30.0),
+        "walk declares +-30 and crouch +-5; the region can do +-30"
     );
     // speed came only from walk
     assert_eq!(env.limit(Channel::Speed).unwrap().max, 0.6);
     // and a channel nothing declared is unstated, not unbounded
     assert!(env.limit(Channel::Current).is_none());
+}
+
+#[test]
+fn the_narrow_verb_is_still_held_to_its_own_limit_at_validate() {
+    // the other half of the same decision: the envelope being wide does
+    // not let the narrow verb exceed what it declared
+    let mut schema = hexapod_schema();
+    schema.declare(
+        VerbSpec::new(v("legs.crouch"), RegionClass::Legs, "crouch")
+            .with(ParamSpec::scalar("heading", Channel::Angle, -5.0, 5.0)),
+    );
+    let body = brainos_abi::ids::BodyId::from_bytes([5; 32]);
+    let env = default_envelope(
+        &schema,
+        RegionClass::Legs,
+        1,
+        Duration::from_millis(10),
+        Duration::from_millis(200),
+    );
+    let mut p = SchemaPolicy::new(body, schema)
+        .with_envelope(env)
+        .calibrated(calibration_for(body));
+    p.posture = Posture::Standing;
+    p.observe(&Telemetry {
+        link_alive: true,
+        rail_v: Some(7.4),
+        tilt_deg: Some(0.0),
+        hottest_c: Some(30.0),
+        ..Default::default()
+    });
+
+    // 20 degrees is inside the region's envelope and outside crouch's
+    // own bound
+    let a = args(&[("heading", Arg::Scalar(20.0))]);
+    assert_eq!(
+        p.validate(&v("legs.crouch"), &a).unwrap_err().code,
+        DenyCode::OutOfBounds
+    );
+    // and the same value through walk, which declared it, is fine
+    let walk = args(&[("speed", Arg::Scalar(0.3)), ("heading", Arg::Scalar(20.0))]);
+    assert!(p.validate(&v("legs.walk"), &walk).is_ok());
 }
 
 #[test]

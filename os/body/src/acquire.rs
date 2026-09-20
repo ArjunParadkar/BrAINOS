@@ -400,6 +400,28 @@ impl Acquisition {
 /// nothing. That is a body the entity can see and cannot move, which is
 /// the correct state for a device that would not say what it can
 /// survive.
+///
+/// **The envelope is the widest any verb declared, not the tightest.**
+/// This was the other way round until an end-to-end run caught it. The
+/// reasoning that produced the intersection — "a grant wide enough for
+/// the loosest verb is wider than the strictest verb was ever checked
+/// against" — sounds right and is wrong, because it confuses two
+/// different jobs:
+///
+/// * **Validate** enforces what *this verb* may do, against the verb's
+///   own declared parameter bounds. That check already exists and runs
+///   on every proposal.
+/// * **The envelope** bounds what *this region* may ever physically do.
+///   It is what Domain 2 runs inside at kilohertz, long after any
+///   particular verb was authorized.
+///
+/// Take the intersection and a region with a fast verb and a slow one
+/// can never perform the fast one: an arm whose `home` is limited to
+/// 60 °/s would cap `move_joint` at 60 °/s too, even though the
+/// manufacturer declared 180. Take the union and the fast verb works,
+/// the slow verb is still held to its own limit at validate, and the
+/// body's own `native_envelope` narrows the whole thing again on the
+/// other side of the wire. Three checks, each doing one job.
 pub fn default_envelope(
     schema: &CapabilitySchema,
     class: RegionClass,
@@ -423,10 +445,10 @@ pub fn default_envelope(
                             env.bound(ch, l);
                         }
                         Some(existing) => {
-                            let tighter =
-                                Limit::new(existing.min.max(l.min), existing.max.min(l.max));
-                            if tighter.is_sane() {
-                                env.bound(ch, tighter);
+                            let wider =
+                                Limit::new(existing.min.min(l.min), existing.max.max(l.max));
+                            if wider.is_sane() {
+                                env.bound(ch, wider);
                             }
                         }
                     }

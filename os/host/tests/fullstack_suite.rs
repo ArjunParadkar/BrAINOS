@@ -366,3 +366,119 @@ fn the_narrated_run_is_reproducible() {
         .collect();
     assert_eq!(a, b);
 }
+
+// =====================================================================
+// Phase 1's deliverable: a body we did not build
+// =====================================================================
+
+use brainos_host::fullstack::{acquire_from_manufacturer, manufacturer_demo, MANUFACTURER_DESCRIPTION};
+
+#[test]
+fn an_arm_described_by_its_manufacturer_becomes_a_body() {
+    let a = acquire_from_manufacturer(0.0);
+    assert!(a.verbs.contains(&"arm.move_joint".to_string()));
+    assert!(a.verbs.contains(&"arm.home".to_string()));
+    assert_eq!(
+        a.actionable_pct, 100,
+        "MHS declares bounds, which is why it is the easier adapter"
+    );
+    assert!(!a.body_id.is_zero());
+}
+
+#[test]
+fn a_legal_motion_on_an_acquired_arm_goes_all_the_way_through() {
+    let a = acquire_from_manufacturer(0.0);
+    assert!(a.legal.0, "the seat granted it");
+    assert_eq!(a.legal.1, None, "the body accepted it");
+}
+
+#[test]
+fn the_body_refuses_a_speed_the_manufacturer_permits_and_our_model_does_not() {
+    // Not a disagreement about the hardware. The manufacturer says
+    // 180 deg/s and is probably right; our static torque model ignores
+    // inertia and is only trusted to 90. The body refuses the regime its
+    // own model does not cover rather than guessing.
+    let a = acquire_from_manufacturer(0.0);
+    assert_eq!(
+        a.seat_rate_limit,
+        Some(180.0),
+        "read out of the manufacturer's JSON Schema"
+    );
+    assert_eq!(a.body_rate_limit, Some(90.0), "our own model's ceiling");
+    assert!(a.too_fast.0, "the seat granted it, because the schema allows it");
+    assert_eq!(
+        a.too_fast.1,
+        Some(Refusal::OutsideEnvelope),
+        "and the body refused it"
+    );
+}
+
+#[test]
+fn the_same_arm_with_a_heavy_payload_refuses_what_it_accepted_empty() {
+    let empty = acquire_from_manufacturer(0.0);
+    let heavy = acquire_from_manufacturer(40.0);
+
+    assert_eq!(empty.legal.1, None, "empty, it moves");
+    assert_eq!(
+        heavy.legal.1,
+        Some(Refusal::WouldBreakInvariant),
+        "loaded, the shoulder's moment budget refuses"
+    );
+    assert!(
+        heavy.legal.0,
+        "and the seat granted both, because nothing in the manufacturer's \
+         description mentions what is in the gripper"
+    );
+}
+
+#[test]
+fn a_manufacturer_description_with_no_bounds_produces_a_body_that_cannot_move() {
+    use brainos_adapters::mhs::from_mhs;
+    use brainos_adapters::ros2::actionable_fraction_pct;
+
+    let vague = r#"{"name":"mystery arm","device_type":"arm","tools":[
+      {"name":"move_joint","input_schema":{"properties":{
+        "angle":{"type":"number"}}}}]}"#;
+    let schema = from_mhs(vague).unwrap();
+    assert_eq!(
+        actionable_fraction_pct(&schema),
+        0,
+        "a body that will not say what it can survive is visible and unmovable"
+    );
+}
+
+#[test]
+fn the_manufacturer_description_is_the_shape_mhs_actually_uses() {
+    // if this stops parsing, the adapter has drifted from the standard
+    use brainos_adapters::mhs::from_mhs;
+    let schema = from_mhs(MANUFACTURER_DESCRIPTION).unwrap();
+    assert_eq!(schema.adapter, "mhs");
+    assert_eq!(schema.len(), 2);
+    let mv = schema.get(&v("arm.move_joint")).unwrap();
+    assert!(!mv.reversible, "the device declared it irreversible");
+    assert_eq!(mv.worst_case_ms, 12_000);
+    // integer and number parameters both came through with their bounds
+    assert!(mv.param("joint").unwrap().admits_scalar(3.0));
+    assert!(!mv.param("joint").unwrap().admits_scalar(9.0));
+    assert!(mv.param("angle").unwrap().admits_scalar(-180.0));
+}
+
+#[test]
+fn the_manufacturer_narration_says_what_happened() {
+    let lines = manufacturer_demo();
+    let steps: Vec<&str> = lines.iter().map(|l| l.step).collect();
+    for expected in ["§8 1-3", "§8 4-5", "envelope", "move", "too fast", "payload"] {
+        assert!(steps.contains(&expected), "{expected} is missing");
+    }
+    let all: String = lines
+        .iter()
+        .map(|l| l.text.clone())
+        .collect::<Vec<_>>()
+        .join(" ");
+    assert!(all.contains("did not build"));
+    assert!(all.contains("would-break-invariant"));
+    assert!(
+        !all.contains("never heard it"),
+        "the seat should have granted every one of these"
+    );
+}

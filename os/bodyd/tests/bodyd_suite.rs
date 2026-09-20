@@ -616,3 +616,335 @@ fn a_sample_carries_a_bounded_number_of_commands() {
     }
     assert_eq!(s.commanded().count(), 8, "fixed width, no allocation");
 }
+
+// =====================================================================
+// the second mechanism — an arm
+//
+// The hexapod and the arm share a runtime, a wire, an envelope model, a
+// watchdog set and a refusal vocabulary, and share no physics at all.
+// These tests are about whether `Mechanism` was the right abstraction:
+// if it was, adding the arm is four methods and no changes anywhere
+// else.
+// =====================================================================
+
+use brainos_bodyd::arm::{Arm, ArmConfig, MAX_JOINTS};
+
+fn arm() -> Arm {
+    let mut a = Arm::new(ArmConfig::collaborative_six_axis());
+    a.calibrate([0.0; MAX_JOINTS]);
+    a
+}
+
+fn loaded_arm(kg: f32) -> Arm {
+    let mut a = Arm::new(ArmConfig {
+        payload_kg: kg,
+        ..ArmConfig::collaborative_six_axis()
+    });
+    a.calibrate([0.0; MAX_JOINTS]);
+    a
+}
+
+#[test]
+fn the_default_arm_is_physically_sane() {
+    let c = ArmConfig::collaborative_six_axis();
+    assert!(c.is_sane());
+    assert!(
+        (0.9..1.3).contains(&c.reach_m()),
+        "reach {} m is not a collaborative arm",
+        c.reach_m()
+    );
+    for j in &c.joints[..c.used] {
+        assert!(j.is_sane());
+    }
+}
+
+#[test]
+fn forward_kinematics_is_exact_for_the_straight_arm() {
+    let a = arm();
+    let (x, y) = a.end_effector(&[0.0; MAX_JOINTS]);
+    assert!(
+        (x - a.config.reach_m()).abs() < 1e-4,
+        "straight out should reach {} m, got {x}",
+        a.config.reach_m()
+    );
+    assert!(y.abs() < 1e-4, "and stay in the plane, got {y}");
+}
+
+#[test]
+fn an_arm_releases_where_a_hexapod_holds() {
+    // the one place the two mechanisms visibly disagree, and getting it
+    // backwards is how a robot falls over while stopping safely
+    assert!(!arm().holds_itself_up());
+    assert!(calibrated_hexapod().holds_itself_up());
+}
+
+#[test]
+fn an_uncalibrated_arm_refuses_to_move() {
+    let a = Arm::new(ArmConfig::collaborative_six_axis());
+    assert!(!a.is_calibrated());
+    assert_eq!(
+        a.plan(&v("arm.move_joint"), &[("joint", 1.0), ("angle", 30.0)]),
+        Err(Refusal::Uncalibrated)
+    );
+}
+
+#[test]
+fn a_calibration_outside_the_joint_limits_is_refused() {
+    let mut a = Arm::new(ArmConfig::collaborative_six_axis());
+    let mut home = [0.0f32; MAX_JOINTS];
+    home[1] = 200.0; // joint 1 stops at 95 degrees
+    assert!(!a.calibrate(home));
+    assert!(!a.is_calibrated());
+}
+
+#[test]
+fn a_joint_past_its_limit_is_refused() {
+    let a = arm();
+    assert!(a
+        .plan(&v("arm.move_joint"), &[("joint", 1.0), ("angle", 60.0)])
+        .is_ok());
+    assert_eq!(
+        a.plan(&v("arm.move_joint"), &[("joint", 1.0), ("angle", 200.0)]),
+        Err(Refusal::OutsideEnvelope),
+        "joint 1 stops at 95 degrees"
+    );
+}
+
+#[test]
+fn a_joint_that_does_not_exist_is_refused() {
+    let a = arm();
+    assert_eq!(
+        a.plan(&v("arm.move_joint"), &[("joint", 9.0), ("angle", 10.0)]),
+        Err(Refusal::OutsideEnvelope)
+    );
+    assert_eq!(
+        a.plan(&v("arm.move_joint"), &[("joint", -1.0), ("angle", 10.0)]),
+        Err(Refusal::OutsideEnvelope)
+    );
+}
+
+#[test]
+fn the_torque_budget_is_what_a_heavy_payload_runs_into() {
+    // the same motion, with and without something in the gripper
+    let empty = arm();
+    let heavy = loaded_arm(40.0);
+
+    assert!(
+        empty
+            .plan(&v("arm.move_joint"), &[("joint", 1.0), ("angle", 10.0)])
+            .is_ok(),
+        "an empty arm can move"
+    );
+    assert_eq!(
+        heavy.plan(&v("arm.move_joint"), &[("joint", 1.0), ("angle", 10.0)]),
+        Err(Refusal::WouldBreakInvariant),
+        "forty kilos at nearly a metre is more moment than the shoulder has"
+    );
+}
+
+#[test]
+fn the_torque_grows_with_reach_which_is_the_whole_point_of_the_model() {
+    let a = loaded_arm(3.0);
+    let extended = a.shoulder_torque_nm(&[0.0; MAX_JOINTS]);
+
+    // fold joint 1 up so the end effector comes back over the base
+    let mut folded = [0.0f32; MAX_JOINTS];
+    folded[1] = 90.0;
+    let tucked = a.shoulder_torque_nm(&folded);
+
+    assert!(
+        tucked < extended,
+        "folding in should reduce the moment: {tucked} vs {extended}"
+    );
+}
+
+#[test]
+fn the_end_effector_may_not_come_back_into_the_column() {
+    let a = arm();
+    // straight out obviously clears the base
+    assert!(a.clears_the_column(&[0.0; MAX_JOINTS]));
+
+    // curled right back over itself does not
+    let mut curled = [0.0f32; MAX_JOINTS];
+    curled[1] = 90.0;
+    curled[2] = 140.0;
+    curled[3] = 100.0;
+    curled[4] = 120.0;
+    let (x, y) = a.end_effector(&curled);
+    let radius = (x * x + y * y).sqrt();
+    assert!(
+        radius < a.config.reach_m(),
+        "curling should bring the end effector in: {radius} m"
+    );
+}
+
+#[test]
+fn a_motion_is_checked_along_its_whole_path_not_only_at_its_ends() {
+    // An arm that checked only its endpoints would happily swing through
+    // its own column. Both ends of this motion are legal; the middle is
+    // what has to be caught.
+    let mut a = Arm::new(ArmConfig {
+        keep_out_m: 0.6, // a generous column, to make the middle illegal
+        ..ArmConfig::collaborative_six_axis()
+    });
+    a.calibrate([0.0; MAX_JOINTS]);
+
+    let mut mid = [0.0f32; MAX_JOINTS];
+    mid[1] = 90.0;
+    let midway_clears = a.clears_the_column(&mid);
+    let end_clears = a.clears_the_column(&[0.0; MAX_JOINTS]);
+    assert!(end_clears, "the start is legal");
+
+    if !midway_clears {
+        assert_eq!(
+            a.plan(&v("arm.move_joint"), &[("joint", 1.0), ("angle", 90.0)]),
+            Err(Refusal::WouldBreakInvariant),
+            "the path passes through the keep-out radius"
+        );
+    }
+}
+
+#[test]
+fn a_motion_faster_than_the_model_covers_is_refused() {
+    // the static torque model ignores inertia entirely, so the mechanism
+    // refuses the regime it does not cover rather than guessing
+    let a = arm();
+    let fast = a.plan(
+        &v("arm.move_joint"),
+        &[("joint", 1.0), ("angle", 30.0), ("speed", 500.0)],
+    );
+    assert_eq!(fast, Err(Refusal::OutsideEnvelope));
+    assert!(a
+        .plan(
+            &v("arm.move_joint"),
+            &[("joint", 1.0), ("angle", 30.0), ("speed", 30.0)]
+        )
+        .is_ok());
+}
+
+#[test]
+fn a_motion_going_nowhere_is_malformed_rather_than_accepted() {
+    let a = arm();
+    assert_eq!(
+        a.plan(&v("arm.move_joint"), &[("joint", 1.0), ("angle", 0.0)]),
+        Err(Refusal::Malformed),
+        "the arm is already there"
+    );
+}
+
+#[test]
+fn an_arm_refuses_a_hexapods_verbs_and_the_reverse() {
+    let a = arm();
+    let h = calibrated_hexapod();
+    assert_eq!(
+        a.plan(&v("legs.walk"), &[("speed", 0.05), ("heading", 0.0)]),
+        Err(Refusal::UnknownVerb)
+    );
+    assert_eq!(
+        h.plan(&v("arm.move_joint"), &[("joint", 1.0), ("angle", 30.0)]),
+        Err(Refusal::UnknownVerb)
+    );
+}
+
+#[test]
+fn the_arms_native_envelope_comes_from_its_joint_table() {
+    let a = arm();
+    let e = a.native_envelope(3);
+    let angle = e.limit(Channel::Angle).unwrap();
+    // the widest any joint reaches
+    assert_eq!(angle.max, 360.0);
+    assert_eq!(angle.min, -360.0);
+    let rate = e.limit(Channel::Rate).unwrap();
+    assert_eq!(rate.max, a.config.max_rate_dps);
+    // and a channel this body has no opinion about stays unstated
+    assert!(e.limit(Channel::Tilt).is_none());
+}
+
+#[test]
+fn an_arm_runs_on_the_same_runtime_with_no_changes_to_it() {
+    // The claim the trait exists for. Same BodyRuntime, same envelope
+    // model, same watchdogs, same protocol — a different body.
+    let mut rt = BodyRuntime::new(arm(), Instant(0));
+    rt.narrow_to(
+        Envelope::new(9, Duration::from_millis(10), Duration::from_millis(200))
+            .with(Channel::Angle, -180.0, 180.0)
+            .with(Channel::Rate, 0.0, 60.0),
+    );
+    rt.ready();
+
+    let cmd = Command::new(v("arm.move_joint"))
+        .arg("joint", 1.0)
+        .arg("angle", 45.0)
+        .arg("speed", 30.0);
+    let accepted = rt.accept(&cmd, Instant(0));
+    let samples = match accepted {
+        Report::Accepted { samples, .. } => samples,
+        other => panic!("expected acceptance, got {other:?}"),
+    };
+    assert!(samples > 0);
+
+    let mut played = 0;
+    let mut t = 0u64;
+    for _ in 0..(samples as u64 * 4 + 20) {
+        rt.heard_from_seat(Instant(t));
+        let pass = rt.tick(Instant(t), measured());
+        if pass.applied.is_some() {
+            played += 1;
+        }
+        if pass.state == State::Idle {
+            break;
+        }
+        t += 50_000;
+    }
+    assert_eq!(played, samples);
+    assert_eq!(rt.state(), State::Idle);
+}
+
+#[test]
+fn a_seat_that_grants_a_faster_rate_than_the_arm_models_gets_the_arms() {
+    let mut rt = BodyRuntime::new(arm(), Instant(0));
+    rt.narrow_to(
+        Envelope::new(9, Duration::from_millis(10), Duration::from_millis(200))
+            .with(Channel::Angle, -180.0, 180.0)
+            .with(Channel::Rate, 0.0, 1_000.0),
+    );
+    let effective = rt.effective_envelope().unwrap();
+    assert_eq!(
+        effective.limit(Channel::Rate).unwrap().max,
+        ArmConfig::collaborative_six_axis().max_rate_dps,
+        "the intersection keeps the arm's own limit"
+    );
+}
+
+#[test]
+fn the_arm_stops_like_an_arm_when_its_envelope_is_violated() {
+    let mut rt = BodyRuntime::new(arm(), Instant(0));
+    rt.narrow_to(
+        Envelope::new(9, Duration::from_millis(10), Duration::from_millis(200))
+            .with(Channel::Angle, -180.0, 180.0)
+            .with(Channel::Rate, 0.0, 60.0)
+            .with(Channel::Current, 0.0, 2.0),
+    );
+    rt.ready();
+    rt.accept(
+        &Command::new(v("arm.move_joint"))
+            .arg("joint", 1.0)
+            .arg("angle", 45.0)
+            .arg("speed", 30.0),
+        Instant(0),
+    );
+    rt.heard_from_seat(Instant(0));
+    let pass = rt.tick(
+        Instant(1_000),
+        Measured {
+            current_a: Some(9.0), // the envelope allows 2
+            ..measured()
+        },
+    );
+    assert_eq!(pass.state, State::Stopped);
+    // and the safe pose releases rather than holding
+    let safe = rt.safe_pose();
+    assert!(safe
+        .commanded()
+        .any(|(ch, v)| ch == Channel::Rate && v == 0.0));
+}

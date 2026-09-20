@@ -458,3 +458,248 @@ pub fn run() -> Vec<Line> {
 
     out
 }
+
+// =====================================================================
+// Phase 1's deliverable: a body we did not build
+// =====================================================================
+
+/// An MHS device description, as a manufacturer would publish it.
+///
+/// This is the shape Anthropic's Model Hardware Standard uses: tools
+/// with JSON Schema inputs, including `minimum` and `maximum`. It is why
+/// MHS is the easier of the two adapters — a ROS topic says "this is a
+/// Twist" and an MHS tool says "this takes an angle between −360 and
+/// 360 degrees".
+///
+/// Note the `speed` bound. The manufacturer says the arm will move at up
+/// to 180 °/s. Our own mechanism's static torque model is only trusted
+/// to 90 °/s, so the seat will grant a fast motion and the body will
+/// refuse it. That is not a disagreement about the hardware; it is a
+/// disagreement about what we are willing to model, and the body is the
+/// one that gets the last word.
+pub const MANUFACTURER_DESCRIPTION: &str = r#"{
+  "name": "M0609 collaborative arm",
+  "device_type": "arm",
+  "tools": [
+    {
+      "name": "move_joint",
+      "description": "move one joint to an absolute angle",
+      "irreversible": true,
+      "timeout_ms": 12000,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "joint":  {"type": "integer", "minimum": 0,    "maximum": 5},
+          "angle":  {"type": "number",  "unit": "deg",   "minimum": -360, "maximum": 360},
+          "speed":  {"type": "number",  "unit": "deg/s", "minimum": 0,    "maximum": 180}
+        },
+        "required": ["joint", "angle"]
+      }
+    },
+    {
+      "name": "home",
+      "description": "return to the home pose",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "speed": {"type": "number", "unit": "deg/s", "minimum": 0, "maximum": 60}
+        }
+      }
+    }
+  ]
+}"#;
+
+/// What happened when the entity inhabited a body it did not build.
+#[derive(Clone, Debug)]
+pub struct AcquiredBody {
+    /// what the adapter read out of the manufacturer's description
+    pub verbs: Vec<String>,
+    /// how much of it is actionable — the number a design partner asks
+    /// for first
+    pub actionable_pct: u8,
+    pub body_id: BodyId,
+    /// the seat's view of the joint rate, from the manufacturer
+    pub seat_rate_limit: Option<f32>,
+    /// what the body's own model will actually accept
+    pub body_rate_limit: Option<f32>,
+    /// a legal motion: what the seat said and what the body said
+    pub legal: (bool, Option<Refusal>),
+    /// a motion inside the manufacturer's numbers but outside ours
+    pub too_fast: (bool, Option<Refusal>),
+    /// a motion the arm's own torque budget refuses
+    pub too_heavy: (bool, Option<Refusal>),
+}
+
+/// Acquire an arm from its manufacturer's description and drive it.
+pub fn acquire_from_manufacturer(payload_kg: f32) -> AcquiredBody {
+    use brainos_adapters::mhs::from_mhs;
+    use brainos_adapters::ros2::actionable_fraction_pct;
+    use brainos_bodyd::arm::{Arm, ArmConfig, MAX_JOINTS};
+
+    // --- §8 steps 1–3: the adapter reads the device ---
+    let schema = from_mhs(MANUFACTURER_DESCRIPTION).expect("a well-formed device description");
+    let verbs: Vec<String> = schema
+        .verbs()
+        .iter()
+        .map(|v| v.verb.as_str().to_string())
+        .collect();
+    let actionable_pct = actionable_fraction_pct(&schema);
+    let seat_rate_limit = schema
+        .get(&v("arm.move_joint"))
+        .and_then(|s| s.param("speed"))
+        .map(|p| p.max as f32);
+
+    // --- §8 steps 4–5: the entity incorporates it ---
+    let entity_key = BrainKey::from_seed(&[0x5A; 32]);
+    let device_key = BrainKey::from_seed(&[0xC3; 32]);
+    let mut entity = Entity::new(BrainKey::from_seed(&[0x5A; 32]), Tick(0));
+    entity.wake(None, None, Tick(1)).expect("a fresh entity wakes");
+
+    // an arm has no legs to calibrate; its calibration is its home pose,
+    // which lives in the entity's state graph like everything else
+    let body_id = entity
+        .acquire(&device_key, schema.clone(), Calibration::new(BodyId::ZERO, Tick(1)), 0)
+        .expect("the arm joins");
+    entity.observe_body(&body_id, &fit());
+    let _ = entity_key;
+
+    // --- the body side ---
+    let config = ArmConfig {
+        payload_kg,
+        ..ArmConfig::collaborative_six_axis()
+    };
+    let body_rate_limit = Some(config.max_rate_dps);
+    let mut arm = Arm::new(config);
+    arm.calibrate([0.0; MAX_JOINTS]);
+
+    let mut runtime = BodyRuntime::new(arm, Instant(0));
+    // the seat's envelope, derived from the manufacturer's own numbers
+    let mut granted = Envelope::new(
+        2,
+        Duration::from_millis(10),
+        Duration::from_millis(200),
+    );
+    granted.bound(Channel::Angle, Limit::new(-360.0, 360.0));
+    granted.bound(Channel::Rate, Limit::new(0.0, seat_rate_limit.unwrap_or(180.0)));
+    runtime.narrow_to(granted);
+    runtime.ready();
+
+    let mut ask = |joint: f64, angle: f64, speed: f64| -> (bool, Option<Refusal>) {
+        let out = entity.attempt(
+            v("arm.move_joint"),
+            body_id,
+            &[("joint", joint), ("angle", angle), ("speed", speed)],
+        );
+        let granted = out.verdict.is_granted();
+        if !granted {
+            return (false, None);
+        }
+        let cmd = Command::new(v("arm.move_joint"))
+            .arg("joint", joint as f32)
+            .arg("angle", angle as f32)
+            .arg("speed", speed as f32);
+        let report = runtime.accept(&cmd, Instant(0));
+        let refusal = match report {
+            Report::Refused { refusal, .. } => Some(refusal),
+            _ => None,
+        };
+        (granted, refusal)
+    };
+
+    let legal = ask(1.0, 45.0, 30.0);
+    let too_fast = ask(1.0, -45.0, 150.0);
+    let too_heavy = ask(2.0, 30.0, 20.0);
+
+    AcquiredBody {
+        verbs,
+        actionable_pct,
+        body_id,
+        seat_rate_limit,
+        body_rate_limit,
+        legal,
+        too_fast,
+        too_heavy,
+    }
+}
+
+/// The narrated version, for the binary.
+pub fn manufacturer_demo() -> Vec<Line> {
+    let mut out = Vec::new();
+
+    let light = acquire_from_manufacturer(0.0);
+    out.push(line(
+        "§8 1-3",
+        format!(
+            "the MHS adapter read the manufacturer's description: {} verbs ({}), {}% of them actionable because the device declared its bounds",
+            light.verbs.len(),
+            light.verbs.join(", "),
+            light.actionable_pct
+        ),
+    ));
+    out.push(line(
+        "§8 4-5",
+        format!(
+            "incorporated as body {} — a body we did not build, inhabited without anyone ripping out their stack",
+            light.body_id.fingerprint()
+        ),
+    ));
+    out.push(line(
+        "envelope",
+        format!(
+            "the manufacturer says the arm moves at up to {} °/s; our own static torque model is trusted to {} °/s, and the intersection is what the body will accept",
+            light.seat_rate_limit.unwrap_or(0.0),
+            light.body_rate_limit.unwrap_or(0.0)
+        ),
+    ));
+    out.push(line(
+        "move",
+        format!(
+            "45° on joint 1 at 30 °/s — seat: {} · body: {}",
+            granted_word(light.legal.0),
+            body_word(light.legal.0, light.legal.1)
+        ),
+    ));
+    out.push(line(
+        "too fast",
+        format!(
+            "the same move at 150 °/s, inside the manufacturer's numbers — seat: {} · body: {} — not a disagreement about the hardware, a disagreement about what we are willing to model",
+            granted_word(light.too_fast.0),
+            body_word(light.too_fast.0, light.too_fast.1)
+        ),
+    ));
+
+    let heavy = acquire_from_manufacturer(40.0);
+    out.push(line(
+        "payload",
+        format!(
+            "the same arm with 40 kg in the gripper, same description, same command — seat: {} · body: {} — forty kilos at nearly a metre is more moment than the shoulder has",
+            granted_word(heavy.legal.0),
+            body_word(heavy.legal.0, heavy.legal.1)
+        ),
+    ));
+
+    out
+}
+
+fn granted_word(b: bool) -> &'static str {
+    if b {
+        "granted"
+    } else {
+        "denied"
+    }
+}
+
+fn refusal_word(r: Option<Refusal>) -> &'static str {
+    match r {
+        None => "accepted",
+        Some(x) => x.name(),
+    }
+}
+
+/// What the body said, when the seat may not have let it hear anything.
+fn body_word(granted: bool, r: Option<Refusal>) -> &'static str {
+    if !granted {
+        return "never heard it";
+    }
+    refusal_word(r)
+}

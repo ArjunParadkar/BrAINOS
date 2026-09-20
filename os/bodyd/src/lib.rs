@@ -38,11 +38,13 @@
 
 extern crate alloc;
 
+pub mod arm;
 pub mod hexapod;
 pub mod mechanism;
 pub mod protocol;
 pub mod runtime;
 
+pub use arm::{Arm, ArmConfig, Joint};
 pub use hexapod::{Hexapod, HexapodConfig};
 pub use mechanism::{Mechanism, Motion, Refusal, Sample};
 pub use protocol::{Command, Report, Wire as Protocol};

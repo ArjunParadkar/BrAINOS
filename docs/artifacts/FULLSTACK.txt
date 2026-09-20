@@ -10,6 +10,15 @@ BrAInOS — the whole stack
   [subverted ] the token was genuine and the wire was authentic. The body refused because its own geometry said the motion was a fall — the same envelope, checked twice.
   [bad link  ] 40 commands over a link that drops, corrupts, duplicates and reorders: the body heard 39, refused 1 as forged or replayed, and never acted on a wrong one
 
+A body we did not build
+───────────────────────
+  [§8 1-3    ] the MHS adapter read the manufacturer's description: 2 verbs (arm.home, arm.move_joint), 100% of them actionable because the device declared its bounds
+  [§8 4-5    ] incorporated as body f9d67328..0e31 — a body we did not build, inhabited without anyone ripping out their stack
+  [envelope  ] the manufacturer says the arm moves at up to 180 °/s; our own static torque model is trusted to 90 °/s, and the intersection is what the body will accept
+  [move      ] 45° on joint 1 at 30 °/s — seat: granted · body: accepted
+  [too fast  ] the same move at 150 °/s, inside the manufacturer's numbers — seat: granted · body: outside-envelope — not a disagreement about the hardware, a disagreement about what we are willing to model
+  [payload   ] the same arm with 40 kg in the gripper, same description, same command — seat: granted · body: would-break-invariant — forty kilos at nearly a metre is more moment than the shoulder has
+
   Everything in that path is the shipping code: the gait is the one the
   ESP32-S3 firmware plays, the tip-over check is the convex-hull support
   polygon, and the wire is authenticated and replay-protected. What is

@@ -14,3 +14,4 @@ brainos-crypto = { workspace = true }
 brainos-rt = { workspace = true }
 brainos-transport = { workspace = true }
 miniblur-core = { path = "../../miniblur/core" }
+libm = { workspace = true }

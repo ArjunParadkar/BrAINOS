@@ -124,6 +124,11 @@ fn stack() -> ExitCode {
     for line in brainos_host::fullstack::run() {
         println!("  [{:<10}] {}", line.step, line.text);
     }
+
+    rule("A body we did not build");
+    for line in brainos_host::fullstack::manufacturer_demo() {
+        println!("  [{:<10}] {}", line.step, line.text);
+    }
     println!(
         "\n  Everything in that path is the shipping code: the gait is the one the
   ESP32-S3 firmware plays, the tip-over check is the convex-hull support
