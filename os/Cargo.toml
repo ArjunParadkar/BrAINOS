@@ -1,0 +1,68 @@
+# BrAInOS — the substrate.
+#
+# Stages 3–8 of Architecture v1.3, built as one workspace of small crates.
+# The existing tree (mind/, core/, miniblur/, firmware/, body/) is Stages
+# 1–2 and Phase 0: it stays exactly as it is and keeps passing. This
+# workspace is what those stages grow into — the layer that is the BrAIn
+# for every body, not just the two we have.
+#
+# Discipline, inherited from Part 0 and §3.9 and not negotiable here:
+#   * no_std first. Every crate below brainos-host compiles with no
+#     operating system beneath it, because the platforms that eventually
+#     matter will not have Linux.
+#   * Near-zero dependencies. ed25519-dalek for the Key (real crypto, not
+#     theater) and libm where float math is unavoidable. Nothing else.
+#     Hashes, codecs, schedulers, indexes and proofs are ours, and we
+#     understand them at author level.
+#   * #![forbid(unsafe_code)] everywhere except where hardware forces it,
+#     and there it is isolated and named.
+#   * Every crate carries its own test suite. A stage is not complete
+#     until its suite is green.
+[workspace]
+resolver = "2"
+members = [
+    "abi",
+    "crypto",
+    "rt",
+    "memory",
+    "body",
+    "kira",
+    "cognition",
+    "worlds",
+    "entity",
+    "transport",
+    "adapters",
+    "proof",
+    "fleet",
+    "export",
+    "host",
+]
+
+[workspace.package]
+version = "0.3.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+brainos-abi = { path = "abi" }
+brainos-crypto = { path = "crypto" }
+brainos-rt = { path = "rt" }
+brainos-memory = { path = "memory" }
+brainos-body = { path = "body" }
+brainos-kira = { path = "kira" }
+brainos-cognition = { path = "cognition" }
+brainos-worlds = { path = "worlds" }
+brainos-entity = { path = "entity" }
+brainos-transport = { path = "transport" }
+brainos-adapters = { path = "adapters" }
+brainos-proof = { path = "proof" }
+brainos-fleet = { path = "fleet" }
+brainos-export = { path = "export" }
+ed25519-dalek = { version = "2", default-features = false }
+libm = "0.2"
+
+[profile.release]
+opt-level = "s"
+lto = true
+panic = "abort"
+codegen-units = 1

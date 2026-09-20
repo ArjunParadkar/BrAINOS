@@ -1,0 +1,12 @@
+[package]
+name = "brainos-rt"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Domain 2 — autonomic reflexes, deterministic real-time loops, watchdogs. No cognition in the loop."
+
+[lib]
+doctest = false
+
+[dependencies]
+brainos-abi = { workspace = true }

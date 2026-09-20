@@ -1,0 +1,13 @@
+[package]
+name = "brainos-crypto"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "The BrAIn Key, the hash, the Merkle audit anchor, and quorum operations. Real cryptography, not theater."
+
+[lib]
+doctest = false
+
+[dependencies]
+brainos-abi = { workspace = true }
+ed25519-dalek = { workspace = true }

@@ -30,3 +30,6 @@ body/build/work/
 *.ext4
 BODY.EFI
 iso_build/
+
+# the os workspace's build output
+os/target/

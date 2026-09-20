@@ -1,0 +1,13 @@
+[package]
+name = "brainos-memory"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Domain 5 — the entity's state graph. Episodic, semantic, procedural. Consolidation. The Memory-Integrity Law."
+
+[lib]
+doctest = false
+
+[dependencies]
+brainos-abi = { workspace = true }
+brainos-crypto = { workspace = true }

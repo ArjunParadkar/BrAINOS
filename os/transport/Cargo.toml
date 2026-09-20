@@ -1,0 +1,10 @@
+[package]
+name = "brainos-transport"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+doctest = false
+
+[dependencies]

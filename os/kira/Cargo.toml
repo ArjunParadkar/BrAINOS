@@ -1,0 +1,16 @@
+[package]
+name = "brainos-kira"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Domain 3 — the eight-stage gate. The only path to action. Granted has no public constructor."
+
+[lib]
+doctest = false
+
+[dependencies]
+brainos-abi = { workspace = true }
+brainos-crypto = { workspace = true }
+brainos-body = { workspace = true }
+brainos-memory = { workspace = true }
+brainos-rt = { workspace = true }
