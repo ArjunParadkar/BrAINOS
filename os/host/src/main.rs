@@ -20,6 +20,7 @@ fn main() -> ExitCode {
         "wire" => wire(),
         "stack" => stack(),
         "bench" => bench(),
+        "compound" => compound(),
         "stat" => stat(),
         "help" | "-h" | "--help" => {
             usage();
@@ -49,6 +50,8 @@ usage: brainos <command>
            including a subverted seat that the body refuses anyway
   bench    measured latencies and memory footprint, against the budgets
            the architecture's tiers imply
+  compound the experiment behind the moat claim: does an entity with
+           experience make better decisions than one without?
   stat     what this build contains
 "
     );
@@ -128,6 +131,121 @@ fn stack() -> ExitCode {
   simulated is the servo.\n"
     );
     ExitCode::SUCCESS
+}
+
+fn compound() -> ExitCode {
+    use brainos_host::compound::{experiment, Run};
+
+    rule("BrAInOS — does experience compound?");
+    println!(
+        "  §2.4 says the moat becomes visible as a published curve: entity age
+  against task success. This is the measurement apparatus for that curve,
+  run against a simulated world — so it can say whether the mechanism
+  recovers latent structure from experience, and cannot say that a real
+  robot gets better. The world here has exactly the structure I put in it.\n"
+    );
+
+    let e = experiment(2_000, 8);
+
+    let table = |r: &Run| {
+        println!(
+            "\n  {} · {} · {} episodes",
+            r.world.name(),
+            r.policy.name(),
+            r.episodes
+        );
+        println!(
+            "    {:>10} {:>10} {:>10} {:>10} {:>10} {:>9}",
+            "episodes", "attempted", "succeeded", "declined", "judgement", "learned"
+        );
+        for w in &r.windows {
+            println!(
+                "    {:>10} {:>10} {:>10} {:>10} {:>9}% {:>9}",
+                format!("{}-{}", w.from_episode, w.to_episode),
+                w.attempted,
+                w.succeeded,
+                w.declined,
+                w.judgement_pct(),
+                w.binding_preconditions
+            );
+        }
+    };
+
+    table(&e.structured_control);
+    table(&e.structured_learner);
+    table(&e.structureless_control);
+    table(&e.structureless_learner);
+
+    rule("What it found");
+    println!(
+        "  In the structured world, the entity that consults what it learned ends
+  with judgement {}% against the control's {}% — a difference of {} points.",
+        e.structured_learner.late().judgement_pct(),
+        e.structured_control.late().judgement_pct(),
+        e.effect_pts()
+    );
+    println!(
+        "\n  In the world with nothing to learn, the same comparison gives {} points.
+  That is the number that decides whether the first one means anything:
+  an entity that 'improves' where there is no structure is not learning,
+  and the metric would be measuring something else.",
+        e.null_effect_pts()
+    );
+
+    let (carpet, battery, loaded) = e.found_the_real_rule();
+    println!(
+        "\n  The world's rule was: walking works on carpet with a good battery, and
+  ignores whether the body is loaded. The entity ended up believing:"
+    );
+    println!("    carpet matters      {}", yes_no(carpet));
+    println!("    battery matters     {}", yes_no(battery));
+    println!(
+        "    loaded matters      {}   <- the world ignores this; believing it
+                              would be a correlate rather than a cause",
+        yes_no(loaded)
+    );
+    if !e.structured_learner.learned.is_empty() {
+        println!("\n  Every precondition it ended up holding, with its strength:");
+        for (tag, strength) in &e.structured_learner.learned {
+            println!("    {:<16} {}%", tag, strength);
+        }
+    }
+
+    rule("Verdict");
+    if e.survives_the_control() {
+        println!(
+            "  The effect survives its control: {} points where there is structure,
+  {} where there is not. The consolidation mechanism recovers latent
+  structure from experience.",
+            e.effect_pts(),
+            e.null_effect_pts()
+        );
+    } else {
+        println!(
+            "  NULL. The effect is {} points where there is structure and {} where
+  there is not, which does not clear the threshold set before running
+  (at least 10 points, and at least three times the control). Reported
+  as a null rather than reframed.",
+            e.effect_pts(),
+            e.null_effect_pts()
+        );
+    }
+    println!(
+        "\n  What this does not show: that a robot gets better. The world is
+  simulated and its structure is one I wrote. What it shows is that the
+  mechanism can find structure when there is some, and — the control —
+  does not manufacture an improvement when there is none.\n"
+    );
+
+    ExitCode::SUCCESS
+}
+
+fn yes_no(b: bool) -> &'static str {
+    if b {
+        "yes"
+    } else {
+        "no"
+    }
 }
 
 fn bench() -> ExitCode {

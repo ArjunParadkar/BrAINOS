@@ -26,6 +26,7 @@ cargo run --release --bin brainos -- stack    # the whole path, intent to servo
 cargo run --release --bin brainos -- verify   # the Stage 6 property report
 cargo run --release --bin brainos -- bench    # measured latencies and footprint
 cargo run --release --bin brainos -- wire     # the transport under a bad link
+cargo run --release --bin brainos -- compound # does experience compound?
 cargo run --release --bin brainos -- stat     # what this build contains
 
 cargo test --workspace --release              # 529 tests
@@ -154,6 +155,45 @@ ESP32-S3 has 512 KiB of SRAM in total. `Bounds::EMBEDDED` is 256
 episodes — about 30 KiB — and that is why it exists. The same entity
 remembers less in a small body and more in a large one; the bound is a
 property of the body it is currently thinking in, not of who it is.
+
+## Does experience compound?
+
+The company's core claim is that an entity with experience is measurably
+better than a new one, and §2.4 says the curve gets published.
+`brainos compound` is the measurement apparatus for that curve, run
+against a simulated world.
+
+The entity faces situations described by three observable conditions.
+The world's hidden rule uses two of them and ignores the third, with ten
+percent noise so nothing is perfectly learnable. The thing experience is
+*for* is not doing the task better — there is no motor skill to improve —
+it is deciding whether to attempt at all.
+
+Over two thousand episodes, an entity that consults what it learned ends
+with 90% judgement against a control's 29%. It attempts about a quarter
+of situations, which is exactly the fraction the world rewards. It learns
+that the surface matters (94%) and the battery matters (100%), and does
+*not* come to believe the irrelevant third condition matters — which is
+the failure mode `Precondition`'s own documentation admits is possible.
+
+Three things make that number mean something rather than being a graph:
+
+* **A null control.** The same experiment in a world where success is a
+  coin flip gives a three-point difference — noise. An entity that
+  "improved" where there is no structure would mean the metric measures
+  something other than learning, and the result would be worthless.
+* **The metric cannot be gamed.** An entity that declined everything
+  would have a perfect success rate, so the metric counts correct
+  declines and not incorrect ones, and a `Policy::Never` run is in the
+  suite to prove the learner beats it.
+* **Caution's cost is reported.** Some of what the entity declined would
+  have worked; that percentage is printed rather than hidden inside a
+  success rate.
+
+What it does not show is that a robot gets better. The world is simulated
+and its structure is one I wrote. What it shows is that the mechanism
+finds structure when there is some and does not manufacture an
+improvement when there is none.
 
 ## What none of this shows
 

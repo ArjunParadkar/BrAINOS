@@ -23,7 +23,8 @@ cargo run --release --bin brainos -- demo     # Phase 0, in simulation
 cargo run --release --bin brainos -- stack    # the whole path, intent to servo
 cargo run --release --bin brainos -- verify   # both property domains
 cargo run --release --bin brainos -- bench    # measured latencies and footprint
-cargo test --workspace --release              # 536 tests
+cargo run --release --bin brainos -- compound # does experience compound?
+cargo test --workspace --release              # 549 tests
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -149,6 +150,44 @@ has 512 KiB of SRAM in total. `Bounds::EMBEDDED` is 256 episodes, about
 30 KiB. The same entity remembers less in a small body and more in a
 large one — the bound is a property of the body it is currently thinking
 in, not of who it is.
+
+---
+
+## Does experience compound?
+
+`brainos compound` is the measurement apparatus for the curve §2.4 says
+gets published — entity age against task success — run against a
+simulated world.
+
+The entity faces situations described by three observable conditions;
+the world's hidden rule uses two and ignores the third, with ten percent
+noise so nothing is perfectly learnable. What experience is *for* is not
+doing the task better but deciding whether to attempt at all.
+
+Over 2,000 episodes an entity that consults what it learned ends with
+**90% judgement against a control's 29%**. It attempts about a quarter of
+situations, which is exactly the fraction the world rewards. It learns
+that the surface matters (94%) and the battery matters (100%), and does
+not come to believe the irrelevant third condition matters — the failure
+mode `Precondition`'s own documentation admits is possible.
+
+Three things make it a result rather than a graph:
+
+* **A null control.** The same experiment where success is a coin flip
+  gives a three-point difference. An entity that "improved" there would
+  mean the metric measures something other than learning.
+* **The metric resists the obvious cheat.** An entity that declined
+  everything would have a perfect success rate, so judgement counts
+  correct declines and not incorrect ones, and a `Policy::Never` run is
+  in the suite to prove the learner beats it.
+* **Caution's cost is reported.** Some of what it declined would have
+  worked; that percentage is printed rather than buried.
+
+It does **not** show that a robot gets better. The world is simulated and
+its structure is one I wrote. It shows that the mechanism finds structure
+when there is some, and does not manufacture an improvement when there is
+none — which is the part that can be established before there is real
+data, and the apparatus is ready for when there is.
 
 ---
 

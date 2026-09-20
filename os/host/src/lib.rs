@@ -16,6 +16,7 @@
 pub mod clock;
 pub mod store;
 pub mod bench;
+pub mod compound;
 pub mod demo;
 pub mod fullstack;
 

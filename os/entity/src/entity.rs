@@ -392,6 +392,20 @@ impl Entity {
         self.propose(r)
     }
 
+    /// Name a way of doing something.
+    ///
+    /// The entity declaring that it *has* an approach, separately from
+    /// knowing whether it works — which is what the statistics are for.
+    /// Consolidation promotes verbs into skills on its own once there is
+    /// enough evidence; this is for the case where the entity is told,
+    /// or acquires one from the marketplace, and starts with a name and
+    /// no record.
+    pub fn learn_skill(&mut self, verb: Verb, name: &str) -> brainos_memory::skill::SkillId {
+        let prov = Provenance::own(self.tick);
+        self.skills
+            .learn(&self.handle, &mut self.graph, verb, name, prov)
+    }
+
     /// Record what happened after acting, so the skill graph learns.
     ///
     /// This is the feedback edge that makes the entity compound, and it
