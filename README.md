@@ -29,6 +29,25 @@
 > ./build.sh --esp32                                                                 # the board's firmware
 > ```
 
+> **The substrate — `os/`.** Stages 3–8 of Architecture v1.3 are built as a
+> separate `no_std` workspace beside this tree: the state graph with
+> provenance and consolidation, KIRA v2 with a sealed `Granted` and capability
+> attenuation, §8 with ROS 2 and MHS adapters, Stage 4 multi-body simultaneity,
+> Stage 5 brain placement, two exhaustive property domains, Stage 7 fleet and
+> marketplace, entity export v1.0, and a body-side runtime that links
+> `miniblur/core` so the new stack and the firmware agree about the hexapod by
+> construction. 536 tests. Nothing in this tree changed.
+>
+> ```sh
+> cd os && cargo run --release --bin brainos -- stack    # intent → gate → wire → body → gait
+> cd os && cargo run --release --bin brainos -- verify   # both property domains
+> ```
+>
+> What it is, what it proves and — at length — what it does not:
+> **[`docs/OS_STATUS.md`](docs/OS_STATUS.md)**. Transcripts in
+> `docs/artifacts/`. The critical-path item is unchanged and is not software:
+> Mini-Blur has never been powered on.
+
 A working seed of the BrAInOS architecture (`BrAInOS_Architecture v1.3`):
 a **universal boot key** you can plug into any UEFI machine. The firmware
 performs the sweep (§9.2), picks the core matching its own architecture,
