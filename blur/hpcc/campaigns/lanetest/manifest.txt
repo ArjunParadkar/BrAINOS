@@ -1,0 +1,4 @@
+# tiny lane test: one run spans a lane deadline and must resume; one baseline
+ref_sit ZERO:sit 0 0
+walk_t walk 0 0.12
+righting_t righting 0 0.12
