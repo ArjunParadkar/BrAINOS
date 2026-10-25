@@ -1,0 +1,239 @@
+[2026-10-24T14:30:40-0500] node c1410 tmp /local_scratch/1367491
+singularity-ce version 3.9.7
+FATAL:   could not use fakeroot: no mapping entry found in /etc/subuid for paradkar
+[2026-10-24T14:30:41-0500] fakeroot build failed; unprivileged sandbox route
+INFO:    Starting build...
+Getting image source signatures
+Copying blob sha256:b52d28f2ade3944bb78458d2d77f25816d73cb5566d86dd897c9b8829a853ad8
+Copying blob sha256:11422d7ca1a44390a32bd8d8d9dc5946b4d053b3bbd9507d682e35584ba84a26
+Copying blob sha256:fd4548892b7d74acf5f52391380b45441b4ec55f6c2e1506030c2af26fd3e3f6
+Copying blob sha256:87463122edacdc60df8c7840549960acce4dfb91a2b2aa36f563f62e0cd991db
+Copying config sha256:3c4d812a6efe003770aafbdba65f9c1960ba8234ab23a133934205a70bdcda77
+Writing manifest to image destination
+Storing signatures
+2026/10/24 14:30:45  info unpack layer: sha256:11422d7ca1a44390a32bd8d8d9dc5946b4d053b3bbd9507d682e35584ba84a26
+2026/10/24 14:30:46  info unpack layer: sha256:fd4548892b7d74acf5f52391380b45441b4ec55f6c2e1506030c2af26fd3e3f6
+2026/10/24 14:30:46  info unpack layer: sha256:87463122edacdc60df8c7840549960acce4dfb91a2b2aa36f563f62e0cd991db
+2026/10/24 14:30:47  info unpack layer: sha256:b52d28f2ade3944bb78458d2d77f25816d73cb5566d86dd897c9b8829a853ad8
+INFO:    Creating sandbox directory...
+INFO:    Build complete: /local_scratch/1367491/sandbox
+Collecting numpy==2.5.4 (from -r /opt/blur/requirements.txt (line 4))
+  Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+Collecting scipy==1.18.1 (from -r /opt/blur/requirements.txt (line 5))
+  Downloading scipy-1.18.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+Collecting mujoco==3.16.0 (from -r /opt/blur/requirements.txt (line 6))
+  Downloading mujoco-3.16.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (232 kB)
+Collecting mujoco-mjx==3.16.0 (from -r /opt/blur/requirements.txt (line 7))
+  Downloading mujoco_mjx-3.16.0-py3-none-any.whl.metadata (3.6 kB)
+Collecting mujoco-warp==3.16.0 (from -r /opt/blur/requirements.txt (line 8))
+  Downloading mujoco_warp-3.16.0-py3-none-any.whl.metadata (9.4 kB)
+Collecting warp-lang==1.18.0 (from -r /opt/blur/requirements.txt (line 9))
+  Downloading warp_lang-1.18.0-py3-none-manylinux_2_28_x86_64.whl.metadata (26 kB)
+Collecting jax==0.12.0.1 (from jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading jax-0.12.0.1-py3-none-any.whl.metadata (13 kB)
+Collecting cma==4.5.0 (from -r /opt/blur/requirements.txt (line 11))
+  Downloading cma-4.5.0-py3-none-any.whl.metadata (9.2 kB)
+Collecting imageio==2.38.1 (from -r /opt/blur/requirements.txt (line 12))
+  Downloading imageio-2.38.1-py3-none-any.whl.metadata (9.7 kB)
+Collecting imageio-ffmpeg==0.6.0 (from -r /opt/blur/requirements.txt (line 13))
+  Downloading imageio_ffmpeg-0.6.0-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting matplotlib==3.11.2 (from -r /opt/blur/requirements.txt (line 14))
+  Downloading matplotlib-3.11.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (80 kB)
+Collecting absl-py (from mujoco==3.16.0->-r /opt/blur/requirements.txt (line 6))
+  Downloading absl_py-2.5.1-py3-none-any.whl.metadata (3.3 kB)
+Collecting etils[epath] (from mujoco==3.16.0->-r /opt/blur/requirements.txt (line 6))
+  Downloading etils-1.14.0-py3-none-any.whl.metadata (6.5 kB)
+Collecting glfw (from mujoco==3.16.0->-r /opt/blur/requirements.txt (line 6))
+  Downloading glfw-2.11.0-py2.py3-none-manylinux_2_28_x86_64.whl.metadata (5.5 kB)
+Collecting pyopengl (from mujoco==3.16.0->-r /opt/blur/requirements.txt (line 6))
+  Downloading pyopengl-3.1.10-py3-none-any.whl.metadata (3.3 kB)
+Collecting websockets>=13 (from mujoco==3.16.0->-r /opt/blur/requirements.txt (line 6))
+  Downloading websockets-17.3-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.3 kB)
+Collecting jaxlib (from mujoco-mjx==3.16.0->-r /opt/blur/requirements.txt (line 7))
+  Downloading jaxlib-0.12.0.1-cp312-cp312-manylinux_2_27_x86_64.whl.metadata (1.3 kB)
+Collecting trimesh (from mujoco-mjx==3.16.0->-r /opt/blur/requirements.txt (line 7))
+  Downloading trimesh-5.2.0-py3-none-any.whl.metadata (13 kB)
+Collecting ml_dtypes>=0.5.0 (from jax==0.12.0.1->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading ml_dtypes-0.6.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (8.8 kB)
+Collecting opt_einsum (from jax==0.12.0.1->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading opt_einsum-3.4.0-py3-none-any.whl.metadata (6.3 kB)
+Collecting pillow>=8.3.2 (from imageio==2.38.1->-r /opt/blur/requirements.txt (line 12))
+  Downloading pillow-13.0.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+Collecting contourpy>=1.0.1 (from matplotlib==3.11.2->-r /opt/blur/requirements.txt (line 14))
+  Downloading contourpy-1.4.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (3.8 kB)
+Collecting cycler>=0.10 (from matplotlib==3.11.2->-r /opt/blur/requirements.txt (line 14))
+  Downloading cycler-0.12.1-py3-none-any.whl.metadata (3.8 kB)
+Collecting fonttools>=4.28.2 (from matplotlib==3.11.2->-r /opt/blur/requirements.txt (line 14))
+  Downloading fonttools-4.67.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (137 kB)
+Collecting kiwisolver>=1.3.1 (from matplotlib==3.11.2->-r /opt/blur/requirements.txt (line 14))
+  Downloading kiwisolver-1.5.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (5.2 kB)
+Collecting packaging>=20.0 (from matplotlib==3.11.2->-r /opt/blur/requirements.txt (line 14))
+  Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+Collecting pyparsing>=3 (from matplotlib==3.11.2->-r /opt/blur/requirements.txt (line 14))
+  Downloading pyparsing-3.3.3-py3-none-any.whl.metadata (5.9 kB)
+Collecting python-dateutil>=2.7 (from matplotlib==3.11.2->-r /opt/blur/requirements.txt (line 14))
+  Downloading python_dateutil-3.0.0-py2.py3-none-any.whl.metadata (8.2 kB)
+Collecting jax-cuda12-plugin<=0.12.0.1,>=0.12.0.1 (from jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading jax_cuda12_plugin-0.12.0.1-cp312-cp312-manylinux_2_27_x86_64.whl.metadata (2.0 kB)
+Collecting jax-cuda12-pjrt==0.12.0.1 (from jax-cuda12-plugin<=0.12.0.1,>=0.12.0.1->jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading jax_cuda12_pjrt-0.12.0.1-py3-none-manylinux_2_27_x86_64.whl.metadata (582 bytes)
+Collecting nvidia-cublas-cu12>=12.1.3.1 (from jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading nvidia_cublas_cu12-12.9.2.10-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cuda-cupti-cu12>=12.1.105 (from jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading nvidia_cuda_cupti_cu12-12.9.79-py3-none-manylinux_2_25_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cuda-nvcc-cu12>=12.6.85 (from jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading nvidia_cuda_nvcc_cu12-12.9.86-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cuda-runtime-cu12>=12.1.105 (from jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading nvidia_cuda_runtime_cu12-12.9.79-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cudnn-cu12<10.0,>=9.10.2.21 (from jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading nvidia_cudnn_cu12-9.27.0.42-py3-none-manylinux_2_27_x86_64.whl.metadata (1.9 kB)
+Collecting nvidia-cufft-cu12>=11.0.2.54 (from jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading nvidia_cufft_cu12-11.4.1.4-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cusolver-cu12>=11.4.5.107 (from jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading nvidia_cusolver_cu12-11.7.5.82-py3-none-manylinux_2_27_x86_64.whl.metadata (1.9 kB)
+Collecting nvidia-cusparse-cu12>=12.1.0.106 (from jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading nvidia_cusparse_cu12-12.5.10.65-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-nccl-cu12>=2.18.1 (from jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading nvidia_nccl_cu12-2.32.3-py3-none-manylinux_2_27_x86_64.whl.metadata (2.1 kB)
+Collecting nvidia-nvjitlink-cu12>=12.1.105 (from jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading nvidia_nvjitlink_cu12-12.9.86-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cuda-nvrtc-cu12>=12.1.55 (from jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading nvidia_cuda_nvrtc_cu12-12.9.86-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-nvshmem-cu12>=3.2.5 (from jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading nvidia_nvshmem_cu12-3.8.0-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.2 kB)
+Collecting six>=1.6 (from python-dateutil>=2.7->matplotlib==3.11.2->-r /opt/blur/requirements.txt (line 14))
+  Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting tzdata (from python-dateutil>=2.7->matplotlib==3.11.2->-r /opt/blur/requirements.txt (line 14))
+  Downloading tzdata-2026.5-py2.py3-none-any.whl.metadata (1.4 kB)
+Collecting fsspec (from etils[epath]->mujoco==3.16.0->-r /opt/blur/requirements.txt (line 6))
+  Downloading fsspec-2026.9.0-py3-none-any.whl.metadata (10 kB)
+Collecting typing_extensions (from etils[epath]->mujoco==3.16.0->-r /opt/blur/requirements.txt (line 6))
+  Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting zipp (from etils[epath]->mujoco==3.16.0->-r /opt/blur/requirements.txt (line 6))
+  Downloading zipp-4.1.2-py3-none-any.whl.metadata (3.6 kB)
+Collecting nvidia-cuda-cccl-cu12 (from nvidia-nvshmem-cu12>=3.2.5->jax-cuda12-plugin[with-cuda]<=0.12.0.1,>=0.12.0.1; extra == "cuda12"->jax[cuda12]==0.12.0.1->-r /opt/blur/requirements.txt (line 10))
+  Downloading nvidia_cuda_cccl_cu12-12.9.27-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 33.2 MB/s eta 0:00:00
+Downloading scipy-1.18.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (35.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.3/35.3 MB 111.1 MB/s eta 0:00:00
+Downloading mujoco-3.16.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (30.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 30.6/30.6 MB 116.7 MB/s eta 0:00:00
+Downloading mujoco_mjx-3.16.0-py3-none-any.whl (7.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.3/7.3 MB 117.5 MB/s eta 0:00:00
+Downloading mujoco_warp-3.16.0-py3-none-any.whl (2.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.3/2.3 MB 82.9 MB/s eta 0:00:00
+Downloading warp_lang-1.18.0-py3-none-manylinux_2_28_x86_64.whl (148.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 148.8/148.8 MB 116.5 MB/s eta 0:00:00
+Downloading jax-0.12.0.1-py3-none-any.whl (3.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.5/3.5 MB 117.2 MB/s eta 0:00:00
+Downloading cma-4.5.0-py3-none-any.whl (347 kB)
+Downloading imageio-2.38.1-py3-none-any.whl (328 kB)
+Downloading imageio_ffmpeg-0.6.0-py3-none-manylinux2014_x86_64.whl (29.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 29.5/29.5 MB 117.5 MB/s eta 0:00:00
+Downloading matplotlib-3.11.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (9.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.9/9.9 MB 118.1 MB/s eta 0:00:00
+Downloading contourpy-1.4.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (383 kB)
+Downloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
+Downloading fonttools-4.67.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.4/5.4 MB 118.3 MB/s eta 0:00:00
+Downloading jax_cuda12_plugin-0.12.0.1-cp312-cp312-manylinux_2_27_x86_64.whl (8.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.9/8.9 MB 116.1 MB/s eta 0:00:00
+Downloading jax_cuda12_pjrt-0.12.0.1-py3-none-manylinux_2_27_x86_64.whl (191.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 191.8/191.8 MB 117.2 MB/s eta 0:00:00
+Downloading jaxlib-0.12.0.1-cp312-cp312-manylinux_2_27_x86_64.whl (86.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 86.8/86.8 MB 117.4 MB/s eta 0:00:00
+Downloading kiwisolver-1.5.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.5/1.5 MB 120.2 MB/s eta 0:00:00
+Downloading ml_dtypes-0.6.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (409 kB)
+Downloading packaging-26.3-py3-none-any.whl (129 kB)
+Downloading pillow-13.0.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 117.9 MB/s eta 0:00:00
+Downloading pyparsing-3.3.3-py3-none-any.whl (126 kB)
+Downloading python_dateutil-3.0.0-py2.py3-none-any.whl (94 kB)
+Downloading websockets-17.3-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (225 kB)
+Downloading absl_py-2.5.1-py3-none-any.whl (137 kB)
+Downloading glfw-2.11.0-py2.py3-none-manylinux_2_28_x86_64.whl (248 kB)
+Downloading opt_einsum-3.4.0-py3-none-any.whl (71 kB)
+Downloading pyopengl-3.1.10-py3-none-any.whl (3.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 118.7 MB/s eta 0:00:00
+Downloading trimesh-5.2.0-py3-none-any.whl (751 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 751.5/751.5 kB 117.2 MB/s eta 0:00:00
+Downloading nvidia_cublas_cu12-12.9.2.10-py3-none-manylinux_2_27_x86_64.whl (581.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 581.2/581.2 MB 97.6 MB/s eta 0:00:00
+Downloading nvidia_cuda_cupti_cu12-12.9.79-py3-none-manylinux_2_25_x86_64.whl (10.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.8/10.8 MB 88.6 MB/s eta 0:00:00
+Downloading nvidia_cuda_nvcc_cu12-12.9.86-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (40.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40.5/40.5 MB 90.4 MB/s eta 0:00:00
+Downloading nvidia_cuda_nvrtc_cu12-12.9.86-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (89.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 89.6/89.6 MB 94.2 MB/s eta 0:00:00
+Downloading nvidia_cuda_runtime_cu12-12.9.79-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (3.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.5/3.5 MB 94.6 MB/s eta 0:00:00
+Downloading nvidia_cudnn_cu12-9.27.0.42-py3-none-manylinux_2_27_x86_64.whl (766.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 766.2/766.2 MB 115.7 MB/s eta 0:00:00
+Downloading nvidia_cufft_cu12-11.4.1.4-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (200.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 200.9/200.9 MB 117.3 MB/s eta 0:00:00
+Downloading nvidia_cusolver_cu12-11.7.5.82-py3-none-manylinux_2_27_x86_64.whl (338.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 338.1/338.1 MB 110.4 MB/s eta 0:00:00
+Downloading nvidia_cusparse_cu12-12.5.10.65-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (366.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 366.5/366.5 MB 117.4 MB/s eta 0:00:00
+Downloading nvidia_nccl_cu12-2.32.3-py3-none-manylinux_2_27_x86_64.whl (351.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 351.5/351.5 MB 117.3 MB/s eta 0:00:00
+Downloading nvidia_nvjitlink_cu12-12.9.86-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (39.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 39.7/39.7 MB 117.4 MB/s eta 0:00:00
+Downloading nvidia_nvshmem_cu12-3.8.0-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (280.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 280.8/280.8 MB 117.4 MB/s eta 0:00:00
+Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Downloading etils-1.14.0-py3-none-any.whl (172 kB)
+Downloading fsspec-2026.9.0-py3-none-any.whl (221 kB)
+Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Downloading tzdata-2026.5-py2.py3-none-any.whl (347 kB)
+Downloading zipp-4.1.2-py3-none-any.whl (10 kB)
+Downloading nvidia_cuda_cccl_cu12-12.9.27-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (3.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 101.4 MB/s eta 0:00:00
+Installing collected packages: pyopengl, jax-cuda12-pjrt, glfw, zipp, websockets, tzdata, typing_extensions, six, pyparsing, pillow, packaging, opt_einsum, nvidia-nvjitlink-cu12, nvidia-nccl-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-nvcc-cu12, nvidia-cuda-cupti-cu12, nvidia-cuda-cccl-cu12, numpy, kiwisolver, jax-cuda12-plugin, imageio-ffmpeg, fsspec, fonttools, etils, cycler, absl-py, warp-lang, trimesh, scipy, python-dateutil, nvidia-nvshmem-cu12, nvidia-cusparse-cu12, nvidia-cufft-cu12, nvidia-cublas-cu12, ml_dtypes, imageio, contourpy, cma, nvidia-cusolver-cu12, nvidia-cudnn-cu12, matplotlib, jaxlib, mujoco, jax, mujoco-warp, mujoco-mjx
+Successfully installed absl-py-2.5.1 cma-4.5.0 contourpy-1.4.0 cycler-0.12.1 etils-1.14.0 fonttools-4.67.0 fsspec-2026.9.0 glfw-2.11.0 imageio-2.38.1 imageio-ffmpeg-0.6.0 jax-0.12.0.1 jax-cuda12-pjrt-0.12.0.1 jax-cuda12-plugin-0.12.0.1 jaxlib-0.12.0.1 kiwisolver-1.5.1 matplotlib-3.11.2 ml_dtypes-0.6.0 mujoco-3.16.0 mujoco-mjx-3.16.0 mujoco-warp-3.16.0 numpy-2.5.4 nvidia-cublas-cu12-12.9.2.10 nvidia-cuda-cccl-cu12-12.9.27 nvidia-cuda-cupti-cu12-12.9.79 nvidia-cuda-nvcc-cu12-12.9.86 nvidia-cuda-nvrtc-cu12-12.9.86 nvidia-cuda-runtime-cu12-12.9.79 nvidia-cudnn-cu12-9.27.0.42 nvidia-cufft-cu12-11.4.1.4 nvidia-cusolver-cu12-11.7.5.82 nvidia-cusparse-cu12-12.5.10.65 nvidia-nccl-cu12-2.32.3 nvidia-nvjitlink-cu12-12.9.86 nvidia-nvshmem-cu12-3.8.0 opt_einsum-3.4.0 packaging-26.3 pillow-13.0.0 pyopengl-3.1.10 pyparsing-3.3.3 python-dateutil-3.0.0 scipy-1.18.1 six-1.17.0 trimesh-5.2.0 typing_extensions-4.16.0 tzdata-2026.5 warp-lang-1.18.0 websockets-17.3 zipp-4.1.2
+
+[notice] A new release of pip is available: 25.0.1 -> 26.2.2
+[notice] To update, run: pip install --upgrade pip
+Looking in indexes: https://download.pytorch.org/whl/cpu
+Collecting torch==2.14.1
+  Downloading https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl.metadata (37 kB)
+Collecting filelock (from torch==2.14.1)
+  Downloading filelock-3.32.3-py3-none-any.whl.metadata (2.0 kB)
+Requirement already satisfied: typing-extensions>=4.10.0 in /usr/local/lib/python3.12/site-packages (from torch==2.14.1) (4.16.0)
+Collecting setuptools>=77.0.3 (from torch==2.14.1)
+  Downloading https://download.pytorch.org/whl/setuptools-78.1.0-py3-none-any.whl.metadata (6.6 kB)
+Collecting sympy>=1.13.3 (from torch==2.14.1)
+  Downloading sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+Collecting networkx>=2.5.1 (from torch==2.14.1)
+  Downloading networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+Collecting jinja2 (from torch==2.14.1)
+  Downloading https://download.pytorch.org/whl/jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Requirement already satisfied: fsspec>=0.8.5 in /usr/local/lib/python3.12/site-packages (from torch==2.14.1) (2026.9.0)
+Collecting mpmath<1.4,>=1.1.0 (from sympy>=1.13.3->torch==2.14.1)
+  Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+Collecting MarkupSafe>=2.0 (from jinja2->torch==2.14.1)
+  Downloading https://download.pytorch.org/whl/markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Downloading https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl (196.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 196.3/196.3 MB 115.0 MB/s eta 0:00:00
+Downloading networkx-3.6.1-py3-none-any.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 58.2 MB/s eta 0:00:00
+Downloading https://download.pytorch.org/whl/setuptools-78.1.0-py3-none-any.whl (1.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 55.2 MB/s eta 0:00:00
+Downloading sympy-1.14.0-py3-none-any.whl (6.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 117.6 MB/s eta 0:00:00
+Downloading filelock-3.32.3-py3-none-any.whl (98 kB)
+Downloading https://download.pytorch.org/whl/jinja2-3.1.6-py3-none-any.whl (134 kB)
+Downloading https://download.pytorch.org/whl/markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 118.8 MB/s eta 0:00:00
+Installing collected packages: mpmath, sympy, setuptools, networkx, MarkupSafe, filelock, jinja2, torch
+Successfully installed MarkupSafe-3.0.3 filelock-3.32.3 jinja2-3.1.6 mpmath-1.3.0 networkx-3.6.1 setuptools-78.1.0 sympy-1.14.0 torch-2.14.1+cpu
+WARNING: Unable to get key server client configuration: error making request to server: Get "https://cloud.sylabs.io/assets/config/config.prod.json": dial tcp: lookup cloud.sylabs.io on 8.8.8.8:53: no such host
+INFO:    Starting build...
+INFO:    Creating SIF file...
+INFO:    Build complete: /scrfs/storage/paradkar/blur/images/blur-mjx-0.12-mj3.16.sif.new
+-rwxr-xr-x 1 paradkar jv002 4012969984 Oct 24 14:37 /scrfs/storage/paradkar/blur/images/blur-mjx-0.12-mj3.16.sif
+b5aa2388eb6ad5d5aac3ceb9e4f5eae0c2fa390be74815490c2a4b4100d373bd  /scrfs/storage/paradkar/blur/images/blur-mjx-0.12-mj3.16.sif
+[2026-10-24T14:37:50-0500] done

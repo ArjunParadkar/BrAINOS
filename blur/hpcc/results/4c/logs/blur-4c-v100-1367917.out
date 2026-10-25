@@ -1,0 +1,48 @@
+code snapshot /scrfs/storage/paradkar/blur/snap/1367917 (4693fd7b0dcf)
+[2026-10-24T19:05:01-0500] c1704
+name, memory.total [MiB], driver_version
+Tesla V100-PCIE-32GB, 32768 MiB, 550.163.01
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+{'device': 'cuda:0', 'device_kind': 'Tesla V100-PCIE-32GB', 'jax': '0.12.0.1', 'mujoco': '3.16.0', 'runs': []}
+{"n": 1024, "solver": "fast_feet", "impl": "jax", "k": 200, "first_call_s": 91.21138334274292, "second_call_s": 3.1528284549713135, "wall_s": 3.1588540077209473, "env_steps_per_s": 64833.63887644788, "policy_steps_per_s": 3241.6819438223943, "finite": true, "mean_base_z": -0.09999332576990128, "ncon_candidates": 4}
+{"n": 4096, "solver": "fast_feet", "impl": "jax", "k": 200, "first_call_s": 74.7262396812439, "second_call_s": 9.015751361846924, "wall_s": 8.96147632598877, "env_steps_per_s": 91413.50935942054, "policy_steps_per_s": 4570.675467971027, "finite": true, "mean_base_z": -0.10055693238973618, "ncon_candidates": 4}
+{"n": 8192, "solver": "fast_feet", "impl": "jax", "k": 200, "first_call_s": 80.66331553459167, "second_call_s": 16.54143500328064, "wall_s": 16.52303671836853, "env_steps_per_s": 99158.52805547563, "policy_steps_per_s": 4957.926402773782, "finite": true, "mean_base_z": -0.10143999755382538, "ncon_candidates": 4}
+{"n": 1024, "solver": "fast", "impl": "jax", "k": 200, "first_call_s": 132.22870326042175, "second_call_s": 22.80261492729187, "wall_s": 22.7796950340271, "env_steps_per_s": 8990.462764935204, "policy_steps_per_s": 449.5231382467602, "finite": true, "mean_base_z": 0.1551375389099121, "ncon_candidates": 233}
+{"n": 4096, "solver": "fast", "impl": "jax", "k": 200, "first_call_s": 159.2795445919037, "second_call_s": 80.59856176376343, "wall_s": 80.67921495437622, "env_steps_per_s": 10153.792404440901, "policy_steps_per_s": 507.68962022204505, "finite": true, "mean_base_z": 0.20307788252830505, "ncon_candidates": 233}
+W1024 19:22:10.437426   20086 hlo_rematerialization.cc:3402] Can't reduce memory use below 24.74GiB (26564821844 bytes) by rematerialization; only reduced to 40.07GiB (43027184124 bytes), down from 40.19GiB (43158833368 bytes) originally
+throughput exit 124
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+walk f32_fast div0.1 None div0.01 None 1s max 6e-05 all max 0.0056
+drop f32_fast div0.1 None div0.01 0.552 1s max 0.05965 all max 0.0596
+wrote /scrfs/storage/paradkar/blur/runs/4c/1367917/parity_f32_fast.json
+[2026-10-24T19:36:24-0500] done

@@ -1,0 +1,36 @@
+{
+ "device": "cuda:0",
+ "device_kind": "NVIDIA A100-PCIE-40GB",
+ "jax": "0.12.0.1",
+ "mujoco": "3.16.0",
+ "runs": [
+  {
+   "n": 1024,
+   "solver": "fast",
+   "impl": "jax",
+   "k": 200,
+   "first_call_s": 189.86700558662415,
+   "second_call_s": 179.14489912986755,
+   "wall_s": 179.1359839439392,
+   "env_steps_per_s": 1143.265554418661,
+   "policy_steps_per_s": 57.163277720933046,
+   "finite": true,
+   "mean_base_z": 0.2009740024805069,
+   "ncon_candidates": 233
+  },
+  {
+   "n": 1024,
+   "solver": "fast_feet",
+   "impl": "jax",
+   "k": 200,
+   "first_call_s": 75.7360053062439,
+   "second_call_s": 2.2575361728668213,
+   "wall_s": 2.2350802421569824,
+   "env_steps_per_s": 91629.81987723004,
+   "policy_steps_per_s": 4581.490993861502,
+   "finite": true,
+   "mean_base_z": -0.1001528948545456,
+   "ncon_candidates": 4
+  }
+ ]
+}

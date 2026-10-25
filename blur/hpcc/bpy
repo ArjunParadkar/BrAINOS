@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# bpy -- "python" for BLUR on any site. With BLUR_SIF set (cluster) it runs the
+# image: singularity exec [--nv on a GPU node] --cleanenv, /scrfs bound, BLUR_*,
+# thread, JAX/XLA and Slurm GPU variables passed through. Without it (laptop) it
+# execs the laptop venv. Same arguments either way:  bpy script.py --flags
+set -euo pipefail
+if [ -z "${BLUR_SIF:-}" ]; then
+  exec "${BLUR_VENV_PY:-$HOME/Desktop/Arenda_Projects/BLUR/blur_mujoco/.venv/bin/python}" "$@"
+fi
+[ -f "$BLUR_SIF" ] || { echo "bpy: image $BLUR_SIF missing (run jobs/build_image.sbatch)" >&2; exit 2; }
+command -v singularity >/dev/null || { source /etc/profile.d/modules.sh 2>/dev/null || true; module load singularity/3.9.7; }
+nv=(); if [ -e /dev/nvidia0 ]; then nv=(--nv); fi
+for v in $(compgen -e | grep -E '^(BLUR_|OMP_|MKL_|OPENBLAS_|XLA_|JAX_|TF_|CUDA_VISIBLE|NVIDIA_|SLURM_JOB_ID$|SLURM_CPUS|MUJOCO_)'); do
+  export "SINGULARITYENV_$v=${!v}"
+done
+# MUJOCO_GL: the image has no EGL/OSMesa userland (unprivileged build skips apt), and
+# nothing on the cluster renders; "disable" keeps `import mujoco` from probing GL.
+exec singularity exec ${nv[@]+"${nv[@]}"} --cleanenv -B /scrfs "$BLUR_SIF" env MUJOCO_GL="${MUJOCO_GL:-disable}" python "$@"

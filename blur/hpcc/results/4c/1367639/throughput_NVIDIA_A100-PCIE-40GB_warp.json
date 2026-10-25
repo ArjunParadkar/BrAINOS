@@ -1,0 +1,38 @@
+{
+ "device": "cuda:0",
+ "device_kind": "NVIDIA A100-PCIE-40GB",
+ "jax": "0.12.0.1",
+ "mujoco": "3.16.0",
+ "runs": [
+  {
+   "n": 1024,
+   "solver": "fast",
+   "error": "JaxRuntimeError(\"UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit_run']\")"
+  },
+  {
+   "n": 4096,
+   "solver": "fast",
+   "error": "JaxRuntimeError(\"UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit_run']\")"
+  },
+  {
+   "n": 8192,
+   "solver": "fast",
+   "error": "JaxRuntimeError(\"UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit_run']\")"
+  },
+  {
+   "n": 1024,
+   "solver": "fast_feet",
+   "error": "JaxRuntimeError(\"UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit_run']\")"
+  },
+  {
+   "n": 4096,
+   "solver": "fast_feet",
+   "error": "JaxRuntimeError(\"UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit_run']\")"
+  },
+  {
+   "n": 8192,
+   "solver": "fast_feet",
+   "error": "JaxRuntimeError(\"UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit_run']\")"
+  }
+ ]
+}

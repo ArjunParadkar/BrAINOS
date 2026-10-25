@@ -1,0 +1,25 @@
+code snapshot /scrfs/storage/paradkar/blur/snap/1368055 (4693fd7b0dcf)
+[2026-10-24T19:37:09-0500] c2106
+name
+NVIDIA A100-PCIE-40GB
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+{'device': 'cuda:0', 'device_kind': 'NVIDIA A100-PCIE-40GB', 'jax': '0.12.0.1', 'mujoco': '3.16.0', 'runs': []}
+{"n": 1024, "solver": "fast", "impl": "jax", "k": 200, "first_call_s": 189.86700558662415, "second_call_s": 179.14489912986755, "wall_s": 179.1359839439392, "env_steps_per_s": 1143.265554418661, "policy_steps_per_s": 57.163277720933046, "finite": true, "mean_base_z": 0.2009740024805069, "ncon_candidates": 233}
+{"n": 1024, "solver": "fast_feet", "impl": "jax", "k": 200, "first_call_s": 75.7360053062439, "second_call_s": 2.2575361728668213, "wall_s": 2.2350802421569824, "env_steps_per_s": 91629.81987723004, "policy_steps_per_s": 4581.490993861502, "finite": true, "mean_base_z": -0.1001528948545456, "ncon_candidates": 4}
+wrote /scrfs/storage/paradkar/blur/runs/4c/1368055/throughput_NVIDIA_A100-PCIE-40GB.json
+[2026-10-24T19:48:13-0500] done

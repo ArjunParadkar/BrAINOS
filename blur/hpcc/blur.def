@@ -1,0 +1,26 @@
+# blur.def -- the BLUR training image (CPU MuJoCo + MJX/JAX CUDA 12 + torch CPU).
+# Compute nodes are CentOS 7 (glibc 2.17); the image brings its own userland
+# (Debian bookworm, glibc 2.36) so current wheels run. GPU: run with --nv; the
+# host driver (550, CUDA 12.4) is bound in, the CUDA 12 user libraries come
+# from the jax[cuda12] wheels.
+# Built by jobs/build_image.sbatch (fakeroot if the site allows it, otherwise
+# the same steps through an unprivileged sandbox). Never built on a login node.
+Bootstrap: docker
+From: python:3.12-slim-bookworm
+
+%files
+    requirements.txt /opt/blur/requirements.txt
+
+%post
+    set -e
+    apt-get update && apt-get install -y --no-install-recommends libgl1 libegl1 libosmesa6 rsync && rm -rf /var/lib/apt/lists/*
+    pip install --no-cache-dir -r /opt/blur/requirements.txt
+    pip install --no-cache-dir torch==2.14.1 --index-url https://download.pytorch.org/whl/cpu
+    pip freeze > /opt/blur/freeze.txt
+
+%environment
+    export PYTHONNOUSERSITE=1
+    export PYTHONDONTWRITEBYTECODE=1
+
+%labels
+    project BLUR (BrAInOS x BLUR v36 bring-up), research use

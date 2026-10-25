@@ -1,0 +1,21 @@
+{
+ "device": "cuda:0",
+ "device_kind": "NVIDIA A100-PCIE-40GB",
+ "jax": "0.12.0.1",
+ "mujoco": "3.16.0",
+ "runs": [
+  {
+   "n": 1024,
+   "solver": "default",
+   "impl": "jax",
+   "k": 50,
+   "first_call_s": 146.10597896575928,
+   "wall_s": 48.65162229537964,
+   "env_steps_per_s": 1052.3801177512303,
+   "policy_steps_per_s": 52.619005887561514,
+   "finite": true,
+   "mean_base_z": 0.2713654935359955,
+   "ncon_candidates": 233
+  }
+ ]
+}

@@ -1,0 +1,21 @@
+{
+ "variant": "f32_warp",
+ "mujoco": "3.16.0",
+ "scenarios": {
+  "walk": {
+   "error": "JaxRuntimeError(\"UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit__lambda']\")"
+  },
+  "drop": {
+   "error": "JaxRuntimeError(\"UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit__lambda']\")"
+  }
+ },
+ "jax": "0.12.0.1",
+ "device": "cuda:0",
+ "x64": false,
+ "dt": 0.001,
+ "iterations": 100,
+ "ls_iterations": 50,
+ "tolerance": 1e-08,
+ "impl": "warp",
+ "feetonly": false
+}

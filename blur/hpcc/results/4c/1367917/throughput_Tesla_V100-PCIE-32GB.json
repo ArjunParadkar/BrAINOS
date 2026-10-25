@@ -1,0 +1,78 @@
+{
+ "device": "cuda:0",
+ "device_kind": "Tesla V100-PCIE-32GB",
+ "jax": "0.12.0.1",
+ "mujoco": "3.16.0",
+ "runs": [
+  {
+   "n": 1024,
+   "solver": "fast_feet",
+   "impl": "jax",
+   "k": 200,
+   "first_call_s": 91.21138334274292,
+   "second_call_s": 3.1528284549713135,
+   "wall_s": 3.1588540077209473,
+   "env_steps_per_s": 64833.63887644788,
+   "policy_steps_per_s": 3241.6819438223943,
+   "finite": true,
+   "mean_base_z": -0.09999332576990128,
+   "ncon_candidates": 4
+  },
+  {
+   "n": 4096,
+   "solver": "fast_feet",
+   "impl": "jax",
+   "k": 200,
+   "first_call_s": 74.7262396812439,
+   "second_call_s": 9.015751361846924,
+   "wall_s": 8.96147632598877,
+   "env_steps_per_s": 91413.50935942054,
+   "policy_steps_per_s": 4570.675467971027,
+   "finite": true,
+   "mean_base_z": -0.10055693238973618,
+   "ncon_candidates": 4
+  },
+  {
+   "n": 8192,
+   "solver": "fast_feet",
+   "impl": "jax",
+   "k": 200,
+   "first_call_s": 80.66331553459167,
+   "second_call_s": 16.54143500328064,
+   "wall_s": 16.52303671836853,
+   "env_steps_per_s": 99158.52805547563,
+   "policy_steps_per_s": 4957.926402773782,
+   "finite": true,
+   "mean_base_z": -0.10143999755382538,
+   "ncon_candidates": 4
+  },
+  {
+   "n": 1024,
+   "solver": "fast",
+   "impl": "jax",
+   "k": 200,
+   "first_call_s": 132.22870326042175,
+   "second_call_s": 22.80261492729187,
+   "wall_s": 22.7796950340271,
+   "env_steps_per_s": 8990.462764935204,
+   "policy_steps_per_s": 449.5231382467602,
+   "finite": true,
+   "mean_base_z": 0.1551375389099121,
+   "ncon_candidates": 233
+  },
+  {
+   "n": 4096,
+   "solver": "fast",
+   "impl": "jax",
+   "k": 200,
+   "first_call_s": 159.2795445919037,
+   "second_call_s": 80.59856176376343,
+   "wall_s": 80.67921495437622,
+   "env_steps_per_s": 10153.792404440901,
+   "policy_steps_per_s": 507.68962022204505,
+   "finite": true,
+   "mean_base_z": 0.20307788252830505,
+   "ncon_candidates": 233
+  }
+ ]
+}

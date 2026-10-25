@@ -1,0 +1,350 @@
+code snapshot /scrfs/storage/paradkar/blur/snap/1367639 (71d5a577e4b8)
+[2026-10-24T16:41:17-0500] c2107
+name, memory.total [MiB], driver_version
+NVIDIA A100-PCIE-40GB, 40960 MiB, 550.163.01
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_PLATFORMS is set, but APPTAINERENV_JAX_PLATFORMS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+walk 0.001 {'chaos_qvel1e-09': (None, 4.0641490173243255e-11), 'chaos_qvel1e-06': (None, 4.064147240967486e-08), 'full_vs_train_model': (2.149, 0.0), 'feetonly_vs_train_model': (1.854, 0.0)}
+drop 0.001 {'chaos_qvel1e-09': (None, 8.673005907205988e-10), 'chaos_qvel1e-06': (None, 0.0006429513734109715), 'full_vs_train_model': (0.552, 0.3848846943513845), 'feetonly_vs_train_model': (0.558, 0.36425313203379506)}
+walk 0.0005 {'chaos_qvel1e-09': (None, 3.994782282745746e-11), 'chaos_qvel1e-06': (None, 3.9948343966145217e-08), 'full_vs_train_model': (2.157, 0.0), 'feetonly_vs_train_model': (1.857, 0.0)}
+drop 0.0005 {'chaos_qvel1e-09': (None, 9.463350103544599e-10), 'chaos_qvel1e-06': (None, 9.463328227710122e-07), 'full_vs_train_model': (0.5545, 0.36763634719156324), 'feetonly_vs_train_model': (0.5615, 0.3539319523306088)}
+wrote /scrfs/storage/paradkar/blur/runs/4c/1367639/parity_cpu.json
+[2026-10-24T16:41:42-0500] parity f32_fast
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+walk f32_fast div0.1 None div0.01 1.968 1s max 3e-05 all max 0.0205
+drop f32_fast div0.1 None div0.01 0.552 1s max 0.05937 all max 0.0594
+wrote /scrfs/storage/paradkar/blur/runs/4c/1367639/parity_f32_fast.json
+[2026-10-24T16:45:25-0500] parity f32_fast_feet
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+walk f32_fast_feet div0.1 None div0.01 1.959 1s max 2e-05 all max 0.0478
+drop f32_fast_feet div0.1 None div0.01 0.672 1s max 0.07527 all max 0.0753
+wrote /scrfs/storage/paradkar/blur/runs/4c/1367639/parity_f32_fast_feet.json
+[2026-10-24T16:47:27-0500] parity f64
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+walk f64 div0.1 None div0.01 None 1s max 0.0 all max 0.0032
+drop f64 div0.1 None div0.01 0.552 1s max 0.05954 all max 0.0595
+wrote /scrfs/storage/paradkar/blur/runs/4c/1367639/parity_f64.json
+[2026-10-24T16:52:36-0500] parity f32_tol6
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+walk f32_tol6 div0.1 None div0.01 2.2560000000000002 1s max 2e-05 all max 0.0135
+drop f32_tol6 div0.1 None div0.01 0.552 1s max 0.05961 all max 0.0596
+wrote /scrfs/storage/paradkar/blur/runs/4c/1367639/parity_f32_tol6.json
+[2026-10-24T16:56:52-0500] parity f64_dt05
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+walk f64_dt05 div0.1 None div0.01 None 1s max 0.0 all max 0.0043
+drop f64_dt05 div0.1 None div0.01 0.556 1s max 0.02155 all max 0.0215
+wrote /scrfs/storage/paradkar/blur/runs/4c/1367639/parity_f64_dt05.json
+[2026-10-24T17:05:22-0500] parity f32_tol6_dt05
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+walk f32_tol6_dt05 div0.1 None div0.01 None 1s max 5e-05 all max 0.003
+drop f32_tol6_dt05 div0.1 None div0.01 0.556 1s max 0.02166 all max 0.0217
+wrote /scrfs/storage/paradkar/blur/runs/4c/1367639/parity_f32_tol6_dt05.json
+[2026-10-24T17:11:48-0500] parity f32_warp
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+Warp UserWarning: 
+   Insufficient CUDA driver version.
+   The minimum required CUDA driver version is 13.0, but the installed CUDA driver version is 12.4.
+   Visit https://nvidia.github.io/warp/stable/user_guide/installation.html for guidance.
+Warp 1.18.0 initialized:
+   CUDA Toolkit 13.4, Driver 12.4 (insufficient CUDA driver version!)
+   Devices:
+     "cpu"      : "CPU"
+   Kernel cache:
+     /home/paradkar/.cache/warp/1.18.0
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/jax/ffi.py", line 961, in ffi_callback
+    device = wp.get_cuda_device(device_ordinal)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/context.py", line 9074, in get_cuda_device
+    return runtime.cuda_devices[ordinal]
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+IndexError: list index out of range
+
+walk ERROR JaxRuntimeError("UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit__lambda']")
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/jax/ffi.py", line 961, in ffi_callback
+    device = wp.get_cuda_device(device_ordinal)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/context.py", line 9074, in get_cuda_device
+    return runtime.cuda_devices[ordinal]
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+IndexError: list index out of range
+
+drop ERROR JaxRuntimeError("UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit__lambda']")
+wrote /scrfs/storage/paradkar/blur/runs/4c/1367639/parity_f32_warp.json
+[2026-10-24T17:12:09-0500] parity f32
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+walk f32 div0.1 None div0.01 None 1s max 3e-05 all max 0.0053
+drop f32 div0.1 None div0.01 0.552 1s max 0.05962 all max 0.0596
+wrote /scrfs/storage/paradkar/blur/runs/4c/1367639/parity_f32.json
+[2026-10-24T17:16:25-0500] throughput
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+{'device': 'cuda:0', 'device_kind': 'NVIDIA A100-PCIE-40GB', 'jax': '0.12.0.1', 'mujoco': '3.16.0', 'runs': []}
+{"n": 1024, "solver": "fast", "impl": "jax", "k": 200, "first_call_s": 264.427286863327, "wall_s": 179.18881726264954, "env_steps_per_s": 1142.9284657859557, "policy_steps_per_s": 57.146423289297786, "finite": true, "mean_base_z": 0.2513204514980316, "ncon_candidates": 233}
+{"n": 4096, "solver": "fast", "impl": "jax", "k": 200, "first_call_s": 123.59763169288635, "wall_s": 36.69508981704712, "env_steps_per_s": 22324.512736835743, "policy_steps_per_s": 1116.225636841787, "finite": true, "mean_base_z": 0.25253403186798096, "ncon_candidates": 233}
+W1024 17:27:52.964843    5995 hlo_rematerialization.cc:3402] Can't reduce memory use below 31.28GiB (33585667310 bytes) by rematerialization; only reduced to 40.05GiB (43009292652 bytes), down from 40.20GiB (43159423232 bytes) originally
+{"n": 8192, "solver": "fast", "impl": "jax", "k": 200, "first_call_s": 145.99959754943848, "wall_s": 71.28131914138794, "env_steps_per_s": 22984.984281087734, "policy_steps_per_s": 1149.2492140543868, "finite": true, "mean_base_z": 0.2527334988117218, "ncon_candidates": 233}
+{"n": 1024, "solver": "fast_feet", "impl": "jax", "k": 200, "first_call_s": 63.040093421936035, "wall_s": 2.2079248428344727, "env_steps_per_s": 92756.78049669636, "policy_steps_per_s": 4637.839024834818, "finite": true, "mean_base_z": -0.008348270319402218, "ncon_candidates": 4}
+{"n": 4096, "solver": "fast_feet", "impl": "jax", "k": 200, "first_call_s": 67.39941573143005, "wall_s": 4.622847080230713, "env_steps_per_s": 177206.81341661772, "policy_steps_per_s": 8860.340670830887, "finite": true, "mean_base_z": -0.0016540493816137314, "ncon_candidates": 4}
+{"n": 8192, "solver": "fast_feet", "impl": "jax", "k": 200, "first_call_s": 62.406657457351685, "wall_s": 10.248858213424683, "env_steps_per_s": 159861.7100443352, "policy_steps_per_s": 7993.08550221676, "finite": true, "mean_base_z": -0.0017870303709059954, "ncon_candidates": 4}
+throughput exit 124
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+{'device': 'cuda:0', 'device_kind': 'NVIDIA A100-PCIE-40GB', 'jax': '0.12.0.1', 'mujoco': '3.16.0', 'runs': []}
+{"n": 1024, "solver": "default", "impl": "jax", "k": 50, "first_call_s": 146.10597896575928, "wall_s": 48.65162229537964, "env_steps_per_s": 1052.3801177512303, "policy_steps_per_s": 52.619005887561514, "finite": true, "mean_base_z": 0.2713654935359955, "ncon_candidates": 233}
+wrote /scrfs/storage/paradkar/blur/runs/4c/1367639/throughput_NVIDIA_A100-PCIE-40GB_default.json
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_JAX_COMPILATION_CACHE_DIR is set, but APPTAINERENV_JAX_COMPILATION_CACHE_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+{'device': 'cuda:0', 'device_kind': 'NVIDIA A100-PCIE-40GB', 'jax': '0.12.0.1', 'mujoco': '3.16.0', 'runs': []}
+Warp UserWarning: 
+   Insufficient CUDA driver version.
+   The minimum required CUDA driver version is 13.0, but the installed CUDA driver version is 12.4.
+   Visit https://nvidia.github.io/warp/stable/user_guide/installation.html for guidance.
+Warp 1.18.0 initialized:
+   CUDA Toolkit 13.4, Driver 12.4 (insufficient CUDA driver version!)
+   Devices:
+     "cpu"      : "CPU"
+   Kernel cache:
+     /home/paradkar/.cache/warp/1.18.0
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/jax/ffi.py", line 961, in ffi_callback
+    device = wp.get_cuda_device(device_ordinal)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/context.py", line 9074, in get_cuda_device
+    return runtime.cuda_devices[ordinal]
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+IndexError: list index out of range
+
+ERROR 1024 fast JaxRuntimeError("UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit_run']")
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/jax/ffi.py", line 961, in ffi_callback
+    device = wp.get_cuda_device(device_ordinal)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/context.py", line 9074, in get_cuda_device
+    return runtime.cuda_devices[ordinal]
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+IndexError: list index out of range
+
+ERROR 4096 fast JaxRuntimeError("UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit_run']")
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/jax/ffi.py", line 961, in ffi_callback
+    device = wp.get_cuda_device(device_ordinal)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/context.py", line 9074, in get_cuda_device
+    return runtime.cuda_devices[ordinal]
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+IndexError: list index out of range
+
+ERROR 8192 fast JaxRuntimeError("UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit_run']")
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/jax/ffi.py", line 961, in ffi_callback
+    device = wp.get_cuda_device(device_ordinal)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/context.py", line 9074, in get_cuda_device
+    return runtime.cuda_devices[ordinal]
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+IndexError: list index out of range
+
+ERROR 1024 fast_feet JaxRuntimeError("UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit_run']")
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/jax/ffi.py", line 961, in ffi_callback
+    device = wp.get_cuda_device(device_ordinal)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/context.py", line 9074, in get_cuda_device
+    return runtime.cuda_devices[ordinal]
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+IndexError: list index out of range
+
+ERROR 4096 fast_feet JaxRuntimeError("UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit_run']")
+/usr/local/lib/python3.12/site-packages/warp/_src/types.py:3728: RuntimeWarning: overflow encountered in cast
+  arr = np.asarray(data, dtype=npdtype)
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/jax/ffi.py", line 961, in ffi_callback
+    device = wp.get_cuda_device(device_ordinal)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/warp/_src/context.py", line 9074, in get_cuda_device
+    return runtime.cuda_devices[ordinal]
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+IndexError: list index out of range
+
+ERROR 8192 fast_feet JaxRuntimeError("UNKNOWN: FFI callback error: IndexError: list index out of range [executable_name='jit_run']")
+wrote /scrfs/storage/paradkar/blur/runs/4c/1367639/throughput_NVIDIA_A100-PCIE-40GB_warp.json
+[2026-10-24T17:45:37-0500] done

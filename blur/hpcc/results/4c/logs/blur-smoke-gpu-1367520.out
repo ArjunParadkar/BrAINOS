@@ -1,0 +1,24 @@
+[2026-10-24T15:17:55-0500] c2006
+name, memory.total [MiB], driver_version
+NVIDIA A100-PCIE-40GB, 40960 MiB, 550.163.01
+INFO:    Environment variable SINGULARITYENV_MKL_NUM_THREADS is set, but APPTAINERENV_MKL_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SITE is set, but APPTAINERENV_BLUR_SITE is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_PER_TASK is set, but APPTAINERENV_SLURM_CPUS_PER_TASK is preferred
+INFO:    Environment variable SINGULARITYENV_OMP_NUM_THREADS is set, but APPTAINERENV_OMP_NUM_THREADS is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_SIF is set, but APPTAINERENV_BLUR_SIF is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_MJCF_DIR is set, but APPTAINERENV_BLUR_MJCF_DIR is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_PY is set, but APPTAINERENV_BLUR_PY is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_HOME is set, but APPTAINERENV_BLUR_HOME is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_RUNS is set, but APPTAINERENV_BLUR_RUNS is preferred
+INFO:    Environment variable SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION is set, but APPTAINERENV_XLA_PYTHON_CLIENT_MEM_FRACTION is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_CODE is set, but APPTAINERENV_BLUR_CODE is preferred
+INFO:    Environment variable SINGULARITYENV_BLUR_LOGS is set, but APPTAINERENV_BLUR_LOGS is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_JOB_ID is set, but APPTAINERENV_SLURM_JOB_ID is preferred
+INFO:    Environment variable SINGULARITYENV_CUDA_VISIBLE_DEVICES is set, but APPTAINERENV_CUDA_VISIBLE_DEVICES is preferred
+INFO:    Environment variable SINGULARITYENV_SLURM_CPUS_ON_NODE is set, but APPTAINERENV_SLURM_CPUS_ON_NODE is preferred
+PASS versions (14.0s) {'python': '3.12.15', 'numpy': '2.5.4', 'scipy': '1.18.1', 'mujoco': '3.16.0', 'jax': '0.12.0.1', 'torch': '2.14.1+cpu', 'devices': ['cuda:0']}
+PASS descriptor (0.1s) {'mjcf_dir': '/scrfs/storage/paradkar/blur/mjcf/blur_mujoco_v36', 'sha': '9c7a5d24e096'}
+PASS cpu full MJCF 1 s (5.5s) {'nq': 60, 'nu': 26, 'z': 0.2915}
+PASS cpu RL env + torch MLP (0.6s) {'obs': 64, 'r': -0.012}
+PASS mjx 64 envs x 100 steps (188.0s) {'device': 'cuda:0', 'compile_s': 107.9, 'steps_per_s': 170}
+SMOKE PASS
