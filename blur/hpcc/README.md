@@ -45,6 +45,31 @@ Rules (Arjun): job names `blur-*`; `--export=NONE`; ≤ 1 blur GPU job at a
 time and only while the account's running gpu-QOS cores ≤ 168; no python on
 the login node; no large allocations until Arjun has seen the numbers.
 
+## Training campaigns (4d)
+
+```sh
+# laptop: sync, then on Pinnacle freeze the code + manifest for a new campaign
+blur/hpcc/sync_to_pinnacle.sh
+ssh pinnacle bash /scrfs/storage/paradkar/blur/code/blur/hpcc/campaign_setup.sh dayone
+# start N lanes (check: account running comp cores <= 96 first)
+for L in 1 2; do ssh pinnacle sbatch --export=NONE,CAMPAIGN=dayone -J blur-lane-$L -p comp06 -q comp -c 32 \
+  -t 6:00:00 --dependency=singleton /scrfs/storage/paradkar/blur/campaigns/dayone/code/hpcc/jobs/lane.sbatch; done
+# laptop: results + ranked table
+blur/hpcc/fetch_runs.sh dayone      # -> blur/learn/runs/hpcc_dayone/SUMMARY.md
+# stop: touch /scrfs/storage/paradkar/blur/campaigns/dayone/STOP  (lanes finish their segment, don't resubmit)
+```
+
+| file | what |
+|---|---|
+| `campaigns/<name>/{manifest.txt,campaign.env}` | runs (`id task seed hours`; `ZERO:<skill>` = reference baseline) and settings (`BLUR_DR`, workers, eval size) |
+| `campaign_setup.sh` | freezes the synced code as `campaigns/<name>/code` (+ hash); refuses to overwrite a live campaign |
+| `jobs/lane.sbatch` | singleton lane: lock-claim the next unfinished run, comp-core guard (≤ 96; squeue failure = busy), node-hour cap (`CAP_NODE_H`, default 210), self-resubmission |
+| `run_one.sh` | one run: train (`ppo.py --auto-resume --deadline`, exit 75 = resume later) → deterministic eval nominal + stress → `DONE` |
+| `jobs/resume_test.sbatch` | bitwise resume test (PASS, job 1368258) |
+| `fetch_runs.sh`, `summarize.py` | results back to `blur/learn/runs/hpcc_<name>/` (no ckpt/.pt) and the ranked `SUMMARY.md` |
+
+Campaign directories: `/scrfs/storage/paradkar/blur/campaigns/<name>/{code,runs,state,CODE_SHA}`.
+
 ## Results (2026-10-24)
 
 - 4b: CPU smoke PASS (job 1367526, CentOS 7 node), GPU smoke PASS (job 1367520, A100, driver 550).
