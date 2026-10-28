@@ -41,3 +41,5 @@ firmware/.pio-core/
 **/.pio/
 .env
 *.onnx
+blur/pi/voice/audition/
+blur/pi/voice/voice_config.json

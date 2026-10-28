@@ -1,14 +1,14 @@
 """
-latency_test.py -- one command to exercise the voice pipeline and log the
-end-of-speech -> first-audio latency. Runs against mocks until keys are in
-.env; once ANTHROPIC_API_KEY + CARTESIA_API_KEY (+ DEEPGRAM_API_KEY) are set,
-the same command measures the real cloud round-trip.
+latency_test.py -- exercise the voice pipeline and log latency.
+
+With ANTHROPIC_API_KEY in blur/pi/.env it runs the REAL Claude
+(claude-haiku-5-5) streaming path with mock STT/TTS, and reports, over ~10
+short turns, end-of-speech -> first LLM text token and -> first complete
+phrase as p50/p95. It also checks that tool calls route through KIRA (a
+denied skill comes back as a tool_result and is spoken). Without the key it
+runs fully on mocks. Never prints the key.
 
   blur/pi/.venv/bin/python blur/pi/voice/latency_test.py
-
-It also verifies: tool calls route through KIRA (a denied skill is spoken
-gently), the local stop-word spotter fires with no network, and barge-in
-stops playback.
 """
 import os
 import sys
@@ -18,65 +18,68 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))      # blur/pi
 sys.path.insert(0, HERE)
-from pipeline import FRAME, Pipeline, TTS      # noqa: E402
-from kira_gate import BodyState, KiraGate, Posture   # noqa: E402
+from pipeline import FRAME, Pipeline, TTS, load_env   # noqa: E402
+from kira_gate import BodyState, KiraGate, Posture    # noqa: E402
+
+TURNS = [
+    "can you sit down please", "lie down for me", "okay stand back up",
+    "good girl, look at me", "come here", "follow me please",
+    "what are you", "are you doing okay", "tell me a tiny joke",
+    "alright, stop",
+]
 
 
-def utterance(text, seconds=1.2):
-    """fake 16 kHz int16 mic audio: `seconds` of noise then 300 ms silence."""
+def utterance(text, seconds=1.0):
     n = int(seconds * 16000)
-    speech = (np.random.default_rng(0).standard_normal(n) * 3000).astype(np.int16)
+    speech = (np.random.default_rng(len(text)).standard_normal(n) * 3000).astype(np.int16)
     tail = np.zeros(16000 * 300 // 1000, np.int16)
     pcm = np.concatenate([speech, tail])
     return [pcm[i:i + FRAME] for i in range(0, len(pcm) - FRAME, FRAME)], text
 
 
+def pct(xs, q):
+    xs = sorted(x for x in xs if x == x)
+    return xs[min(len(xs) - 1, int(q * len(xs)))] if xs else float("nan")
+
+
 def main():
+    load_env()
     gate = KiraGate(allow_spine_abd=False)
     state = BodyState(posture=Posture.STAND)
-    log = []
+    routed = []
     def on_tool(name):
         d = gate.check(name, state)
-        log.append((name, d.verdict.value, d.reason))
+        routed.append((name, d.verdict.value, d.code))
         return d.verdict.value, d.reason
 
-    keyed = bool(os.environ.get("ANTHROPIC_API_KEY") and
-                 (os.environ.get("CARTESIA_API_KEY") or os.environ.get("ELEVENLABS_API_KEY")))
-    mode = "REAL (keys present)" if keyed else "MOCK (no keys; timings are simulated)"
-    print(f"voice pipeline latency test -- {mode}")
-    print(f"TTS provider: {TTS.provider}; stock voice candidates:")
-    for i, (prov, desc) in enumerate(TTS.stock_candidates):
-        print(f"  [{i}] {prov}: {desc}")
+    llm = bool(os.environ.get("ANTHROPIC_API_KEY"))
+    tts_real = bool(os.environ.get("ELEVENLABS_API_KEY") or os.environ.get("CARTESIA_API_KEY"))
+    print(f"voice latency test -- STT: fixture ; "
+          f"LLM: {'REAL claude-haiku-5-5' if llm else 'mock'} ; "
+          f"TTS: {'REAL '+TTS.provider if tts_real else 'mock'}")
 
     pipe = Pipeline(on_tool=on_tool)
+    tok, phr, aud = [], [], []
+    for text in TURNS:
+        frames, t = utterance(text)
+        turn = pipe.handle_utterance(frames, transcript_fixture=t)
+        tok.append(turn.token_ms); phr.append(turn.phrase_ms); aud.append(turn.latency_ms)
+        tools = ", ".join(f"{n}:{'ok' if a else 'deny'}" for n, a, _ in turn.tools) or "-"
+        print(f"  '{text[:26]:<26}' tok {turn.token_ms:5.0f}  phrase {turn.phrase_ms:5.0f}  "
+              f"audio {turn.latency_ms:5.0f}ms  [{tools}] \"{turn.reply.strip()[:40]}\"")
 
-    # 1. a normal request that KIRA grants
-    frames, text = utterance("can you sit down please")
-    t = pipe.handle_utterance(frames, transcript_fixture=text)
-    print(f"\n[sit]  '{t.transcript}' -> \"{t.reply.strip()}\" tool={t.tool}")
-    print(f"       end-of-speech -> first audio: {t.latency_ms:.0f} ms "
-          f"({'under' if t.latency_ms < 800 else 'OVER'} the 800 ms target)")
+    print(f"\nend-of-speech -> first LLM token : p50 {pct(tok,.5):.0f} ms  p95 {pct(tok,.95):.0f} ms")
+    print(f"end-of-speech -> first phrase    : p50 {pct(phr,.5):.0f} ms  p95 {pct(phr,.95):.0f} ms")
+    print(f"end-of-speech -> first AUDIO byte: p50 {pct(aud,.5):.0f} ms  p95 {pct(aud,.95):.0f} ms  "
+          f"({'real LLM+TTS' if (llm and tts_real) else 'partly mocked'}; target < 800 ms)")
 
-    # 2. a request KIRA denies (walk: no spine/abd motors) -> spoken gently
-    frames, text = utterance("come here")
-    t2 = pipe.handle_utterance(frames, transcript_fixture=text)
-    print(f"[come] '{t2.transcript}' -> \"{t2.reply.strip()}\" tool={t2.tool}")
-
-    # 3. local stop-word with no network
-    frames, text = utterance("stop stop")
-    t3 = pipe.handle_utterance(frames, transcript_fixture=text)
-    print(f"[stop] local stop-word fired = {t3.stopword_local} (works offline)")
-
-    # 4. barge-in: loud mic frame while speaking stops playback
+    # barge-in
     pipe.speaking = True
     loud = (np.random.default_rng(1).standard_normal(FRAME) * 6000).astype(np.int16)
-    print(f"[barge-in] interrupt detected = {pipe.handle_barge_in(loud)}")
-
-    print("\nKIRA tool routing:")
-    for name, verdict, reason in log:
-        print(f"  {name:<10} {verdict:<6} {reason}")
-    lat = pipe.log[0].latency_ms
-    print(f"\nlogged latency (turn 1): {lat:.0f} ms  [{'measured' if keyed else 'simulated'}]")
+    print(f"\nbarge-in interrupt detected: {pipe.handle_barge_in(loud)}")
+    print("KIRA tool routing:")
+    for n, v, c in routed:
+        print(f"  {n:<10} {v:<6} {c}")
 
 
 if __name__ == "__main__":

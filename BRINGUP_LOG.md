@@ -9,6 +9,76 @@ Pi skill runtime + laptop control → voice → vision → sim/training.
 
 ---
 
+## Block 3 — 2026-10-28 (voice made real: Claude streaming + ElevenLabs TTS)
+
+Correction to Block 2: that report called the voice pipeline "built", but the
+real Claude path was a stub (NotImplementedError) — only the mocks ran. Now
+the LLM and TTS are really implemented and measured.
+
+### Real Claude streaming with tool use (anthropic SDK, `blur/pi/.venv`)
+
+`voice/pipeline.py` `LLM` now uses `client.messages.stream(model=
+"claude-haiku-5-5", system=PERSONA, tools=TOOL_SCHEMAS, messages=history)`,
+yielding text deltas phrase-by-phrase to TTS and running a bounded tool loop:
+each `tool_use` → KIRA (`_execute`) → `tool_result` back to the model, so a
+**denial is spoken in BLUR's own words**. System prompt + tools carry
+`cache_control` (prompt caching); history is trimmed to whole user turns so a
+`tool_result` is never orphaned. (No dedicated claude-api skill exists on this
+machine; used the official SDK.)
+
+Verified live (real key, mock STT/TTS): sit/lie/stand/look granted; **come_here
+and follow denied and spoken** ("I can't walk over to you just yet. My
+spine…"); an on-brand deadpan joke. KIRA routing correct on every turn.
+
+### Real TTS + audition (ElevenLabs primary)
+
+- `TTS` streams **ElevenLabs Flash v2.5** via `/stream` (pcm_16000), first bytes
+  as synthesised; Cartesia kept as secondary; mock when no key.
+- `voice/audition.py` rendered **6 account voices × 5 short lines = 30 clips**
+  for real + an HTML page to listen/pick (`--set` saves the choice). Candidates
+  ranked from `/v2/voices` (account) and `/v1/shared-voices` (library). No
+  cloning. **Page: `blur/pi/voice/audition/index.html`** (Sarah, Jessica,
+  Laura, Bella, Lily, Alice).
+
+### Real end-to-end latency (real Claude + real ElevenLabs, fixture STT, 10 turns)
+
+| end-of-speech → | p50 | p95 |
+|---|---|---|
+| first LLM token | 2046 ms | 4695 ms |
+| first phrase | 2266 ms | 4723 ms |
+| **first audio byte** | **2519 ms** | **5016 ms** |
+
+- **ElevenLabs Flash first-audio-byte is fast: ~250–370 ms** after the phrase.
+- The **bottleneck is the LLM first token**: ~0.8 s for pure chat, but **tool
+  turns double it** (initial `tool_use` call + a second call after the
+  `tool_result`), and the p95 outlier is a turn that called a tool twice.
+- So the **< 800 ms target is not met** on STT→Claude→TTS when a tool is
+  involved (chat-only first-audio ≈ 1.2 s). Hitting < 800 ms needs the
+  speech-to-speech realtime API (architecture B), or speaking an instant
+  acknowledgement before the tool round-trip. Reported honestly, not claimed.
+
+### Persona (updated)
+
+Warm, soft, slightly low, calm with gentle pacing, polite, a little shy, a
+little breathy, quietly protective, dry deadpan humour, can go quiet and
+serious. Explicitly: BLUR is herself — never imitates/quotes any real person
+or character, no catchphrases. (`PERSONA` in `pipeline.py`.)
+
+### Laptop live loop (`voice/laptop_live.py`)
+
+laptop mic → local **faster-whisper** STT → Claude (tools→KIRA) → TTS →
+speaker. `--self-test` verified the full local loop headlessly: piper spoke
+"can you sit down please" → whisper heard it → Claude → `sit` via KIRA →
+"I'm sitting now. Thank you for asking so nicely." Modes: `--mic`, `--wav`,
+`--say`, `--self-test`. TTS = ElevenLabs if keyed, else local piper, else text.
+
+### Budget / keys
+
+Character use modest (30 audition lines + 10 short latency turns). Keys live
+in `blur/pi/.env` (gitignored, 0600); never printed, logged or committed.
+
+---
+
 ## Block 2 — 2026-10-28 (real firmware builds, Pi stack + SIL, control, voice, vision, retarget)
 
 ### Firmware — real on-target builds (PlatformIO in a repo-local venv)
