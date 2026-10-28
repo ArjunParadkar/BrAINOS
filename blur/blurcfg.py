@@ -19,7 +19,11 @@ needs nothing.
 import hashlib, json, os, sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-DESCRIPTOR = os.path.join(ROOT, 'descriptor.json')
+# BLUR_DESCRIPTOR overrides which descriptor is the body (default: v36's
+# descriptor.json). The final-body retarget campaign points this at
+# descriptor_final.json so it trains on BLUR_final without editing the
+# committed v36 descriptor the day-one campaign is pinned to.
+DESCRIPTOR = os.environ.get('BLUR_DESCRIPTOR') or os.path.join(ROOT, 'descriptor.json')
 _cache = {}
 
 

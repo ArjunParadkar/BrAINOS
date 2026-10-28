@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BLUR control</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font: 14px/1.4 system-ui, sans-serif; background:#0d0f12; color:#d7dce1; margin:0; padding:16px; }
+  h1 { font-size:16px; margin:0 0 12px; letter-spacing:.08em; color:#8fb7ff; }
+  .grid { display:grid; grid-template-columns: 320px 1fr; gap:16px; max-width:900px; }
+  .card { background:#14181d; border:1px solid #232a32; border-radius:10px; padding:12px; }
+  button { background:#1d2630; color:#cfe0ff; border:1px solid #2c3a49; border-radius:8px;
+           padding:8px 10px; margin:3px; cursor:pointer; font-size:13px; }
+  button:hover { background:#273445; }
+  #estop { width:100%; background:#3a0d12; border-color:#7a1a24; color:#ffd9dc; font-weight:700;
+           padding:14px; font-size:15px; letter-spacing:.1em; }
+  #estop.on { background:#8a111b; color:#fff; }
+  .row { display:flex; gap:6px; flex-wrap:wrap; }
+  canvas { border:1px solid #232a32; border-radius:6px; image-rendering:pixelated; width:288px; height:192px; }
+  table { width:100%; border-collapse:collapse; } td { padding:2px 4px; } td.k { color:#7f8b98; }
+  .pill { display:inline-block; padding:1px 8px; border-radius:10px; background:#1d2630; font-size:12px; }
+  #log { height:90px; overflow:auto; font:11px ui-monospace,monospace; color:#9fb0c0; white-space:pre-wrap; }
+  .ok { color:#7fe0a0; } .deny { color:#ff9ba3; }
+</style>
+</head>
+<body>
+<h1>BLUR · laptop control</h1>
+<div class="grid">
+  <div class="card">
+    <button id="estop">◉ EMERGENCY STOP</button>
+    <div class="row" style="margin-top:8px">
+      <button data-skill="stand">stand</button>
+      <button data-skill="sit">sit</button>
+      <button data-skill="lie">lie</button>
+      <button data-skill="standup">stand up</button>
+      <button data-skill="righting">right</button>
+      <button data-skill="stop">stop</button>
+    </div>
+    <h1 style="margin-top:14px">drive (WASD / left stick)</h1>
+    <div class="row">
+      <button data-vel="f">▲ fwd</button><button data-vel="b">▼ back</button>
+      <button data-vel="l">◀ left</button><button data-vel="r">right ▶</button>
+      <button data-vel="0">stop drive</button>
+    </div>
+    <h1 style="margin-top:14px">head (right stick)</h1>
+    <div class="row">
+      <button data-head="up">pan ▲</button><button data-head="down">▼</button>
+      <button data-head="left">◀</button><button data-head="right">▶</button>
+    </div>
+    <div style="margin-top:10px" class="k">gamepad: <span id="pad">none</span></div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div>eye camera (mock)</div>
+      <div>link: <span id="rtt" class="pill">– ms</span></div>
+    </div>
+    <canvas id="vid" width="96" height="64"></canvas>
+    <table style="margin-top:10px">
+      <tr><td class="k">posture</td><td id="t_posture">–</td><td class="k">battery</td><td id="t_batt">–</td></tr>
+      <tr><td class="k">e-stop</td><td id="t_estop">–</td><td class="k">upright</td><td id="t_up">–</td></tr>
+      <tr><td class="k">active</td><td id="t_active">–</td><td class="k">pose x,y,θ</td><td id="t_pose">–</td></tr>
+      <tr><td class="k">joint °C</td><td colspan=3 id="t_temp">–</td></tr>
+      <tr><td class="k">torque</td><td colspan=3 id="t_tau">–</td></tr>
+    </table>
+    <h1 style="margin-top:10px">log</h1>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script>
+const ws = new WebSocket(`ws://${location.host}/`);
+const $ = id => document.getElementById(id);
+const log = (m, cls='') => { const d=$('log'); d.innerHTML += `<span class="${cls}">${m}</span>\n`; d.scrollTop=1e9; };
+let estopped = false;
+
+function send(o){ o.t_client = performance.now(); ws.send(JSON.stringify(o)); }
+
+ws.onopen = () => { log('connected'); setInterval(()=>send({type:'ping'}), 1000); };
+ws.onmessage = ev => {
+  const m = JSON.parse(ev.data);
+  if (m.type === 'ack') {
+    if (m.t_client != null) $('rtt').textContent = (performance.now()-m.t_client).toFixed(1)+' ms';
+    if (m.verdict) log(`${m.code||'skill'}: ${m.verdict} ${m.reason||''}`, m.verdict==='grant'?'ok':'deny');
+    if (m.estopped !== undefined){ estopped=m.estopped; $('estop').classList.toggle('on', estopped); }
+  } else if (m.type === 'telemetry') {
+    $('t_posture').textContent=m.posture; $('t_batt').textContent=(m.battery*100).toFixed(0)+'%';
+    $('t_estop').textContent=m.estopped?'ENGAGED':'clear'; $('t_up').textContent=m.upright;
+    $('t_active').textContent=m.active||'–'; $('t_pose').textContent=m.pose.join(', ');
+    $('t_temp').textContent=m.temps_c.join('  '); $('t_tau').textContent=m.torques.join('  ');
+  } else if (m.type === 'video') {
+    const img=new Image(); img.onload=()=>$('vid').getContext('2d').drawImage(img,0,0);
+    img.src='data:image/bmp;base64,'+m.bmp;
+  }
+};
+ws.onclose = () => log('disconnected');
+
+$('estop').onclick = () => send({type:'estop', on:!estopped});
+document.querySelectorAll('[data-skill]').forEach(b=>b.onclick=()=>send({type:'skill',name:b.dataset.skill}));
+const V=0.15;
+const vmap={f:[V,0,0],b:[-V,0,0],l:[0,V,0],r:[0,-V,0],'0':[0,0,0]};
+document.querySelectorAll('[data-vel]').forEach(b=>b.onclick=()=>{const v=vmap[b.dataset.vel];send({type:'velocity',vx:v[0],vy:v[1],wz:0});});
+const hmap={up:[0,0.1],down:[0,-0.1],left:[-0.1,0],right:[0.1,0]};
+document.querySelectorAll('[data-head]').forEach(b=>b.onclick=()=>{const h=hmap[b.dataset.head];send({type:'head',pan:h[0],tilt:h[1]});});
+
+// keyboard
+addEventListener('keydown',e=>{const k={w:'f',s:'b',a:'l',d:'r',' ':'0'}[e.key];
+  if(k){const v=vmap[k];send({type:'velocity',vx:v[0],vy:v[1],wz:0});}
+  if(e.key==='Escape')send({type:'estop',on:!estopped});});
+
+// gamepad (browser Gamepad API): left stick = drive, right stick = head
+function padLoop(){
+  const p=navigator.getGamepads?.()[0];
+  if(p){ $('pad').textContent=p.id.slice(0,24);
+    const dz=v=>Math.abs(v)<0.12?0:v;
+    const lx=dz(p.axes[0]),ly=dz(p.axes[1]),rx=dz(p.axes[2]||0),ry=dz(p.axes[3]||0);
+    send({type:'velocity',vx:-ly*V,vy:-lx*V,wz:0});
+    if(rx||ry)send({type:'head',pan:rx*0.1,tilt:-ry*0.1});
+    if(p.buttons[1]?.pressed)send({type:'estop',on:true});
+  }
+  requestAnimationFrame(padLoop);
+}
+addEventListener('gamepadconnected',()=>{log('gamepad connected');padLoop();});
+</script>
+</body>
+</html>

@@ -1,1 +1,7 @@
 */target/
+miniblur-a
+.venv/
+.pio/
+.pio-core/
+*/.pio/
+node_core/test_node_core

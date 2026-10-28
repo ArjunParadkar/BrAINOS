@@ -33,3 +33,11 @@ iso_build/
 
 # the os workspace's build output
 os/target/
+
+# BLUR bring-up (block 2)
+blur/pi/.venv/
+firmware/.venv/
+firmware/.pio-core/
+**/.pio/
+.env
+*.onnx
