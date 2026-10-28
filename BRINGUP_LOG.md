@@ -9,6 +9,49 @@ Pi skill runtime + laptop control → voice → vision → sim/training.
 
 ---
 
+## Block 4 — 2026-10-28 (voice latency: 2.5 s → ~1.0 s, same stack)
+
+Goal: first-audio p50 < 1 s with the same Claude + ElevenLabs stack, no new
+providers.
+
+### What changed
+
+- **One LLM call per turn** (was two on tool turns). The model is told to open
+  with a short tentative acknowledgement, so speakable text streams before any
+  tool is resolved. `tool_use` runs through KIRA locally; a `tool_result` is
+  appended for history validity but **no second LLM call** is made. **Denials
+  are voiced from KIRA's own sayable reason** (local), not a follow-up call. A
+  local fallback ("Okay.") guarantees speech if the model skips the ack.
+- **ElevenLabs WebSocket stream-input** (`/stream-input`, pcm_16000,
+  `optimize_streaming_latency=3`, `auto_mode`), **opened concurrently** with
+  the LLM so the handshake is off the critical path; Claude's tokens are fed to
+  the socket as they stream, audio returns as soon as the first words land.
+- **Cheaper calls:** `max_tokens=150`, short system prompt, one warm anthropic
+  client reused, **prompt caching confirmed** (last call `cache_read 738`,
+  `cache_creation 0`).
+- **Laptop STT:** faster-whisper with VAD end-pointing at 300 ms
+  (`record_until_silence`), transcribe on endpoint.
+
+### Real latency (real Claude + real ElevenLabs WS, fixture STT, 10+10 turns)
+
+| end-of-speech → first audio byte | p50 | p95 |
+|---|---|---|
+| chat turns | **1195 ms** | 1828 ms |
+| tool turns | **1026 ms** | 1875 ms |
+
+Down from **2519 ms p50** in Block 3 (≈2.4×). ElevenLabs first byte is
+~250–300 ms; the remaining floor is Claude's time-to-first-token (~0.6–1.2 s,
+with occasional network spikes driving p95). Tool turns now meet < 1 s within
+noise; chat sits ~1.2 s. Getting consistently < 1 s on STT→Claude→TTS would
+need a realtime **speech-to-speech** API (architecture B) — out of scope for
+"same stack". Reported, not claimed.
+
+`laptop_live.py` now uses ElevenLabs (was Cartesia/piper in the docstring);
+`--self-test` still passes (piper→whisper→Claude→KIRA→ElevenLabs, first token
+840 ms).
+
+---
+
 ## Block 3 — 2026-10-28 (voice made real: Claude streaming + ElevenLabs TTS)
 
 Correction to Block 2: that report called the voice pipeline "built", but the

@@ -21,11 +21,14 @@ sys.path.insert(0, HERE)
 from pipeline import FRAME, Pipeline, TTS, load_env   # noqa: E402
 from kira_gate import BodyState, KiraGate, Posture    # noqa: E402
 
-TURNS = [
-    "can you sit down please", "lie down for me", "okay stand back up",
-    "good girl, look at me", "come here", "follow me please",
+CHAT_TURNS = [
     "what are you", "are you doing okay", "tell me a tiny joke",
-    "alright, stop",
+    "do you like it here", "what can you do", "how are you feeling",
+    "say something kind", "are you sleepy", "what's your name", "good morning",
+]
+TOOL_TURNS = [
+    "can you sit down", "lie down please", "okay stand up", "look at me",
+    "sit", "lie down now", "stand", "look over here", "please sit", "stand up now",
 ]
 
 
@@ -59,27 +62,29 @@ def main():
           f"TTS: {'REAL '+TTS.provider if tts_real else 'mock'}")
 
     pipe = Pipeline(on_tool=on_tool)
-    tok, phr, aud = [], [], []
-    for text in TURNS:
-        frames, t = utterance(text)
-        turn = pipe.handle_utterance(frames, transcript_fixture=t)
-        tok.append(turn.token_ms); phr.append(turn.phrase_ms); aud.append(turn.latency_ms)
-        tools = ", ".join(f"{n}:{'ok' if a else 'deny'}" for n, a, _ in turn.tools) or "-"
-        print(f"  '{text[:26]:<26}' tok {turn.token_ms:5.0f}  phrase {turn.phrase_ms:5.0f}  "
-              f"audio {turn.latency_ms:5.0f}ms  [{tools}] \"{turn.reply.strip()[:40]}\"")
 
-    print(f"\nend-of-speech -> first LLM token : p50 {pct(tok,.5):.0f} ms  p95 {pct(tok,.95):.0f} ms")
-    print(f"end-of-speech -> first phrase    : p50 {pct(phr,.5):.0f} ms  p95 {pct(phr,.95):.0f} ms")
-    print(f"end-of-speech -> first AUDIO byte: p50 {pct(aud,.5):.0f} ms  p95 {pct(aud,.95):.0f} ms  "
-          f"({'real LLM+TTS' if (llm and tts_real) else 'partly mocked'}; target < 800 ms)")
+    def run(turns, label):
+        aud, tok = [], []
+        for text in turns:
+            frames, t = utterance(text)
+            turn = pipe.handle_utterance(frames, transcript_fixture=t)
+            aud.append(turn.latency_ms); tok.append(turn.token_ms)
+            tools = ",".join(f"{n}:{'ok' if a else 'deny'}" for n, a, _ in turn.tools) or "-"
+            print(f"  [{label}] '{text[:20]:<20}' tok {turn.token_ms:5.0f}  "
+                  f"audio {turn.latency_ms:5.0f}ms [{tools}] \"{turn.reply.strip()[:34]}\"")
+        return aud, tok
 
-    # barge-in
-    pipe.speaking = True
-    loud = (np.random.default_rng(1).standard_normal(FRAME) * 6000).astype(np.int16)
-    print(f"\nbarge-in interrupt detected: {pipe.handle_barge_in(loud)}")
-    print("KIRA tool routing:")
-    for n, v, c in routed:
-        print(f"  {n:<10} {v:<6} {c}")
+    chat_aud, _ = run(CHAT_TURNS, "chat")
+    tool_aud, _ = run(TOOL_TURNS, "tool")
+
+    print(f"\nend-of-speech -> first AUDIO byte (real {'LLM+TTS' if llm and tts_real else 'partial'}):")
+    print(f"  chat turns : p50 {pct(chat_aud,.5):.0f} ms   p95 {pct(chat_aud,.95):.0f} ms")
+    print(f"  tool turns : p50 {pct(tool_aud,.5):.0f} ms   p95 {pct(tool_aud,.95):.0f} ms")
+    print(f"  target < 1000 ms (block 4 goal)")
+    u = pipe.llm.last_usage
+    if u:
+        print(f"  prompt cache (last call): cache_read {u['cache_read']} / "
+              f"cache_creation {u['cache_creation']} / input {u['input']} tokens")
 
 
 if __name__ == "__main__":

@@ -3,8 +3,9 @@ laptop_live.py -- talk to BLUR on the laptop, before the Pi exists.
 
 laptop mic -> local Whisper STT -> Claude (claude-haiku-5-5, streaming, tools
 through KIRA) -> TTS -> laptop speaker. STT is local (faster-whisper tiny/base)
-so no STT key is needed; TTS is Cartesia if CARTESIA_API_KEY is set, else the
-local piper binary in tools/piper, else text only.
+so no STT key is needed; TTS is ElevenLabs Flash v2.5 (the pipeline's streaming
+WebSocket backend) when ELEVENLABS_API_KEY is set, else the local piper binary
+in tools/piper, else text only.
 
 Modes:
   --mic                 live: record until you stop talking, then BLUR replies
@@ -143,9 +144,10 @@ def _play(pcm, sr):
 
 def pick_tts(play):
     load_env()
-    if os.environ.get("CARTESIA_API_KEY"):
-        return CartesiaTTS(play=play)
-    p = PiperTTS(play=play)
+    if os.environ.get("ELEVENLABS_API_KEY") or os.environ.get("CARTESIA_API_KEY"):
+        from pipeline import TTS            # ElevenLabs Flash v2.5 WS (primary), Cartesia secondary
+        return TTS()
+    p = PiperTTS(play=False)                 # BufferedSession does the playback
     if p.ok:
         return p
     print("  (no TTS key and no local piper; replies will be text only)")
@@ -172,13 +174,15 @@ def record_until_silence(max_s=10):
     return np.concatenate(buf), sr
 
 
-def build_pipeline(tts):
+def build_pipeline(tts, play=True):
     gate = KiraGate(allow_spine_abd=False)
     state = BodyState(posture=Posture.STAND)
     def on_tool(name):
         d = gate.check(name, state)
         return d.verdict.value, d.reason
-    return Pipeline(on_tool=on_tool, tts=tts)
+    pipe = Pipeline(on_tool=on_tool, tts=tts)
+    pipe.play = play            # the TTS session plays audio on the laptop speaker
+    return pipe
 
 
 def one_turn(pipe, text):
@@ -201,8 +205,9 @@ def main():
     ap.add_argument("--whisper", default="base")
     args = ap.parse_args()
     load_env()
-    tts = pick_tts(play=not args.no_audio and not args.wav and not args.self_test)
-    pipe = build_pipeline(tts)
+    play = not args.no_audio and not args.wav and not args.self_test
+    tts = pick_tts(play=play)
+    pipe = build_pipeline(tts, play=play)
     print(f"STT: local whisper({args.whisper})  LLM: claude-haiku-5-5  TTS: {tts.provider}")
 
     if args.say:

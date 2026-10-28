@@ -40,18 +40,14 @@ TOOLS = ["sit", "lie_down", "stand", "come_here", "look_at_me", "follow", "stop"
 STOP_WORDS = {"stop", "freeze", "halt", "wait"}
 
 PERSONA = (
-    "You are BLUR, a small quadruped robot companion. Your manner is warm, "
-    "soft, and calm, with gentle pacing; polite and a little shy, and quietly "
-    "protective of the person you are with. You have a dry, deadpan sense of "
-    "humour. You can drop to a quiet, serious tone when something matters. "
-    "Speak in short spoken sentences -- this is said aloud, so no lists, no "
-    "emoji, no stage directions. "
-    "You are BLUR, your own self: never imitate or quote any person or "
-    "fictional character, and never use anyone's catchphrases or lines. "
-    "When the person asks you to do something physical, call the matching "
-    "tool. Your safety policy (KIRA) may refuse a tool; when it does, you will "
-    "get the reason as the tool result -- accept it gracefully and say, "
-    "briefly and gently, why you can't just now."
+    "You are BLUR, a small quadruped robot companion: warm, soft, calm, a "
+    "little shy, quietly protective, with dry deadpan humour. Short spoken "
+    "sentences, said aloud -- no lists, no emoji, no stage directions. You are "
+    "your own self; never imitate or quote anyone, no catchphrases. "
+    "Always begin your reply with a few words immediately. If the person asks "
+    "for a physical action, say a brief, tentative acknowledgement first (like "
+    "\"okay, let me\"), then call the matching tool -- it may not be possible "
+    "right now, and that's fine."
 )
 
 
@@ -154,35 +150,42 @@ class LLM:
             import anthropic
             self._client = anthropic.Anthropic()        # reads ANTHROPIC_API_KEY from env
 
+    last_usage = None     # {"cache_read": int, "cache_creation": int, "input": int}
+
     def respond(self, transcript, history, execute):
-        """Generator of events: {"type":"text","text":...} and
-        {"type":"tool","name":...,"allowed":...,"result":...}. Appends the
-        user/assistant/tool turns to `history` in place."""
+        """ONE streaming call per turn (no tool round-trip on the critical
+        path). Yields {"type":"text",...} deltas and {"type":"tool",...} events.
+        The model speaks a short acknowledgement first, so TTS starts before
+        the tool is even resolved. Tools run through KIRA locally; for history
+        validity a tool_result is still appended, but no second LLM call is
+        made -- denials are voiced from KIRA's own sayable reason upstream."""
         if self._client is None:
             yield from self._mock(transcript, history, execute)
             return
         system = [{"type": "text", "text": PERSONA, "cache_control": {"type": "ephemeral"}}]
         tools = [dict(t) for t in TOOL_SCHEMAS]
-        tools[-1]["cache_control"] = {"type": "ephemeral"}   # cache the tool block
+        tools[-1]["cache_control"] = {"type": "ephemeral"}   # cache the prompt prefix
         history.append({"role": "user", "content": transcript})
-        for _ in range(4):                                    # bounded tool loop
-            with self._client.messages.stream(
-                model=self.model, max_tokens=256, system=system,
-                tools=tools, messages=history) as stream:
-                for ev in stream:
-                    if ev.type == "content_block_delta" and ev.delta.type == "text_delta":
-                        yield {"type": "text", "text": ev.delta.text}
-                final = stream.get_final_message()
-            history.append({"role": "assistant", "content": final.content})
-            tus = [b for b in final.content if getattr(b, "type", None) == "tool_use"]
-            if final.stop_reason != "tool_use" or not tus:
-                break
-            results = []
-            for b in tus:
-                allowed, result = execute(b.name, dict(b.input or {}))
-                yield {"type": "tool", "name": b.name, "allowed": allowed, "result": result}
-                results.append({"type": "tool_result", "tool_use_id": b.id,
-                                "content": result, "is_error": not allowed})
+        with self._client.messages.stream(
+            model=self.model, max_tokens=150, system=system,
+            tools=tools, messages=history) as stream:
+            for ev in stream:
+                if ev.type == "content_block_delta" and ev.delta.type == "text_delta":
+                    yield {"type": "text", "text": ev.delta.text}
+            final = stream.get_final_message()
+        u = final.usage
+        self.last_usage = {"cache_read": getattr(u, "cache_read_input_tokens", 0) or 0,
+                           "cache_creation": getattr(u, "cache_creation_input_tokens", 0) or 0,
+                           "input": u.input_tokens, "output": u.output_tokens}
+        history.append({"role": "assistant", "content": final.content})
+        tus = [b for b in final.content if getattr(b, "type", None) == "tool_use"]
+        results = []
+        for b in tus:
+            allowed, result = execute(b.name, dict(b.input or {}))
+            yield {"type": "tool", "name": b.name, "allowed": allowed, "result": result}
+            results.append({"type": "tool_result", "tool_use_id": b.id,
+                            "content": result, "is_error": not allowed})
+        if results:                           # keep history valid; no extra LLM call
             history.append({"role": "user", "content": results})
 
     def _mock(self, transcript, history, execute):
@@ -281,6 +284,104 @@ class TTS:
                         yield np.frombuffer(data[:n], np.int16)
                     rem = data[n:]
 
+    def session(self, play=False):
+        """A per-turn streaming session: feed text as the LLM emits it, audio
+        starts as soon as the first words arrive. ElevenLabs uses the
+        WebSocket stream-input endpoint (socket opened up front, off the
+        critical path); everything else buffers and renders on close."""
+        if self.el_key:
+            return ElevenWSSession(self.el_key, self.voice_id, self.model, play=play)
+        return BufferedSession(self, play=play)
+
+
+class BufferedSession:
+    """Collects the whole reply, then renders it via tts.stream() on close.
+    Used for the mock, piper, and Cartesia-HTTP backends."""
+    def __init__(self, tts, play=False):
+        self.tts = tts
+        self.play = play
+        self.buf = ""
+        self._first = None
+
+    def feed(self, text):
+        self.buf += text
+
+    def first_audio_ts(self):
+        return self._first
+
+    def close(self):
+        if not self.buf.strip():
+            return
+        for pcm in self.tts.stream([self.buf.strip()]):
+            if self._first is None:
+                self._first = time.perf_counter()
+            if self.play:
+                _play_blocking(pcm, 16000)
+
+
+class ElevenWSSession:
+    """ElevenLabs stream-input WebSocket. The socket is opened and primed in
+    __init__ (off the LLM critical path); feed() sends text as tokens arrive;
+    a reader thread timestamps the first audio chunk and collects PCM."""
+    def __init__(self, key, voice_id, model, play=False):
+        import json
+        import threading
+        from websockets.sync.client import connect
+        self.play = play
+        self._first = None
+        self._pcm = []
+        url = (f"wss://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream-input"
+               f"?model_id={model}&output_format=pcm_16000&optimize_streaming_latency=3"
+               f"&inactivity_timeout=20&auto_mode=true")
+        self._ws = connect(url, additional_headers={"xi-api-key": key}, max_size=None,
+                           open_timeout=10)
+        self._ws.send(json.dumps({"text": " ",
+                                  "voice_settings": {"stability": 0.7, "similarity_boost": 0.75,
+                                                     "speed": 0.95}}))
+        self._json = json
+        self._reader = threading.Thread(target=self._read, daemon=True)
+        self._reader.start()
+
+    def _read(self):
+        import base64
+        try:
+            for msg in self._ws:
+                d = self._json.loads(msg)
+                if d.get("audio"):
+                    if self._first is None:
+                        self._first = time.perf_counter()
+                    self._pcm.append(base64.b64decode(d["audio"]))
+                if d.get("isFinal"):
+                    break
+        except Exception:
+            pass
+
+    def feed(self, text):
+        if text.strip():
+            self._ws.send(self._json.dumps({"text": text}))
+
+    def first_audio_ts(self):
+        return self._first
+
+    def close(self):
+        try:
+            self._ws.send(self._json.dumps({"text": ""}))   # flush + end of stream
+            self._reader.join(timeout=15)
+            self._ws.close()
+        except Exception:
+            pass
+        if self.play and self._pcm:
+            import numpy as _np
+            _play_blocking(_np.frombuffer(b"".join(self._pcm), _np.int16), 16000)
+
+
+def _play_blocking(pcm, sr):
+    try:
+        import sounddevice as sd
+        sd.play(pcm, sr); sd.wait()
+    except Exception:
+        pass
+
 
 # ---------------- the orchestrator ----------------
 @dataclass
@@ -341,37 +442,53 @@ class Pipeline:
                 turn.transcript = ev["partial"]
         turn.t_end_of_speech = time.perf_counter()
 
-        # LLM streaming -> phrases -> TTS, started on the first complete phrase
+        # Open the TTS session up front (WS handshake off the critical path),
+        # then feed Claude's words to it the instant they stream. The model is
+        # told to start with a short acknowledgement, so audio begins before
+        # any tool is resolved -- no second LLM call on the critical path.
         self.speaking = True
+        play = getattr(self, "play", False)
+        # open the TTS session concurrently so the WS handshake overlaps the
+        # LLM's first-token wait instead of adding to it.
+        import threading
+        holder = {}
+        def _open():
+            holder["s"] = (self.tts.session(play=play) if hasattr(self.tts, "session")
+                           else BufferedSession(self.tts, play=play))
+        opener = threading.Thread(target=_open); opener.start()
+        sess = None
+        def _sess():
+            nonlocal sess
+            if sess is None:
+                opener.join()
+                sess = holder["s"]
+            return sess
         buf = ""
-        pending_phrases = []
-        tts_started = False
-
-        def speak(phrases):
-            nonlocal tts_started
-            for i, _pcm in enumerate(self.tts.stream(phrases)):
-                if not tts_started:
-                    turn.t_first_audio = time.perf_counter()
-                    tts_started = True
-
         for ev in self.llm.respond(turn.transcript, self.history, self._execute):
             if ev["type"] == "text" and ev["text"]:
                 if not turn.t_first_token:
                     turn.t_first_token = time.perf_counter()
                 turn.reply += ev["text"]
+                _sess().feed(ev["text"])        # stream tokens straight to TTS (auto_mode buffers)
                 buf += ev["text"]
                 done, buf = _phrases(buf)
-                for p in done:
-                    if not turn.t_first_phrase:
-                        turn.t_first_phrase = time.perf_counter()
-                    pending_phrases.append(p)
-                    speak([p])
+                if done and not turn.t_first_phrase:
+                    turn.t_first_phrase = time.perf_counter()
             elif ev["type"] == "tool":
                 turn.tools.append((ev["name"], ev["allowed"], ev["result"]))
-        if buf.strip():
-            if not turn.t_first_phrase:
-                turn.t_first_phrase = time.perf_counter()
-            speak([buf.strip()])
+                # voice a denial from KIRA's own sayable reason -- no extra LLM call
+                if not ev["allowed"] and ev["result"]:
+                    _sess().feed(" " + ev["result"])
+                    turn.reply += " " + ev["result"]
+        if not turn.reply.strip():
+            # the model skipped the spoken acknowledgement -> a short local one,
+            # so a granted action still gets a voice
+            fallback = "Okay." if any(a for _, a, _ in turn.tools) else "Mm."
+            turn.reply = fallback
+            _sess().feed(fallback)
+        s = _sess()
+        s.close()
+        turn.t_first_audio = s.first_audio_ts() or 0.0
         self.speaking = False
 
         # keep conversation history short, but only ever cut at a real user
