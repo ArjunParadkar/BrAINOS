@@ -18,16 +18,19 @@ inside the repo (`firmware/.pio-core`); both gitignored. No system packages.
 
 | project | target | result |
 |---|---|---|
+| `esc_g431` | B-G431B-ESC1 (ststm32 ^19, Arduino + SimpleFOC) | **BUILT** — Flash 25,908 B (19.8 %), RAM 2,220 B (6.8 %) |
 | `esp32s3_node` | ESP32-S3 (SimpleFOC 2.3.2 + TWAI) | **BUILT** — Flash 233,597 B (7.0 %), RAM 19,064 B (5.8 %) |
 | `node_core.c` (cross) | Cortex-M4F (STM32G431) | **BUILT** `arm-none-eabi-gcc -O2 -Werror -ffreestanding`, .text **2060 B** |
 | `node_core.c` (cross) | Cortex-M7 (Teensy 4.1) | **BUILT** same flags, .text **1960 B** |
-| `esc_g431` | B-G431B-ESC1 | blocked: PlatformIO can't resolve `framework-arduinoststm32` for linux_x86_64 (registry/mirror); core cross-builds for M4F above |
-| `teensy_body` | Teensy 4.1 | blocked: GitHub TLS resets cloning FlexCAN_T4; core cross-builds for M7 above |
+| `teensy_body` | Teensy 4.1 | blocked: this box's GitHub clone of FlexCAN_T4 keeps resetting (TLS/connection); core cross-builds for M7 above. Builds on a stable connection. |
 
-So the portable node control core is proven to compile for the real MCUs
-(2 KB of code), and the full ESP32-S3 node image links and builds. The two
-blocked projects failed on **transient network / registry** issues fetching
-third-party frameworks, not on our code; retried automatically.
+So **both motor-node images build** (G431 and ESP32-S3), and the portable node
+control core compiles for both real MCUs (≈2 KB of code). Only the Teensy body
+image is outstanding, blocked solely by this environment's unreliable GitHub
+access when cloning the FlexCAN_T4 library — not our code; it links the same
+proven core (M7 cross-build above) and builds once the connection is stable.
+Fix applied: `esc_g431` pinned to `ststm32@^19` (the earlier 17.6 pin's
+framework package would not resolve here).
 
 ### Pi stack + SIL — "BrAInOS learns its devices in sim first" (brief 3, 5)
 
