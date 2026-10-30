@@ -21,7 +21,9 @@ Pi skill runtime + laptop control → voice → vision → sim/training.
 - Voice: real streaming Claude (`claude-haiku-5-5`, tools→KIRA) + ElevenLabs
   Flash v2.5 WebSocket; ~1 s p50, memory/greeting answers < 500 ms.
 - Firmware: the CAN protocol + node core (host tests 26/26, cross-compiles for
-  M4F/M7); **G431 and ESP32-S3 node images build**; torque limits.
+  M4F/M7); **all three images build — G431, ESP32-S3 and the Teensy 4.1 body
+  controller** (Teensy FLASH ~39 KB; the earlier block was a flaky FlexCAN_T4
+  clone + a compound-literal bug, both fixed Friday); torque limits.
 - Pi stack: KIRA-gated skill runtime (50 Hz, 14 µs/step), SIL on the final body
   holds stand over the real CAN protocol; laptop WebSocket control (p50 0.4 ms).
 - Retarget: final-body descriptor staged; finalbody campaign submitted.
@@ -29,8 +31,6 @@ Pi skill runtime + laptop control → voice → vision → sim/training.
 **Doesn't / needs more:**
 - Anything on the **real robot** — no hardware here; the 7×4015 are missing, so
   no walk/run/jump even when built.
-- **Teensy image** — blocked on a flaky GitHub clone of FlexCAN_T4 (network),
-  not code; the M7 cross-build proves the core compiles.
 - **< 800 ms voice** on cloud turns — Claude TTFT is the floor; a native
   speech-to-speech model (Arjun's "ChatGPT voice") would close it.
 - **Retrained policies** — finalbody campaign queued on Pinnacle, not finished.

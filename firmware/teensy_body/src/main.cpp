@@ -50,8 +50,8 @@ static void reflex_attitude_update() { /* Mahony on BMI270 @ >=400 Hz */ }
 static bool reflex_fall_detected()   { return false; /* tilt + accel */ }
 static void reflex_protective_lie()  { /* tuck legs + damp */ }
 static void broadcast_estop(uint8_t reason) {
-  can_frame_t f = frame_make(0, FC_ESTOP, 0,
-      (const uint8_t[]){ESTOP_MAGIC0, ESTOP_MAGIC1, reason, (uint8_t)tick}, 4);
+  const uint8_t payload[4] = {ESTOP_MAGIC0, ESTOP_MAGIC1, reason, (uint8_t)tick};
+  can_frame_t f = frame_make(0, FC_ESTOP, 0, payload, 4);
   for (uint8_t b = 0; b < 3; ++b) { f.bus = b; send_frame(&f); }
   digitalWriteFast(PIN_RELAY_OPEN, HIGH);
 }
@@ -67,7 +67,8 @@ static JointCmd interp(int j, uint32_t now_ms) {
   JointCmd a = pi_prev[j], b = pi_now[j];
   float span = (float)(pi_now_ms - pi_prev_ms);
   float t = span > 0.5f ? (float)(now_ms - pi_prev_ms) / span : 1.0f;
-  if (t < 0) t = 0; if (t > 1) t = 1;
+  if (t < 0) t = 0;
+  if (t > 1) t = 1;
   JointCmd o;
   o.q = a.q + t * (b.q - a.q); o.qd = a.qd + t * (b.qd - a.qd);
   o.kp = b.kp; o.kd = b.kd; o.tau_ff = b.tau_ff;
