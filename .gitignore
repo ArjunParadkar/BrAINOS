@@ -43,3 +43,6 @@ firmware/.pio-core/
 *.onnx
 blur/pi/voice/audition/
 blur/pi/voice/voice_config.json
+blur/pi/mind/demo_memory.json
+blur/pi/mind/web/reacts.html
+blur/pi/mind/__pycache__/

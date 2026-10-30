@@ -9,6 +9,84 @@ Pi skill runtime + laptop control → voice → vision → sim/training.
 
 ---
 
+## What works by Friday (2026-10-30) / what doesn't
+
+**Works (laptop / sim / host — never on a real robot):**
+- The **conversational mind** (`blur/pi/mind/`): real Claude + ElevenLabs, a
+  reflex layer (backchannels, gaze, turn-taking, name/stop/greeting), a fast
+  path that answers from persona + BrAInOS memory, a visible **thinking**
+  display, memory write-back + **recall across runs**, gestures on a web page.
+  Demo: `blur/pi/.venv/bin/python blur/pi/mind/demo.py --fresh --view`
+  (add `--speak` for audio; open `blur/pi/mind/web/reacts.html`).
+- Voice: real streaming Claude (`claude-haiku-5-5`, tools→KIRA) + ElevenLabs
+  Flash v2.5 WebSocket; ~1 s p50, memory/greeting answers < 500 ms.
+- Firmware: the CAN protocol + node core (host tests 26/26, cross-compiles for
+  M4F/M7); **G431 and ESP32-S3 node images build**; torque limits.
+- Pi stack: KIRA-gated skill runtime (50 Hz, 14 µs/step), SIL on the final body
+  holds stand over the real CAN protocol; laptop WebSocket control (p50 0.4 ms).
+- Retarget: final-body descriptor staged; finalbody campaign submitted.
+
+**Doesn't / needs more:**
+- Anything on the **real robot** — no hardware here; the 7×4015 are missing, so
+  no walk/run/jump even when built.
+- **Teensy image** — blocked on a flaky GitHub clone of FlexCAN_T4 (network),
+  not code; the M7 cross-build proves the core compiles.
+- **< 800 ms voice** on cloud turns — Claude TTFT is the floor; a native
+  speech-to-speech model (Arjun's "ChatGPT voice") would close it.
+- **Retrained policies** — finalbody campaign queued on Pinnacle, not finished.
+- Per-phrase (vs per-turn) expressive prosody; twin-rendered gestures (the web
+  page renders them instead).
+
+---
+
+## Block 5 — 2026-10-28..30 (the conversational mind, inside BrAInOS)
+
+A conversational mind built the way the brain runs — fast reflex + cognitive
+paths in parallel, a slow "thinking" path shown in the body — not a voice
+script. It lives in `blur/pi/mind/` and uses the entity's PERSONA, its MEMORY
+of the person (Domain 5 rules), and KIRA for every body act.
+
+- **Reflex layer** (`reflex.py`, local, no cloud): energy/pitch prosody,
+  turn-taking prediction (pause + falling pitch + syntactic completeness),
+  backchannels at clause boundaries, instant name/stop/greeting, prosody→emotion.
+  **Measured reflex latency: mean 48 µs, max 569 µs per frame** (budget
+  150 ms) — ~3000× headroom.
+- **Fast path** (`mind.py`): answers instantly from what she knows — a local
+  no-cloud answer for name recall, greetings and good-night; otherwise a tiny
+  prompt carrying a retrieved **memory snippet** (not the whole history) to
+  `claude-haiku-5-5`, with a **speculative start** fired when the turn is
+  predicted to end (its latency hides behind the user's last words) and
+  committed if the final only extends it.
+- **Slow path / thinking**: on a recall miss or a complex question she SHOWS
+  thinking (head tilt + gaze up-and-to-the-side + a soft "hmm", a KIRA-gated
+  gesture) and runs a deeper call with episode context, then speaks.
+- **Memory** (`memory.py`): episodic ring + semantic facts with provenance +
+  consolidation, bounded, persisted to disk ("flash"). **Recall across two
+  runs verified**: name "Arjun" (provenance turn2) saved by one run, recalled
+  by a fresh process in 664 ms with no cloud call.
+- **Expressive** output: per-turn emotion → ElevenLabs voice settings
+  (stability/style/speed). Per-phrase / v3 audio tags are the documented next
+  step (higher latency). Gestures synced with speech (jaw, nod, tail, head).
+- **Gestures** (`gestures.py`): dialogue-act/emotion → neck/jaw/tail (no ear
+  servos, rendered as head/tail flicks), each KIRA-gated; `CollectSink` writes
+  a self-contained **web replay page** (`web/reacts.html`) so Arjun sees her
+  react; `TwinSink` drives the MuJoCo twin's neck/jaw/tail when connected.
+
+**Measured end-of-turn → first audio** (real Claude + ElevenLabs, 8-turn
+script; network-variance affects cloud turns):
+- memory/greeting/good-night (local, no cloud): **417–470 ms**;
+- recall from memory: **~470–664 ms**;
+- thinking "hmm" (immediate): **~470–950 ms**;
+- chat/tool (cloud LLM): **~1.2–2.4 s p50** (Claude TTFT + occasional spikes).
+- **Thinking display triggered ~12–38 %** of turns depending on the script.
+
+"Like ChatGPT's newest voice" is a native speech-to-speech model; we don't
+have one with Claude. This parallel design reaches sub-500 ms when she answers
+from memory/persona, and is TTFT-bound on cloud turns. The gap and a
+speech-to-speech option are noted; not adopted without Arjun.
+
+---
+
 ## Block 4 — 2026-10-28 (voice latency: 2.5 s → ~1.0 s, same stack)
 
 Goal: first-audio p50 < 1 s with the same Claude + ElevenLabs stack, no new

@@ -284,13 +284,16 @@ class TTS:
                         yield np.frombuffer(data[:n], np.int16)
                     rem = data[n:]
 
-    def session(self, play=False):
+    def session(self, play=False, voice_settings=None):
         """A per-turn streaming session: feed text as the LLM emits it, audio
         starts as soon as the first words arrive. ElevenLabs uses the
         WebSocket stream-input endpoint (socket opened up front, off the
-        critical path); everything else buffers and renders on close."""
+        critical path); everything else buffers and renders on close.
+        `voice_settings` (per turn) carries the expressive prosody for the
+        conversational mind (stability/style/speed by emotion)."""
         if self.el_key:
-            return ElevenWSSession(self.el_key, self.voice_id, self.model, play=play)
+            return ElevenWSSession(self.el_key, self.voice_id, self.model,
+                                   play=play, voice_settings=voice_settings)
         return BufferedSession(self, play=play)
 
 
@@ -323,24 +326,30 @@ class ElevenWSSession:
     """ElevenLabs stream-input WebSocket. The socket is opened and primed in
     __init__ (off the LLM critical path); feed() sends text as tokens arrive;
     a reader thread timestamps the first audio chunk and collects PCM."""
-    def __init__(self, key, voice_id, model, play=False):
+    def __init__(self, key, voice_id, model, play=False, voice_settings=None):
         import json
         import threading
         from websockets.sync.client import connect
         self.play = play
         self._first = None
         self._pcm = []
+        vs = voice_settings or {"stability": 0.7, "similarity_boost": 0.75, "speed": 0.95}
         url = (f"wss://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream-input"
                f"?model_id={model}&output_format=pcm_16000&optimize_streaming_latency=3"
                f"&inactivity_timeout=20&auto_mode=true")
-        self._ws = connect(url, additional_headers={"xi-api-key": key}, max_size=None,
-                           open_timeout=10)
-        self._ws.send(json.dumps({"text": " ",
-                                  "voice_settings": {"stability": 0.7, "similarity_boost": 0.75,
-                                                     "speed": 0.95}}))
         self._json = json
-        self._reader = threading.Thread(target=self._read, daemon=True)
-        self._reader.start()
+        self._ws = None
+        for attempt in range(2):                 # survive a transient TLS/handshake blip
+            try:
+                self._ws = connect(url, additional_headers={"xi-api-key": key},
+                                   max_size=None, open_timeout=6)
+                self._ws.send(json.dumps({"text": " ", "voice_settings": vs}))
+                break
+            except Exception:
+                self._ws = None
+        if self._ws is not None:
+            self._reader = threading.Thread(target=self._read, daemon=True)
+            self._reader.start()
 
     def _read(self):
         import base64
@@ -357,13 +366,18 @@ class ElevenWSSession:
             pass
 
     def feed(self, text):
-        if text.strip():
-            self._ws.send(self._json.dumps({"text": text}))
+        if self._ws is not None and text.strip():
+            try:
+                self._ws.send(self._json.dumps({"text": text}))
+            except Exception:
+                self._ws = None
 
     def first_audio_ts(self):
         return self._first
 
     def close(self):
+        if self._ws is None:
+            return
         try:
             self._ws.send(self._json.dumps({"text": ""}))   # flush + end of stream
             self._reader.join(timeout=15)
