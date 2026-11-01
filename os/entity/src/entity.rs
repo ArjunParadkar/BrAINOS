@@ -39,7 +39,8 @@ use brainos_kira::action::{Proposal, Request};
 use brainos_kira::gate::{Kira, Outcome, Verdict};
 use brainos_memory::consolidate::{consolidate, ConsolidationReport, Dream};
 use brainos_memory::episode::{Episode, Outcome as EpisodeOutcome};
-use brainos_memory::graph::{NodeKind, StateGraph};
+use brainos_memory::graph::{EdgeKind, NodeKind, StateGraph};
+use brainos_abi::ids::NodeId;
 use brainos_memory::index::Index;
 use brainos_memory::law::MemoryHandle;
 use brainos_memory::provenance::Provenance;
@@ -349,7 +350,37 @@ impl Entity {
         let mut cal = calibration;
         cal.body = body;
         acq.calibrate(cal.clone(), expected_joints, |_| true)?;
+        let join = acq.render_join(self.tick);
+        debug_assert_eq!(acq.step, Step::Calibrated);
+        self.bind_acquired(body, schema, cal, &join);
+        Ok(body)
+    }
 
+    /// Lend an adapter what §8 needs — the key, the RNG, the body map and
+    /// a supply of region ids — for a body whose acquisition is driven
+    /// from outside this crate (a body with its own probing procedure,
+    /// like BLUR's). The adapter runs `Acquisition` itself; when it
+    /// reaches `Calibrated` it hands the result to `bind_acquired`.
+    pub fn acquire_via<T>(
+        &mut self,
+        f: impl FnOnce(&BrainKey, &mut brainos_crypto::rng::Drbg, &mut BodyMap, &mut dyn FnMut() -> RegionId, SessionId, Tick) -> T,
+    ) -> T {
+        let session = SessionId::from_bytes(self.rng.nonce32());
+        let mut pending: Vec<RegionId> = Vec::new();
+        for _ in 0..RegionClass::ALL.len() {
+            pending.push(self.next_region_id());
+        }
+        let mut it = pending.into_iter();
+        let mut ids = move || it.next().unwrap_or(RegionId::ZERO);
+        let tick = self.tick;
+        f(&self.key, &mut self.rng, &mut self.bodies, &mut ids, session, tick)
+    }
+
+    /// The gate side and the memory side of incorporation, for a body
+    /// that has been acquired and calibrated: bind its policy and
+    /// envelopes in KIRA, and write its calibration and its joining into
+    /// the state graph (never into the body).
+    pub fn bind_acquired(&mut self, body: BodyId, schema: CapabilitySchema, cal: Calibration, join: &str) {
         // bind the gate side
         let mut policy = SchemaPolicy::new(body, schema.clone()).calibrated(cal.clone());
         for class in schema.regions().into_iter().filter(|c| c.is_consequential()) {
@@ -381,16 +412,33 @@ impl Entity {
         self.graph.add(
             &self.handle,
             NodeKind::Body,
-            &acq.render_join(self.tick),
+            join,
             100,
             Provenance::own(self.tick),
         );
         self.life.saw_body(body);
         self.span.peak_bodies = self.span.peak_bodies.max(self.bodies.body_count() as u16);
         self.index = Index::build(&self.graph);
+    }
 
-        debug_assert_eq!(acq.step, Step::Calibrated);
-        Ok(body)
+    /// What the body taught the entity about itself: the body schema a
+    /// body-schema learner (e.g. BLUR's, `blur/schema/`) discovered from the
+    /// body's own babbling. Like calibration it lives in the state graph,
+    /// never in the body or in a model file (§3.7): one node per part
+    /// (a summary, then one per discovered module), each kept as
+    /// `Calibration` (not prunable; dropped only when the body is released),
+    /// provenanced to the body, the parts linked in order.
+    pub fn learn_body_schema(&mut self, body: &BodyId, parts: &[&str]) -> Vec<NodeId> {
+        let mut ids = Vec::with_capacity(parts.len());
+        for p in parts {
+            let id = self.graph.add(&self.handle, NodeKind::Calibration, p, 100, Provenance::from_body(*body, self.tick));
+            if let Some(&prev) = ids.last() {
+                self.graph.link(&self.handle, id, prev, EdgeKind::DerivedFrom);
+            }
+            ids.push(id);
+        }
+        self.index = Index::build(&self.graph);
+        ids
     }
 
     /// A body leaves. The entity does not.

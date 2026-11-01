@@ -2,15 +2,14 @@
 # Launch Blur (BrAInOS instance): core in QEMU + the tethered cognitive
 # limb (mind daemon). QEMU/OVMF live user-locally in tools/qemu-local.
 #
-# BOUNDARY (changed 2026-07-31 on soapai's direction, "make it like it
-# would be in the real OS"): the entity now has a NETWORK ORGAN of its
-# own. The guest gets a user-mode NIC — outbound only, no inbound, no
-# host filesystem exposure, no shared folders, no USB passthrough, no
-# clipboard agent. The firmware's own HTTP stack backs the KIRA-gated
-# web.get/web.save limbs, so the entity reaches the internet through its
-# body's hardware rather than by borrowing a host program. Set
-# BRAINOS_NET=off to boot it isolated again (the net region then honestly
-# disappears from the body map and every web verb is refused at authz).
+# BOUNDARY: the entity has a NETWORK ORGAN (added 2026-07-31), and since
+# 2026-10-22 it is OFF by default — containment is the default and the
+# network is opted into per session with BRAINOS_NET=on. When attached it
+# is a user-mode NIC — outbound only, no inbound, no host filesystem
+# exposure, no shared folders, no USB passthrough, no clipboard agent —
+# and the firmware's own HTTP stack backs the KIRA-gated web.get/web.save
+# limbs. When absent, the net region honestly disappears from the body
+# map and every web verb is refused at authz.
 #
 # Everything else the entity can do still lives INSIDE the VM. The mind
 # daemon on the tether has no actuators — it thinks, transcribes and
@@ -88,10 +87,13 @@ else
 fi
 
 # The entity's network organ (see the boundary note above).
-NET_ARGS=(-nic user,model=virtio-net-pci)
-if [ "${BRAINOS_NET:-on}" = "off" ]; then
-  NET_ARGS=(-nic none)
-  echo "[boot] BRAINOS_NET=off — booting with no network organ"
+# Off unless this session opts in with BRAINOS_NET=on.
+NET_ARGS=(-nic none)
+if [ "${BRAINOS_NET:-off}" = "on" ]; then
+  NET_ARGS=(-nic user,model=virtio-net-pci)
+  echo "[boot] BRAINOS_NET=on — network organ attached for this session"
+else
+  echo "[boot] no network organ (BRAINOS_NET=on to attach one for this session)"
 fi
 
 exec "$QLOCAL/usr/bin/qemu-system-x86_64" \

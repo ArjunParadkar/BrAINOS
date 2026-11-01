@@ -32,6 +32,7 @@ fn main() -> ExitCode {
         "life" => life(),
         "model" => model(),
         "worlds" => worlds(),
+        "blur" => blur(&args[2..]),
         "help" | "-h" | "--help" => {
             usage();
             ExitCode::SUCCESS
@@ -39,6 +40,29 @@ fn main() -> ExitCode {
         other => {
             eprintln!("brainos: unknown command `{other}`\n");
             usage();
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn blur(rest: &[String]) -> ExitCode {
+    match rest.first().map(|s| s.as_str()) {
+        Some("gate1") | None => {
+            if brainos_host::blur_run::gate1() {
+                ExitCode::SUCCESS
+            } else {
+                ExitCode::FAILURE
+            }
+        }
+        Some("gate2") => {
+            if brainos_host::blur_gate2::gate2() {
+                ExitCode::SUCCESS
+            } else {
+                ExitCode::FAILURE
+            }
+        }
+        Some(other) => {
+            eprintln!("brainos blur: unknown subcommand `{other}` (gate1, gate2)");
             ExitCode::FAILURE
         }
     }

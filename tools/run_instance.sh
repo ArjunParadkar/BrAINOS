@@ -6,13 +6,11 @@
 # A flock on the key image enforces that: the second launch fails fast
 # with a clear message instead of racing the first.
 #
-# BOUNDARY (changed 2026-07-31 on soapai's direction, "make it like it
-# would be in the real OS"): the entity has a NETWORK ORGAN of its own --
-# a user-mode NIC, outbound only, no inbound, no host filesystem exposure.
-# The firmware's HTTP stack backs the KIRA-gated web.get/web.save limbs,
-# so the internet is reached through this body's hardware rather than by
-# borrowing a host program. BRAINOS_NET=off boots it isolated again, and
-# the net region then honestly vanishes from the body map.
+# BOUNDARY: the entity has a NETWORK ORGAN (added 2026-07-31) that is
+# OFF by default since 2026-10-22; BRAINOS_NET=on attaches it for one
+# session -- a user-mode NIC, outbound only, no inbound, no host
+# filesystem exposure, backing the KIRA-gated web.get/web.save limbs.
+# Without it the net region honestly vanishes from the body map.
 #
 # Otherwise unchanged: no shared folders, no USB passthrough. The other
 # channels out of the GUEST are the COM3 link (mind daemon, no actuators)
@@ -141,10 +139,13 @@ else
 fi
 
 # The entity's network organ (see the boundary note above).
-NET_ARGS=(-nic user,model=virtio-net-pci)
-if [ "${BRAINOS_NET:-on}" = "off" ]; then
-  NET_ARGS=(-nic none)
-  echo "[boot] BRAINOS_NET=off — booting with no network organ"
+# Off unless this session opts in with BRAINOS_NET=on.
+NET_ARGS=(-nic none)
+if [ "${BRAINOS_NET:-off}" = "on" ]; then
+  NET_ARGS=(-nic user,model=virtio-net-pci)
+  echo "[boot] BRAINOS_NET=on — network organ attached for this session"
+else
+  echo "[boot] no network organ (BRAINOS_NET=on to attach one for this session)"
 fi
 
 exec "$QLOCAL/usr/bin/qemu-system-x86_64" \

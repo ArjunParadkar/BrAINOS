@@ -29,6 +29,9 @@ pub mod life;
 pub mod limits;
 pub mod migrate;
 pub mod model;
+pub mod blur_gate2;
+pub mod blur_run;
+pub mod blur_sil;
 
 pub use clock::SystemClock;
 pub use store::{FileStore, StoreError};

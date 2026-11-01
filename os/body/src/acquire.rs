@@ -94,6 +94,15 @@ pub enum StepError {
     CalibrationInvalid,
     /// the device's identity changed mid-protocol
     IdentityShifted,
+    /// the parts the device reports (its own census of what it is made
+    /// of) are not the parts the entity recorded for this body — a
+    /// swapped, duplicated or unknown component. Raised by an adapter
+    /// during the handshake, through `reject`.
+    PartsUnrecognised,
+    /// the schema declares a part the body does not physically have —
+    /// a phantom limb — or omits one the body type requires. Raised by an
+    /// adapter at the schema step, through `reject`.
+    SchemaContradictsBody,
 }
 
 /// One device going through the protocol.
@@ -148,6 +157,24 @@ impl Acquisition {
 
     pub fn transcript(&self) -> [u8; 32] {
         self.transcript
+    }
+
+    /// Reject at the current step for a reason only an adapter can see
+    /// (the body's own census, a probe that went the wrong way). The
+    /// machine stays the single place a body's standing is recorded:
+    /// an adapter that finds a problem says so here rather than keeping
+    /// a private verdict next to an `Acquisition` that still looks fine.
+    pub fn reject(&mut self, e: StepError) -> StepError {
+        let _ = self.fail::<()>(e);
+        e
+    }
+
+    /// Absorb adapter evidence (a signed census, a probe log digest) into
+    /// the transcript, so a later step is bound to what was seen.
+    pub fn witness(&mut self, label: &str, data: &[u8]) {
+        if self.step != Step::Rejected {
+            self.absorb(label, data);
+        }
     }
 
     /// Record a failure and return it. Generic in the success type so
@@ -437,9 +464,9 @@ pub fn default_envelope(
                 let l = Limit::new(p.min as f32, p.max as f32);
                 if l.is_sane() {
                     // several verbs may bound the same channel; the
-                    // envelope keeps the *intersection*, because a grant
-                    // wide enough for the loosest verb would be wider than
-                    // the strictest verb was ever checked against
+                    // envelope keeps the *union* (see the note above:
+                    // each verb is still held to its own bounds at
+                    // validate)
                     match env.limit(ch) {
                         None => {
                             env.bound(ch, l);

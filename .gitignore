@@ -46,3 +46,10 @@ blur/pi/voice/voice_config.json
 blur/pi/mind/demo_memory.json
 blur/pi/mind/web/reacts.html
 blur/pi/mind/__pycache__/
+
+# BLUR bring-up: generated data, latents, trained policies and logs stay local
+blur/schema/data/
+blur/schema/runs/
+blur/learn/runs/
+blur/logs/
+blur/pi/__pycache__/

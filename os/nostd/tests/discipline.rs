@@ -18,7 +18,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 /// Crates that must compile with no operating system beneath them.
-const CORE_CRATES: [&str; 15] = [
+const CORE_CRATES: [&str; 16] = [
     "abi",
     "crypto",
     "rt",
@@ -33,6 +33,7 @@ const CORE_CRATES: [&str; 15] = [
     "proof",
     "fleet",
     "export",
+    "blur",
     "nostd",
 ];
 

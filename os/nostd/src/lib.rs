@@ -203,5 +203,16 @@ pub fn touch_everything() -> u64 {
     n += archive.is_ok() as u64;
 
     let _unused: Vec<u8> = Vec::new();
+
+    // blur — the Teensy's procedures and the wire, as the board would run them
+    let mut auto = brainos_blur::autonomic::Autonomic::new();
+    let mut down = brainos_blur::wire::NerveDown::new(0);
+    n += auto.request(brainos_blur::autonomic::Request::Census) as u64;
+    n += brainos_blur::bus::buses_needed_for(1000) as u64;
+    n += brainos_blur::schema::blur_schema().len() as u64;
+    let f = brainos_blur::wire::estop(brainos_blur::descriptor::Bus::A, 1, 1);
+    n += brainos_blur::wire::is_estop(&f) as u64;
+    n += down.frames.push(f) as u64;
+    let _ = &mut auto;
     n
 }

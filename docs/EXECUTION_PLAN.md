@@ -57,7 +57,7 @@ The repo grew under one numbering (Stage 3 "Operator", Stage 4 "Entity") and the
 | **5 Brain placement** | tiers 1–3 placeable; remote brain | `pool.rs` roles fast/deliberate/vision with fail-over | **VERIFIED** pool fail-over (entity_test T7). Placement as a first-class body (datacenter slice via §8): **NOT BUILT** |
 | **6 Provable safety** | formal verification of the eight stages; sealed `Granted`; hardware isolation | KIRA's stages exist and are tested; `Capability` **sealed 2026-09-14** (no public constructor) | tested, not proven. See §9 |
 | **7 Scale infrastructure** | fleet ops, marketplace, hosted entities | — | **NOT BUILT** (2029–30) |
-| **8 Physical embodiment** | owned bodies: small AI hardware → companions (Blur lineage) → humanoid | Blur designed on paper (23 actuators) | **NOT BUILT** (2030–32) |
+| **8 Physical embodiment** | owned bodies: small AI hardware → companions (Blur lineage) → humanoid | Blur v36 designed, 26 actuators, MuJoCo twin acquired via §8 (docs/BLUR_BRINGUP.md) | **NOT BUILT** (2030–32) |
 
 ---
 
@@ -107,7 +107,7 @@ The repo grew under one numbering (Stage 3 "Operator", Stage 4 "Entity") and the
    Mini-Blur           [firmware BUILT, metal MANUAL] hexapod, ESP32-S3 ×2, 10× MG90S     Phase 0
    miniblur/sim        [VERIFIED] the same wire protocol, simulated servos/pose          Phase 0 test rig
    ROS 2 robot / MHS device   [NOT BUILT] adapters into §8 steps 1–3                 Phase 1
-   Blur                [designed] 23-actuator cheetah quadruped                       Phase 3 lineage
+   Blur v36            [twin acquired] 26-actuator cheetah quadruped, see BLUR_BRINGUP.md   Phase 3 lineage
 ```
 
 **The one flow that everything hangs on** (Architecture §16, one tick):

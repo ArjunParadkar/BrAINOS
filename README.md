@@ -1,5 +1,26 @@
 # BrAInOS — the BrAIn Key
 
+> **The BLUR instance (Oct 2026).** BrAInOS now inhabits BLUR, the 3D-printed
+> cheetah quadruped, in simulation first: the MuJoCo twin is driven through the
+> same CAN frames, IMU bursts and KIRA gates the robot will use. Everything for
+> that body is in two places — `blur/` (descriptor generation from the MJCF,
+> the Python twin + wire mirror, PPO day-one skills, HPCC lanes, Pi-side voice /
+> vision / mind, Teensy firmware build) and `os/blur/` (the `no_std` crate:
+> wire codec, CAN budget, census + schema, Autonomic acquisition at 1 kHz,
+> attitude, firmware attestation). The gated bring-up, with every gate report,
+> is **[`docs/BLUR_BRINGUP.md`](docs/BLUR_BRINGUP.md)**; the twin itself and the
+> physics experiments are in
+> [ArjunParadkar/BLUR-MuJoCo](https://github.com/ArjunParadkar/BLUR-MuJoCo).
+>
+> ```sh
+> cd os && cargo test --release -p brainos-blur                 # the BLUR crate, no twin needed
+> cd os && cargo run --release --bin brainos -- blur gate1      # Gate 1 against the MuJoCo twin
+> ```
+>
+> Demo: [`demo/blur_mujoco_bringup.mp4`](demo/blur_mujoco_bringup.mp4) (the
+> twin under BrAInOS) · [`demo/brainos_boot.mp4`](demo/brainos_boot.mp4) (the
+> seed booting) · [`demo/blur_wiring.png`](demo/blur_wiring.png) (body wiring).
+
 > **September 2026 — what this is now.** BrAInOS is the identity, memory and
 > unforgeable-policy layer for embodied AI: one BrAIn Key, one state graph,
 > many bodies, every physical action through KIRA. The laptop was the first
@@ -144,7 +165,7 @@ VM with nothing crossing the tether:
   (`app.list`, `app.run`) — §1's process→Instance reading of "an app".
 - **the internet as an organ** (`web.get`, `web.save`) — the firmware's
   own UEFI HTTP stack, not a host browser. HTML becomes *meaning* before
-  it enters the graph. `BRAINOS_NET=off` removes the organ honestly.
+  it enters the graph. The organ is off by default; `BRAINOS_NET=on` attaches it for one session.
 - **self-presentation** (`ui.set`) — console or ambient orb, palette,
   caption, quiet/verbose: a body capability, not a skin.
 - **proprioception** (`screen.read`) — it can read its own screen.
@@ -304,7 +325,7 @@ shell only, never from disk or the key image.
 export ANTHROPIC_API_KEY=...      # optional: lights up the deliberate pathway
 ./run_blur.sh                     # one command: daemon, then the core in QEMU
 BRAINOS_CAMERA=on ./run_blur.sh   # ...with the lens jack open
-BRAINOS_NET=off  ./run_blur.sh    # ...with no network organ at all
+BRAINOS_NET=on   ./run_blur.sh    # ...with the network organ attached (off by default)
 tools/run_instance.sh A --headless # a named body (A/B) for two-VM continuity
 ```
 

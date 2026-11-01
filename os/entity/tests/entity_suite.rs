@@ -890,3 +890,20 @@ fn an_entity_captured_while_awake_resumes_at_its_newest_memory() {
         "the caller's number leaked into the counter"
     );
 }
+
+#[test]
+fn a_body_schema_is_kept_in_the_state_graph_from_the_body_and_survives_pruning() {
+    use brainos_memory::graph::NodeKind;
+    let mut e = Entity::new(BrainKey::from_seed(&[42u8; 32]), Tick(1));
+    let body = BodyId::from_bytes([7u8; 32]);
+    let before = e.graph.count(NodeKind::Calibration);
+    let ids = e.learn_body_schema(&body, &["body-schema v1: 3 modules", "m0: imu:ax imu:ay imu:az | Z2 betti 1,0,1", "m1: enc:FR_knee"]);
+    assert_eq!(ids.len(), 3);
+    assert_eq!(e.graph.count(NodeKind::Calibration), before + 3);
+    for id in &ids {
+        let n = e.graph.get(*id).unwrap();
+        assert_eq!(n.kind, NodeKind::Calibration);
+        assert_eq!(n.provenance.body, Some(body));
+    }
+    assert!(!NodeKind::Calibration.prunable());
+}

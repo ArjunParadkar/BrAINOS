@@ -26,6 +26,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "brainos-blur"
+version = "0.3.0"
+dependencies = [
+ "brainos-abi",
+ "brainos-body",
+ "brainos-crypto",
+ "brainos-kira",
+ "brainos-rt",
+ "libm",
+]
+
+[[package]]
 name = "brainos-body"
 version = "0.3.0"
 dependencies = [
@@ -104,6 +116,7 @@ version = "0.3.0"
 dependencies = [
  "brainos-abi",
  "brainos-adapters",
+ "brainos-blur",
  "brainos-body",
  "brainos-bodyd",
  "brainos-cognition",
@@ -145,6 +158,7 @@ version = "0.3.0"
 dependencies = [
  "brainos-abi",
  "brainos-adapters",
+ "brainos-blur",
  "brainos-body",
  "brainos-cognition",
  "brainos-crypto",
