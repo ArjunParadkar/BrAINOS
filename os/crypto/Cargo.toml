@@ -11,3 +11,22 @@ doctest = false
 [dependencies]
 brainos-abi = { workspace = true }
 ed25519-dalek = { workspace = true }
+
+# UEFI targets only. `sha2` is already in the tree — ed25519-dalek pulls it
+# in for SHA-512 — and it is named here for exactly one reason: to switch on
+# its portable software backend where there is no operating system.
+#
+# On x86_64-unknown-uefi a *debug* build died inside sha2 with
+#   rustc-LLVM ERROR: Do not know how to split the result of this operator!
+# The target has SSE off (soft-float), and sha2's x86 path carries
+# `#[target_feature]` AVX2 code that LLVM cannot lower there unoptimised.
+# (A release build got through because the optimiser discarded that path
+# before lowering; that is luck, not a build.) `force-soft` selects the
+# plain-integer compression function and the AVX2 code is never compiled.
+#
+# This adds no crate to the dependency tree and changes nothing on hosted
+# targets, where sha2 keeps its runtime-detected backends. The companion
+# setting for curve25519-dalek is in os/.cargo/config.toml. Both are
+# pinned by nostd/tests/discipline.rs.
+[target.'cfg(target_os = "uefi")'.dependencies]
+sha2 = { version = "0.10", default-features = false, features = ["force-soft"] }

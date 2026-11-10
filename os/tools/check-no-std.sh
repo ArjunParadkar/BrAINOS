@@ -17,6 +17,10 @@
 # is nothing to run. That distinction cost a session's worth of
 # "verified at source level only" in the documentation.
 #
+# Every installed target must build. There was a standing exception for
+# x86_64-unknown-uefi until 2026-11-10; it is gone, and a failure on any
+# target is now a failure of the check.
+#
 # If no target is found anywhere it says so and exits 2 — deliberately
 # not 0, so a CI job cannot report "no_std verified" on a machine that
 # never ran the verification.
@@ -102,23 +106,15 @@ if [ ${#failed[@]} -gt 0 ]; then
 
 did not build: ${failed[*]}
 
-Known, and not ours. On x86_64-unknown-uefi the build dies inside the
-\`sha2\` crate with
-
-    rustc-LLVM ERROR: Do not know how to split the result of this operator!
-
-which is its x86 intrinsic path meeting a target LLVM cannot lower it
-for. \`sha2\` arrives transitively through ed25519-dalek; BrAInOS's own
-SHA-256 is written from FIPS 180-4 in \`brainos-crypto\` and is what every
-digest in the system actually uses. Every BrAInOS crate compiles for
-that target — the failure is downstream of all of them, and the aarch64
-UEFI build above exercises the same code with a working backend.
+Every installed bare target is expected to build, in the debug profile
+this script uses. x86_64-unknown-uefi used to fail here inside \`sha2\`
+and \`curve25519-dalek\` (their AVX2 paths on a target with SSE off);
+that is fixed by crypto/Cargo.toml's UEFI-only \`force-soft\` line and
+os/.cargo/config.toml's serial backend. If it is failing again, check
+those two first — and that this was run from inside os/, since the
+cargo config is only read from there.
 MSG
+    exit 1
 fi
 
-# a build that passed somewhere is a pass: the claim is that the code
-# needs no operating system, not that every LLVM backend is bug-free
-if [ ${#passed[@]} -gt 0 ]; then
-    exit 0
-fi
-exit 1
+exit 0

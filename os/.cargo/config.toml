@@ -1,0 +1,9 @@
+# x86_64-unknown-uefi has SSE disabled, and curve25519-dalek's build script
+# picks its "simd" (AVX2) backend for any x86_64 target. Unoptimised, LLVM
+# cannot lower that code for a soft-float target. The serial backend is
+# plain 64-bit integer arithmetic and is what aarch64 already uses.
+#
+# Scope: this file applies to cargo invocations made from inside os/, and
+# only to this one target. See crypto/Cargo.toml for the sha2 half.
+[target.x86_64-unknown-uefi]
+rustflags = ["--cfg", 'curve25519_dalek_backend="serial"']

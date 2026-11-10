@@ -176,6 +176,7 @@ predicted gravity torque.
 - `tools/check-no-std.sh`: brainos-blur is in the bare-metal canary, and
   it builds for `aarch64-unknown-uefi`. The x86_64-uefi failure is the
   pre-existing `sha2` LLVM bug the script documents.
+  (Fixed 2026-11-10: both UEFI targets build; see `docs/OS_STATUS.md`.)
 
 ## Phase 2 — the Autonomic layer and KIRA's physical policies
 

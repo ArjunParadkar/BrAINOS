@@ -243,6 +243,95 @@ fn the_dependency_list_is_still_two_crates_long() {
     );
 }
 
+/// The workspace table is not the only place a dependency can be named:
+/// a crate can declare one in its own manifest and the test above would
+/// never see it. This one reads every member's manifest.
+///
+/// Exactly one such line is allowed, and it is deliberate. `sha2` is
+/// named in `crypto/Cargo.toml` under the UEFI-only target table, with
+/// `force-soft`, because that is the only way to select its portable
+/// backend on a target with SSE switched off (x86_64-unknown-uefi). It
+/// is not a new crate in the tree — ed25519-dalek already depends on it
+/// — and the line must stay target-scoped, so hosted builds are
+/// untouched. `tools/read-export` names ed25519-dalek directly because
+/// it is forbidden from using the workspace's crates at all.
+#[test]
+fn no_crate_names_an_external_dependency_on_the_side() {
+    let root = workspace_root();
+    let mut members: Vec<PathBuf> = fs::read_dir(&root)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .map(|e| e.path().join("Cargo.toml"))
+        .filter(|p| p.exists())
+        .collect();
+    members.push(root.join("tools/read-export/Cargo.toml"));
+    members.sort();
+
+    let mut found: Vec<String> = Vec::new();
+    for manifest in &members {
+        let text = fs::read_to_string(manifest).unwrap();
+        let krate = manifest
+            .parent()
+            .unwrap()
+            .strip_prefix(&root)
+            .unwrap()
+            .to_string_lossy()
+            .to_string();
+        let mut table = String::new();
+        for line in text.lines() {
+            let l = line.trim();
+            if l.starts_with('[') {
+                table = l.to_string();
+                continue;
+            }
+            if l.is_empty() || l.starts_with('#') || !table.contains("dependencies") {
+                continue;
+            }
+            if l.contains("workspace = true") || l.contains("path = ") {
+                continue;
+            }
+            let name = l.split('=').next().unwrap_or("").trim();
+            found.push(format!("{krate} {table} {name}"));
+        }
+    }
+
+    assert_eq!(
+        found,
+        vec![
+            "crypto [target.'cfg(target_os = \"uefi\")'.dependencies] sha2".to_string(),
+            "tools/read-export [dependencies] ed25519-dalek".to_string(),
+        ],
+        "a crate named an external dependency outside the workspace table"
+    );
+
+    let crypto = fs::read_to_string(root.join("crypto/Cargo.toml")).unwrap();
+    let sha2_line = crypto
+        .lines()
+        .find(|l| l.trim_start().starts_with("sha2"))
+        .expect("the sha2 line");
+    assert!(
+        sha2_line.contains("force-soft") && sha2_line.contains("default-features = false"),
+        "sha2 is named for one purpose only: its software backend on UEFI"
+    );
+}
+
+/// The other half of the x86_64 UEFI build: curve25519-dalek must use
+/// its serial backend there. If this file goes missing the debug build
+/// for that target dies inside LLVM again, with an error that names
+/// nothing of ours.
+#[test]
+fn the_x86_uefi_target_pins_the_serial_curve_backend() {
+    let cfg = fs::read_to_string(workspace_root().join(".cargo/config.toml"))
+        .expect("os/.cargo/config.toml");
+    let code: String = cfg
+        .lines()
+        .filter(|l| !l.trim_start().starts_with('#'))
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(code.contains("[target.x86_64-unknown-uefi]"));
+    assert!(code.contains("curve25519_dalek_backend=\"serial\""));
+}
+
 #[test]
 fn the_canary_touches_every_crate() {
     // A canary that only touches half the workspace checks half the

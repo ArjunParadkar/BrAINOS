@@ -63,7 +63,8 @@ only, no bare target installed" since the workspace was built. There
 were two installed the whole time; the check script asked the
 distribution's `rustc`, which has none, instead of the rustup toolchain
 next to it, which has both. Every crate below `host` builds for
-`aarch64-unknown-uefi` — a machine with no operating system.
+`aarch64-unknown-uefi` and, since 2026-11-10, `x86_64-unknown-uefi` —
+machines with no operating system.
 
 Everything below is the detail. The critical-path item is unchanged and
 is not software: **Mini-Blur has never been powered on.** Stages 1–2 and the Phase 0 work are exactly as they were and
@@ -990,13 +991,15 @@ moved.
 
 **The `no_std` claim is now checked by a real build, and was not
 before.** Every crate below `host` compiles for
-`aarch64-unknown-uefi` — a target with no operating system underneath
-it:
+`aarch64-unknown-uefi` and `x86_64-unknown-uefi` — targets with no
+operating system underneath them:
 
 ```
 ── building the canary for aarch64-unknown-uefi
    ok
-no_std verified against: aarch64-unknown-uefi
+── building the canary for x86_64-unknown-uefi
+   ok
+no_std verified against: aarch64-unknown-uefi x86_64-unknown-uefi
 ```
 
 This was documented as unverifiable on this machine for the whole
@@ -1013,14 +1016,32 @@ the external dependency list is still two crates long. That is what
 catches the discipline breaking in review; the build is what catches it
 breaking in fact.
 
-`x86_64-unknown-uefi` does not build, and it is worth saying exactly
-why, because it is not ours. The build dies inside `sha2` with
-`rustc-LLVM ERROR: Do not know how to split the result of this
-operator!` — its x86 intrinsic path meeting a target LLVM cannot lower
-it for. `sha2` arrives transitively through `ed25519-dalek`; BrAInOS's
-own SHA-256 is written from FIPS 180-4 in `brainos-crypto` and is what
-every digest in the system actually uses. Every BrAInOS crate compiles
-for that target too — the failure is downstream of all of them.
+`x86_64-unknown-uefi` builds too, as of 2026-11-10, and the earlier
+note here was wrong about one thing. It said the target "does not
+build". What actually failed was the **debug** profile, which is the one
+`check-no-std.sh` uses; a release build of the same tree had been
+passing all along, because the optimiser discarded the offending code
+before LLVM had to lower it. That is luck rather than a build, so it was
+fixed properly:
+
+* the target has SSE switched off, and both `sha2` and
+  `curve25519-dalek` (transitive, through `ed25519-dalek`) select AVX2
+  code paths for any x86_64 target. Unoptimised, LLVM cannot lower them
+  there: `rustc-LLVM ERROR: Do not know how to split the result of this
+  operator!`;
+* `crypto/Cargo.toml` now names `sha2` under a UEFI-only target table
+  with `force-soft`. It is not a new crate in the tree, and hosted
+  builds are untouched;
+* `os/.cargo/config.toml` selects `curve25519-dalek`'s serial backend
+  for that one target.
+
+Both are pinned by `nostd/tests/discipline.rs`, and `check-no-std.sh`
+now fails if any installed bare target fails. Every crate below `host`
+builds for both UEFI targets in debug and release. **Built, not run:**
+no UEFI binary of the `os/` workspace has been booted. What is Verified
+is narrower — the RFC 8032 §7.1 vectors pass on the host, both on the
+default backend and with the software SHA-512 path forced
+(`os/tools/check-rfc8032-soft.sh`).
 
 **The ROS 2 adapter is brittle on purpose, and more so than this
 document used to say.** A ROS topic declares a message *type* and

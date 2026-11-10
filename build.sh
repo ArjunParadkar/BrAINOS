@@ -63,10 +63,23 @@ while [ $# -gt 0 ]; do
 done
 OUT="${OUT:-$PWD/brainos-key.img}"
 
+# The os/ substrate is built for the same bare targets as the core, so a
+# key is never minted from a tree whose substrate does not build there.
+# The canary depends on every crate below `host` except bodyd, which is
+# named separately. Run from inside os/: its .cargo/config.toml (the
+# serial curve backend for x86_64 UEFI) is only read from there.
+build_substrate() {
+  ( cd os && cargo build --release --target "$1" -p brainos-nostd-check -p brainos-bodyd )
+}
+
 cargo build --release --target x86_64-unknown-uefi --manifest-path core/Cargo.toml
+build_substrate x86_64-unknown-uefi
+OS_ARCHES="x86_64-unknown-uefi"
 
 if [ -n "$BUILD_ARM" ]; then
   cargo build --release --target aarch64-unknown-uefi --manifest-path core/Cargo.toml
+  build_substrate aarch64-unknown-uefi
+  OS_ARCHES="$OS_ARCHES aarch64-unknown-uefi"
   ARCHES="both"
 else
   ARCHES="x86_64"
@@ -117,3 +130,4 @@ if [ -n "$BODY" ]; then
 fi
 echo "[build] key: $OUT ($(stat -c%s "$OUT") bytes)"
 echo "[build] architectures: ${ARCHES}${FW_ARCH}"
+echo "[build] os/ substrate (every crate below host): ${OS_ARCHES}"
