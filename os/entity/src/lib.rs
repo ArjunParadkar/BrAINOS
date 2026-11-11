@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Crate root: lists the modules that make one entity out of a Key, a memory and every body it holds
 //! BFS  DEFINES  entity, goals, life, simultaneity
 //! BFS  USES     this crate: entity, goals, life, simultaneity
-//! BFS  USED BY  crate export, crate host, crate nostd
+//! BFS  USED BY  crate bpu, crate export, crate host, crate nostd
 //!
 //! brainos-entity — the thing that is a someone.
 //!

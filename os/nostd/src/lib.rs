@@ -1,7 +1,7 @@
 //! BFS  LEVEL    Discipline - the no_std canary and its checks  [crate brainos-nostd-check]
 //! BFS  PURPOSE  A library that touches every crate below host, so building it for a bare target proves none of them needs an operating system
 //! BFS  DEFINES  touch_everything
-//! BFS  USES     brainos: abi, adapters, blur, body, cognition, crypto, entity, export, fleet, kira, +6 more
+//! BFS  USES     brainos: abi, adapters, blur, body, bpu, cognition, crypto, entity, export, fleet, +7 more
 //! BFS  USED BY  -
 //!
 //! The `no_std` canary.
@@ -235,5 +235,18 @@ pub fn touch_everything() -> u64 {
         150.0,
     ));
     n += probe.facets().as_bytes()[0] as u64;
+
+    // bpu — the integer contract and the planner, as silicon would run them
+    n += brainos_bpu::contract::rne_shift(3 << 4, 5) as u64;
+    n += brainos_bpu::contract::sigma_code_from_milli(20) as u64;
+    n += brainos_bpu::prng::EtaPrng::new(1, 328, 4).read_block(1).len() as u64;
+    let d = brainos_cognition::bpu::BpuDescriptor::paper_geometry(4, 1_000_000_000);
+    n += brainos_bpu::planner::plan(
+        &d,
+        &[brainos_bpu::planner::LayerShape { inputs: 256, outputs: 256 }],
+        1_000_000_000,
+    )
+    .map(|p| p.tiles as u64)
+    .unwrap_or(0);
     n
 }

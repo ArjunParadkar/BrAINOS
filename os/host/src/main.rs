@@ -1273,7 +1273,7 @@ fn stat() -> ExitCode {
     println!(
         "  Reported together because \"proof domain size: 8,640\" was the gate's
   number and this line used to print it as if it were the whole of what
-  is checked. It is one of six.\n"
+  is checked. It is one of seven.\n"
     );
     let rows: [(&str, String, &str); 7] = [
         (

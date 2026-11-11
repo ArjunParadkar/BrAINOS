@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  The Nerve trait every hardware protocol implements, and Mandate: proof of a Granted token, the only thing a nerve acts on
 //! BFS  DEFINES  Found, Sensed, NerveFault, MandateError, Mandate, Nerve
 //! BFS  USES     this crate: homeostat, schema | brainos: abi, body, crypto, kira
-//! BFS  USED BY  entity/entity/parts, entity/tests/parts_suite, host/nerves/hwmon, host/nerves/machine, host/nerves/mod, host/nerves/nvml, host/nerves/socketcan, host/tests/autonomic_survives, +5 more
+//! BFS  USED BY  bpu/device, bpu/mock, bpu/nerve, bpu/tests/seam, entity/entity/parts, entity/tests/parts_suite, host/nerves/hwmon, host/nerves/machine, +9 more
 //!
 //! Nerves — the protocols that connect the entity to its parts.
 //!

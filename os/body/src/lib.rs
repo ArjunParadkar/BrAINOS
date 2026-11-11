@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Crate root: lists the modules that turn a device into a region of the body and re-exports their main types
 //! BFS  DEFINES  acquire, calibration, hal, policy, region, schema, vital
 //! BFS  USES     this crate: acquire, calibration, hal, policy, region, schema, vital
-//! BFS  USED BY  crate adapters, crate blur, crate entity, crate fleet, crate host, crate kira, crate nostd, crate part, +1 more
+//! BFS  USED BY  crate adapters, crate blur, crate bpu, crate entity, crate fleet, crate host, crate kira, crate nostd, +2 more
 //!
 //! brainos-body — devices as regions you become.
 //!

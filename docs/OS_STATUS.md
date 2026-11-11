@@ -9,6 +9,16 @@ tree. It is a status report, not a plan — the plan is
 Nothing in `mind/`, `core/`, `miniblur/`, `firmware/` or `body/` was
 changed.
 
+**Updated 2026-11-10** (branch `nerves-x86-bpu`). Three things were added
+and are described where they belong below: the workspace now builds for
+`x86_64-unknown-uefi`; every piece of hardware is a body part reached
+through a nerve, with a seventh property domain and three nerves verified
+on live hardware; and there is a seam and a bit-exact mock for the BPU.
+The full account of the last two is [`NERVES.md`](NERVES.md). One change
+did touch the older trees: every Rust file in the repository now opens
+with a five-line header card (see [`CODE_MAP.md`](CODE_MAP.md)). It is a
+comment and nothing else.
+
 ---
 
 ## If you read one section, read this one
@@ -81,7 +91,8 @@ than a second copy of them.
 cd os
 cargo run --release --bin brainos -- demo     # Phase 0, in simulation
 cargo run --release --bin brainos -- stack    # intent → gate → wire → body → gait
-cargo run --release --bin brainos -- verify   # all six property domains
+cargo run --release --bin brainos -- verify   # all seven property domains
+cargo run --release --bin brainos -- parts    # every part of this machine, live
 cargo run --release --bin brainos -- bench    # measured latencies and footprint
 cargo run --release --bin brainos -- compound # does experience compound?
 cargo run --release --bin brainos -- fleet    # does it transfer between entities?
@@ -95,7 +106,7 @@ cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 762 tests
+cargo test --workspace --release              # 941 tests (2026-11-10)
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -104,10 +115,14 @@ Transcripts of each are in [`artifacts/`](artifacts/).
 
 ## What exists
 
-Eighteen crates plus a standalone tool, about 41,000 lines of Rust, 662
-tests. Every crate
-except `host` is `no_std`, forbids `unsafe`, and depends on nothing
-outside the workspace but `ed25519-dalek` and `libm`.
+Twenty crates plus a standalone tool, about 53,000 lines of Rust under
+`src/`, 941 tests, all passing on 2026-11-10 (it was 802 at the start of
+that day's work and 762 when this document was first written). Every
+crate except `host` is `no_std`, forbids `unsafe`, and depends on nothing
+outside the workspace but `ed25519-dalek` and `libm`. One line names a
+third crate, `sha2`, for UEFI targets only; it was already in the tree
+through `ed25519-dalek` and the line exists to select its software
+backend (see "What this does not show").
 
 | stage / domain | crate | what it is |
 |---|---|---|
@@ -119,7 +134,9 @@ outside the workspace but `ed25519-dalek` and `libm`.
 | §8 acquisition | `body`, `adapters` | the five-step protocol as a state machine, and ROS 2 / MHS bridges into steps 1–3 |
 | §3.8 three worlds | `worlds` | self / human / internet postures, bounded sessions, ingress tainting, and the adversarial filter the entity runs on its human's behalf |
 | Stage 4 | `entity` | one Key, one state graph, every body at once; arbitration; the life record |
-| Stage 6 (part) | `proof` | six property domains: four exhaustive, one fuzzed, one adversarial |
+| parts and nerves | `part` | every piece of hardware as a body part: classes, part schema, the cross-part vitals guard, the `Nerve` trait, homeostasis, interoception |
+| Domain 4 substrate | `bpu` | the BPU seam: the integer contract bit-exact against the reference, a mock device, a nerve, a planner |
+| Stage 6 (part) | `proof` | seven property domains: five exhaustive, one fuzzed, one adversarial |
 | Stage 7 | `fleet` | a registry that cannot command, a marketplace that cannot push, hosts that hold nothing |
 | freedom principle | `export`, `tools/read-export` | entity export v3, and a reader that depends on no BrAInOS crate |
 | — | `abi`, `transport`, `nostd`, `host` | vocabulary, the wire, the `no_std` canary, and the only crate with an operating system underneath it |
@@ -150,7 +167,7 @@ must be acquired again through §8.
 
 ---
 
-## Six property domains
+## Seven property domains
 
 `brainos verify` enumerates the first two completely and runs every case
 through the real code.
@@ -242,6 +259,27 @@ domain is worth exactly as much as its ability to fail, the same domain
 is run against a policy built the old way — one envelope for the whole
 body — and a test asserts it comes back *violated*, in both the
 fail-closed and the fail-open direction.
+
+**Parts and vitals — 504 cases.** Added with the part model
+([`NERVES.md`](NERVES.md)). Every piece of hardware is a part, and a
+verb on one part can harm another: a fan slowed while the processor it
+cools is past its limit. The property is that a verb is permitted
+exactly when it is inside its own part's bounds, is not predicted to
+break another part's vital, and its part is fit — and that a refusal
+names the real reason. Five dimensions: which verb, the value asked for
+either side of the floor and of the schema bound, the other part's
+reading (never heard, stale, too old, not a number, just under, at, and
+well over its limit), the part's own vital, and whether the verb is one
+that relieves it. Every combination is run through the real
+`PartPolicy` and compared with an oracle that shares no code with it.
+
+A missing reading is never read as "fine": four of the seven reading
+values are ways of not knowing, and all of them must refuse as
+`Unpredictable`. And as with the sixth domain, the same cases are run
+against a policy built without the cross-part guard, and a test asserts
+that it comes back violated — in exactly the 24 cases where the guard is
+the only thing between the request and a grant, each of them granted
+when it should have been refused.
 
 It is **not** a machine-checked proof, and the report says so as
 prominently as it says the result. Outside the domains nothing is
@@ -980,6 +1018,51 @@ misquotes it.
 
 ---
 
+## Parts, nerves and the BPU seam
+
+Added 2026-11-10. The detail, the status of every nerve family and the
+runbooks are in [`NERVES.md`](NERVES.md); this is what it changes about
+the picture above.
+
+**Every piece of hardware is a body part.** A fan, a GPU, a disk and a
+battery are acquired by the same five §8 steps as a hexapod, get their
+identity the same way, and are gated by the same `Kira`. What a part
+adds to a body is senses, vitals with thresholds, and a class that says
+which domain looks after it. `brainos parts` surveys the machine it is
+run on: on the development laptop, 14 parts, all acquired.
+
+**Three nerves are verified on live hardware** — Linux hwmon and thermal
+zones, the CPU and disk and battery, and the NVIDIA GPU through NVML
+(which agrees with `nvidia-smi`). CAN is verified on an in-memory bus
+with the existing BLUR codec, and built but not run on a real socket.
+ROS 2 is built and not run. No real fan has been commanded: that needs
+root.
+
+**The live survey produced a result about hardware, not about us.** Most
+chips state no limit: a CPU temperature sensor reports a number and no
+threshold. The nerves do not invent one, so those are senses and not
+vitals. And the fans state no limit either, so — by the rule that a part
+which declares no limits gets no verbs — the entity is given nothing to
+command on them until a human says what the fan's limits are.
+
+**The autonomic loop does not need cognition.** A regulator installed
+under one grant keeps a simulated GPU under its limit at full load while
+a separate cognition process keeps asking for the fan to be stopped (in
+the recorded run: sixty requests, two granted while cool, fifty-eight
+refused at *simulate*), and for ten further simulated minutes after that process is killed with
+SIGKILL. The bench is a simulation and the result is about the path, not
+about a machine.
+
+**The BPU seam is bit-exact against the reference, and found three
+things.** The mock reproduces `bpusim/fixed.py` — the contract the FPGA
+tile was checked against — on every vector, including the FPGA gate's
+own. Building it showed that write-verify never settles at tile scale
+under read noise (about 6 % extra wear, with the devices well written
+regardless), that the 40-bit column sum is tight for 256 rows, and that
+no re-verify threshold is published. All three are in `NERVES.md` §6.
+
+---
+
 ## What this does not show
 
 **Nothing here has touched a motor.** Mini-Blur is simulated throughout.
@@ -1042,6 +1125,19 @@ no UEFI binary of the `os/` workspace has been booted. What is Verified
 is narrower — the RFC 8032 §7.1 vectors pass on the host, both on the
 default backend and with the software SHA-512 path forced
 (`os/tools/check-rfc8032-soft.sh`).
+
+**No part has been commanded on real hardware, and OS-level parts are
+identified, not attested.** Everything that acts on a part ran against a
+simulated bench, a temporary directory or an in-memory bus. Reading is
+live; writing is not. A part behind the operating system holds no key,
+so its identity is derived from the kernel's stable identifiers: it is
+the same part next boot and a different part when swapped, and nothing
+has proved it is what it says.
+
+**The BPU does not exist.** The contract is real and matched bit for
+bit. The device behind it is a mock whose wear, drift and temperature
+are set by a test. The energy figures are projections. The planner is
+not a compiler.
 
 **The ROS 2 adapter is brittle on purpose, and more so than this
 document used to say.** A ROS topic declares a message *type* and

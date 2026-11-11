@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Keeps malfunctions (Error) apart from deliberate refusals (Denied, with the gate stage and a reason code) so code can act on why
 //! BFS  DEFINES  Stage, DenyCode, Denied, Error, Result
 //! BFS  USES     nothing outside core/alloc
-//! BFS  USED BY  abi/codec, abi/ids, abi/lib, abi/tests/abi_suite, abi/text, abi/time, abi/verb, abi/version, +49 more
+//! BFS  USED BY  abi/codec, abi/ids, abi/lib, abi/tests/abi_suite, abi/text, abi/time, abi/verb, abi/version, +50 more
 //!
 //! Errors and refusals.
 //!

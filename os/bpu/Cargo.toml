@@ -1,0 +1,22 @@
+[package]
+name = "brainos-bpu"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "The BPU substrate seam: the integer contract as a bit-exact mock, a nerve that acquires a BPU as a Compute part, and a model-to-tiles planner. The silicon does not exist; this is the seam and a faithful mock."
+
+[lib]
+doctest = false
+
+[dependencies]
+brainos-abi = { workspace = true }
+brainos-crypto = { workspace = true }
+brainos-body = { workspace = true }
+brainos-kira = { workspace = true }
+brainos-cognition = { workspace = true }
+brainos-part = { workspace = true }
+
+[dev-dependencies]
+brainos-memory = { workspace = true }
+brainos-entity = { workspace = true }
+brainos-export = { workspace = true }

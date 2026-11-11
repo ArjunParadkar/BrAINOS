@@ -59,6 +59,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "brainos-bpu"
+version = "0.3.0"
+dependencies = [
+ "brainos-abi",
+ "brainos-body",
+ "brainos-cognition",
+ "brainos-crypto",
+ "brainos-entity",
+ "brainos-export",
+ "brainos-kira",
+ "brainos-memory",
+ "brainos-part",
+]
+
+[[package]]
 name = "brainos-cognition"
 version = "0.3.0"
 dependencies = [
@@ -163,6 +178,7 @@ dependencies = [
  "brainos-adapters",
  "brainos-blur",
  "brainos-body",
+ "brainos-bpu",
  "brainos-cognition",
  "brainos-crypto",
  "brainos-entity",

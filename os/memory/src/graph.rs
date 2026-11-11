@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  The entity's whole memory as typed nodes (with origin, confidence, time) joined by edges; anyone may read, only a MemoryHandle holder writes
 //! BFS  DEFINES  NodeKind, EdgeKind, Edge, Node, Bounds, StateGraph
 //! BFS  USES     this crate: law, provenance | brainos: abi
-//! BFS  USED BY  entity/entity, entity/entity/parts, entity/tests/entity_suite, entity/tests/parts_suite, export/archive, export/tests/export_suite, host/bench, host/demo, +12 more
+//! BFS  USED BY  bpu/tests/seam, entity/entity, entity/entity/parts, entity/tests/entity_suite, entity/tests/parts_suite, export/archive, export/tests/export_suite, host/bench, +13 more
 //!
 //! The state graph — what replaces the filesystem.
 //!

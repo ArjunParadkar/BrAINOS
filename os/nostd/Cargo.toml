@@ -28,3 +28,4 @@ brainos-fleet = { workspace = true }
 brainos-export = { workspace = true }
 brainos-blur = { workspace = true }
 brainos-part = { workspace = true }
+brainos-bpu = { workspace = true }

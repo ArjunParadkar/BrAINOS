@@ -336,7 +336,30 @@ It was **reward farming**:
   load. The v36 MJCF has none (Phase 1 finding 1), so it's a model
   addition in an experiment copy; the shipped MJCF stays untouched.
 
-### Gate 2 report: pending (written 2026-10-22 15:50)
+### Gate 2 report: FAIL (last run 2026-10-23 11:39)
+
+`brainos blur gate2`, log `blur/logs/gate2_after3.txt`: **FAIL — 51
+checks, 20 failed.** (This heading said "pending" until 2026-11-10; the
+gate had run and failed on 23 October and the report was never written
+up. The numbers below are from that log.)
+
+| section | result | detail |
+|---|---|---|
+| release | PASS | |
+| pushes | **FAIL** | 30 pushes of 10–60 N: 9 stayed up, 4 fell and got up, **17 failed** to be upright and still within 12 s |
+| envelope clamp | PASS | worst applied torque 1.0000 × the node limit; violations clamped within one 0.5 ms node-loop step |
+| node envelope without the Teensy | **FAIL** | silent Teensy: PASS (nodes fell back to damping). Rogue Teensy: 75 widening writes refused, but **1 joint went past its physical range** |
+| KIRA stages | **FAIL** | six of seven asks refused at the expected stage. A harmless `neck_pan` pose to 0.3 rad was refused at *simulate* (`PredictedInvariantBreak`) when it should have been granted — so nothing was granted and the Teensy-side check could not be exercised |
+| e-stop | PASS | 8 of 8: no torque with the rail off, 26/26 nodes latched |
+
+Chain evaluations from the same training (200 deterministic episodes
+each, `blur/logs/chain_*.txt`): recovering from fallen **93.5 %**;
+recovering from pushes **49.5 %**.
+
+Open, in order: the push recovery; the rogue-Teensy joint-limit case;
+the false refusal of the neck pose.
+
+#### As written before the run (2026-10-22 15:50)
 Training has not run yet. The InvProj1 job `s19-grid` holds 18 of 20 CPU
 cores, and the standing order is never to disrupt it.
 - The three trainers (`blur-train-{standup,balance,righting}`, 4 active

@@ -76,7 +76,7 @@ SKIP_DIRS = {
     "tts-env", "piper", "qemu-local", "workspace", "iso_build", "work", "runs", "logs",
     ".cargo", "campaigns", "audition",
 }
-GENERATED = re.compile(r"(^|/)(gen|refs_gen)\.rs$")
+GENERATED = re.compile(r"(^|/)(gen|refs_gen|tables_gen)\.rs$")
 CARD = re.compile(r"^//! BFS  (LEVEL|PURPOSE|DEFINES|USES|USED BY) ?(.*)$")
 PUB_RS = re.compile(
     r"^pub(?:\([a-z:]+\))? (?:async )?(?:unsafe )?(?:const )?(fn|struct|enum|trait|type|const|static|mod|union) (\w+)",

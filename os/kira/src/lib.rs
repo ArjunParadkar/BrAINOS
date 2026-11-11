@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Crate root: the gate (KIRA) every action must pass, eight fixed stages from parse to audit, with no bypass and an unforgeable grant
 //! BFS  DEFINES  action, audit, capability, floors, evidence, explain, gate, rules, stages
 //! BFS  USES     this crate: action, audit, capability, floors, gate, rules, stages
-//! BFS  USED BY  crate adapters, crate blur, crate entity, crate host, crate nostd, crate part, crate proof
+//! BFS  USED BY  crate adapters, crate blur, crate bpu, crate entity, crate host, crate nostd, crate part, crate proof
 //!
 //! brainos-kira — Domain 3, the gate.
 //!

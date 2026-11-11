@@ -44,6 +44,8 @@ Authority flows down only through Domain 3. Information flows up freely.
 
 ## 1. Stage numbering — one table, reconciled
 
+*Status column revised 2026-11-10 to include the `os/` workspace, which this table predated. The plan itself (version 1.1, 14 September) is otherwise unchanged; `docs/OS_STATUS.md` and `docs/NERVES.md` are the current status.*
+
 The repo grew under one numbering (Stage 3 "Operator", Stage 4 "Entity") and the September documents use another (Architecture Stages 1–8). From this document on, **the Technical Execution Report's Architecture Stages are canonical**. The repo's old stage names become *build milestones* inside those stages.
 
 | Architecture Stage (canonical) | Deliverable | Repo build milestone(s) that belong to it | Status today |
@@ -53,11 +55,11 @@ The repo grew under one numbering (Stage 3 "Operator", Stage 4 "Entity") and the
 | **3 Compounding mind** | skill graph; semantic memory; consolidation; tool discovery | **M4 "Entity"** `skills.rs` (procedural compilation, signed skill store) is the first working piece | **VERIFIED** entity_test 24/24 (2026-08-30). Consolidation/"dreaming", semantic retrieval beyond keyword, old-vs-new benchmark: **NOT BUILT** |
 | **Phase 0 (Stage 4 seed)** | Mini-Blur walks; entity claims it via §8; two bodies, one memory, live; demo recorded by 31 Oct 2026 | this document's §4 | entity side **VERIFIED in sim** (hexapod_test 24/24, 2026-09-14); firmware **BUILT**; metal, gait on servos, demo video **MANUAL** |
 | **4 Multi-body simultaneity** | same Key on ≥3 bodies, shared graph | **M4 "Entity"** `reach.rs` + `brainos-reach.py` (any device offers hands over TCP, ed25519 attest, ONE body map) | **VERIFIED** for 2 bodies (seat + Reach body, entity_test T1/T2/T6). One loop over the whole entity (Arch §2.1) and split action (§2.2): **NOT BUILT** |
-| **— Adapters** | ROS 2 and MHS bridges into §8 | — | **NOT BUILT** (2027) |
-| **5 Brain placement** | tiers 1–3 placeable; remote brain | `pool.rs` roles fast/deliberate/vision with fail-over | **VERIFIED** pool fail-over (entity_test T7). Placement as a first-class body (datacenter slice via §8): **NOT BUILT** |
-| **6 Provable safety** | formal verification of the eight stages; sealed `Granted`; hardware isolation | KIRA's stages exist and are tested; `Capability` **sealed 2026-09-14** (no public constructor) | tested, not proven. See §9 |
-| **7 Scale infrastructure** | fleet ops, marketplace, hosted entities | — | **NOT BUILT** (2029–30) |
-| **8 Physical embodiment** | owned bodies: small AI hardware → companions (Blur lineage) → humanoid | Blur v36 designed, 26 actuators, MuJoCo twin acquired via §8 (docs/BLUR_BRINGUP.md) | **NOT BUILT** (2030–32) |
+| **— Adapters** | ROS 2 and MHS bridges into §8 | `os/adapters` (ROS 2 node graphs, MHS device schemas, the model boundary); `os/host/src/nerves/ros2.rs` (live graph reader) | **VERIFIED** against *described* robots (adapters suite, `brainos stack`). Live ROS 2 graph: **BUILT**, not run (ROS 2 not installed; runbook in `docs/NERVES.md`). Publishing a granted command into ROS: **NOT BUILT** |
+| **5 Brain placement** | tiers 1–3 placeable; remote brain | `pool.rs` roles fast/deliberate/vision with fail-over | **VERIFIED** pool fail-over (entity_test T7). In `os/`: four tiers, `Plan`, and since 2026-11-10 `Substrate` — a Compute *part* acquired through §8 becomes a placement target and is withdrawn when its vitals degrade: **VERIFIED** (live for the CPU and an NVIDIA GPU; against a mock for the BPU). A datacenter slice as a body: **NOT BUILT** |
+| **6 Provable safety** | formal verification of the eight stages; sealed `Granted`; hardware isolation | KIRA's stages exist and are tested; `Capability` **sealed 2026-09-14** (no public constructor) | tested, not proven. See §9. `os/proof` runs seven bounded property domains (`brainos verify`); it is bounded checking and says so |
+| **7 Scale infrastructure** | fleet ops, marketplace, hosted entities | `os/fleet` (registry, marketplace with provenance, skill delivery) | **VERIFIED in simulation** (fleet suite, `brainos fleet`). No infrastructure deployed: **NOT BUILT** (2029–30) |
+| **8 Physical embodiment** | owned bodies: small AI hardware → companions (Blur lineage) → humanoid | Blur v36 designed, 26 actuators, MuJoCo twin acquired via §8 (docs/BLUR_BRINGUP.md) | twin: Gate 1 **VERIFIED**, Gate 2 **FAILING** (2026-10-23). Hardware: **NOT BUILT** (2030–32) |
 
 ---
 

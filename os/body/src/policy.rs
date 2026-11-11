@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  BodyPolicy: the three KIRA stages (validate, simulate, policy) a body supplies, plus SchemaPolicy, the default built from a schema
 //! BFS  DEFINES  Arg, Args, Refusal, Posture, BodyPolicy, NullPolicy, SchemaPolicy
 //! BFS  USES     this crate: calibration, hal, region, schema, vital | brainos: abi, rt
-//! BFS  USED BY  adapters/boundary, blur/policy, blur/session, blur/tests/blur_suite, body/lib, body/tests/body_suite, entity/entity, entity/tests/entity_suite, +16 more
+//! BFS  USED BY  adapters/boundary, blur/policy, blur/session, blur/tests/blur_suite, body/lib, body/tests/body_suite, bpu/tests/seam, entity/entity, +17 more
 //!
 //! Per-body policy — the invariants that are the body's, not the gate's.
 //!

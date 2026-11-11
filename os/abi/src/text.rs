@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  `Text<N>`: a fixed-capacity UTF-8 string that needs no allocator, cuts on a character boundary, and records when it truncated
 //! BFS  DEFINES  Text
 //! BFS  USES     this crate: codec, error
-//! BFS  USED BY  abi/lib, abi/tests/abi_suite, abi/verb, body/calibration, body/vital, bodyd/mechanism, bodyd/runtime, cognition/escalate, +31 more
+//! BFS  USED BY  abi/lib, abi/tests/abi_suite, abi/verb, body/calibration, body/vital, bodyd/mechanism, bodyd/runtime, bpu/nerve, +32 more
 //!
 //! `Text<N>` — a string with a ceiling.
 //!

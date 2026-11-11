@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  The typed request the gate accepts (verb, which body, arguments, tick) and its signed form, so free text never reaches the gate
 //! BFS  DEFINES  Action, Request, Proposal
 //! BFS  USES     brainos: abi, body, crypto
-//! BFS  USED BY  adapters/boundary, adapters/tests/adapters_suite, blur/session, entity/entity, entity/tests/entity_suite, entity/tests/parts_suite, host/bench, host/blur_gate2, +12 more
+//! BFS  USED BY  adapters/boundary, adapters/tests/adapters_suite, blur/session, bpu/tests/seam, entity/entity, entity/tests/entity_suite, entity/tests/parts_suite, host/bench, +13 more
 //!
 //! What can be asked for.
 //!

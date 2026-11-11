@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Fixed 32-byte ids (entity, body, session, ...) as separate types so one kind cannot be passed as another and names are never strings
 //! BFS  DEFINES  Id32, Fingerprint, NodeId
 //! BFS  USES     this crate: codec, error
-//! BFS  USED BY  abi/lib, abi/tests/abi_suite, adapters/boundary, adapters/tests/adapters_suite, blur/acquire, blur/calibrate, blur/policy, blur/session, +72 more
+//! BFS  USED BY  abi/lib, abi/tests/abi_suite, adapters/boundary, adapters/tests/adapters_suite, blur/acquire, blur/calibrate, blur/policy, blur/session, +73 more
 //!
 //! Identities — every name in the system, as bytes.
 //!

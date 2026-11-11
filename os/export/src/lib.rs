@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Crate root for exporting an entity's complete state to a signed, self-documenting file and importing it back, so an owner can leave with everything
 //! BFS  DEFINES  archive, format
 //! BFS  USES     this crate: archive, format
-//! BFS  USED BY  crate host, crate nostd
+//! BFS  USED BY  crate bpu, crate host, crate nostd
 //!
 //! brainos-export — leaving.
 //!

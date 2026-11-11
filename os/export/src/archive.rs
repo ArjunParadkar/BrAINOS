@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Writes, signs, verifies and imports the entity export file: header, manifest and sections hashed into a Merkle tree and signed by the entity's key
 //! BFS  DEFINES  MAGIC, FORMAT_VERSION, OLDEST_READABLE, ExportError, SectionKind, Section, Manifest, Archive, export, import, adopt
 //! BFS  USES     this crate: format | brainos: abi, crypto, entity, memory
-//! BFS  USED BY  export/lib, export/tests/export_suite, host/demo, host/life, host/main, host/migrate, nostd/lib
+//! BFS  USED BY  bpu/tests/seam, export/lib, export/tests/export_suite, host/demo, host/life, host/main, host/migrate, nostd/lib
 //!
 //! The archive format.
 //!

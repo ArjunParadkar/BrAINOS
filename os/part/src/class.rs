@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  The eight classes a part can be, and which of the five architecture domains looks after each class
 //! BFS  DEFINES  Domain, PartClass
 //! BFS  USES     brainos: body | external: PartClass
-//! BFS  USED BY  host/nerves/hwmon, host/nerves/machine, host/nerves/nvml, host/nerves/socketcan, host/tests/nerves_live, nostd/lib, part/lib, part/policy, +3 more
+//! BFS  USED BY  bpu/nerve, bpu/tests/seam, host/nerves/hwmon, host/nerves/machine, host/nerves/nvml, host/nerves/socketcan, host/tests/nerves_live, nostd/lib, +5 more
 //!
 //! Part classes, and where each sits in the five domains.
 //!

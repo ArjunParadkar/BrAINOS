@@ -315,16 +315,117 @@ hand: `sudo nvme smart-log /dev/nvme0n1` or `sudo smartctl -a /dev/nvme0n1`.
 
 ---
 
-## 6. What changed in existing crates
+## 6. The BPU seam
+
+Code: `os/bpu` (`no_std`, `forbid(unsafe)`, no new external dependency) and
+`os/cognition/src/bpu.rs`. **The silicon does not exist.** This is a seam
+and a faithful mock, and each piece says which it is.
+
+| piece | where | status |
+|---|---|---|
+| `Substrate::Bpu`, `BpuDescriptor` (tiles, tiers, levels, ADC bits, contract version, dial range, endurance, dead tolerance) | `os/cognition` | **Verified** (unit tests) |
+| the integer contract: tile read, noise generator, write path, write-verify | `os/bpu/src/{contract,prng}.rs` | **Verified** bit-exact against `bpusim/fixed.py` at commit `0af2b7aebd8c` |
+| `BpuDevice`: the trait a real driver implements; every write takes a `Mandate` | `os/bpu/src/device.rs` | **Built** (one implementation: the mock) |
+| `MockBpu` | `os/bpu/src/mock.rs` | **Verified** as a mock. Its arithmetic is the contract; wear, dead devices, drift and heat are set by the test, not modelled |
+| `BpuNerve`: a BPU as a Compute part with five verbs | `os/bpu/src/nerve.rs` | **Verified** against the mock |
+| model → tiles planner | `os/bpu/src/planner.rs` | **Verified** as arithmetic. **It is a planner, not a compiler.** |
+| a driver for a real BPU over PCIe/CXL | — | **Not built**; nothing to drive |
+| `sample(k)` experimental read | — | **Not built** |
+
+### The contract is matched bit for bit
+
+`os/bpu/tools/gen_golden.py` reads the reference (it never writes to that
+repository) and produces the lookup tables and `tests/golden/`. Every
+comparison in `tests/golden.rs` is integer equality:
+
+* 69 tile reads — the FPGA gate's own generator, seeds 0–47, plus every
+  contract corner case: 42 one-pass, 27 two-pass, five noise levels, masked
+  tiles, ADC rails;
+* the noise generator's stream for five seeds and dial settings;
+* each write-path function on 400-device arrays;
+* five whole write-verify runs, state for state, with the iteration and
+  pulse counts.
+
+```sh
+cd os && cargo test --release -p brainos-bpu           # 29 tests
+python3 os/bpu/tools/gen_golden.py                     # regenerate from the reference
+```
+
+### What KIRA refuses (Gate C)
+
+| request | refused at | code |
+|---|---|---|
+| a load signed by anyone but the entity | authenticate | `BadSignature` |
+| a load whose pulse estimate would go below the reserve | simulate | `IrreversibleBeyondBudget` |
+| a noise dial outside 0.005–0.2 | validate | `OutOfBounds` |
+| a load onto tiles past the dead-device tolerance, stated honestly | validate | `OutOfBounds` |
+| the same, with the dead fraction understated | policy | `BodyInvariant` (the part is not fit) |
+
+There is no way to write a weight without a token: every `BpuDevice`
+method that writes takes a `&Mandate`. And the device checks for itself
+whatever the gate concluded — it refuses a load onto tiles that really
+exceed the tolerance, stops a write that really overruns the budget, and
+refuses an image other than the one the grant names
+(`tests/seam.rs::the_device_refuses_a_bad_load_even_if_the_gate_was_told_a_comfortable_story`).
+
+### Placement
+
+A healthy BPU is preferred for the tier that prefers it; when its vitals
+go critical its resource is withdrawn and work falls to the GPU, then the
+CPU. The state graph is intact throughout and the entity still exports and
+verifies (`tests/seam.rs::placement_prefers_a_healthy_bpu_...`).
+
+### Three things this work found, none of them in the brief
+
+1. **Write-verify does not settle at tile scale under read noise.** The
+   contract stops when a round finds *no* device outside the band. Every
+   round re-measures with fresh noise, so in an array of 2,048 devices a
+   few measurements fall outside each round and the run goes to the
+   100-round limit. The devices are well written either way (worst true
+   error 0.024 in both cases); the noisy run spends pulses on false
+   alarms. Measured on a 32 × 32 tile: 69,177 pulses and settled at dial
+   0.005; 73,269 pulses and not settled at the contract's 0.02 — about 6 %
+   more wear. `WriteReport::settled` reports this honestly rather than
+   calling it convergence. *A per-device stopping rule would remove it.*
+2. **The 40-bit column sum is exact for 32 rows and tight for 256.** With
+   no read noise a 256-row tile still fits, by about 1 %. With noise near
+   the top of the dial (σ = 0.2) the worst case does not. The mock
+   accumulates in 64 bits and counts columns that left the 40-bit range
+   (`ReadResult::beyond_40_bits`); it does not saturate them, because the
+   contract — written for 32 rows — does not say what a 256-row
+   accumulator does. *Needs one more bit, or a stated saturation, before
+   256-row silicon.*
+3. **No re-verify threshold or temperature limit is published.** The
+   paper gives the write band (0.02) and says retention drifts toward
+   G_min. The nerve's drift thresholds (degraded at 0.05, critical at
+   0.10) are its own assumption, derived and labelled in
+   `os/bpu/src/nerve.rs`; temperature is a sense with no vital.
+
+### What is deliberately absent
+
+Nothing here assumes device noise improves results. The dial is exposed
+because the hardware has one. Nothing schedules it or tunes it.
+
+The energy figures (4 fJ per multiply-accumulate, 2.56 pJ per conversion,
+100 pJ per write pulse) are **projections** from the paper. They leave out
+the controller, the row drivers and everything off-tile. They are for
+comparing placements and should not be quoted as measurements. The
+endurance figures in a `BpuDescriptor` are parameters: on-chip endurance
+is unproven and no value is published.
+
+---
+
+## 7. What changed in existing crates
 
 | crate | change | effect on existing behaviour |
 |---|---|---|
 | `body` | `vital.rs` (`Felt`, `Health`, `Band`); `BodyPolicy::feel` with a default that ignores it; `Acquisition::describe_part` | none: `describe` produces the same ids as before; existing policies are unchanged |
-| `cognition` | `Substrate`; `Resource::substrate` (defaults from the site), `on`, `costing`; `Plan::prefer`; `ResourcePool::pick`, `set_available` | none: a plan with no preference picks exactly as `cheapest_for` did |
+| `cognition` | `bpu.rs` (`BpuDescriptor`, projected energy constants); `Substrate`; `Resource::substrate` (defaults from the site), `on`, `costing`; `Plan::prefer`; `ResourcePool::pick`, `set_available` | none: a plan with no preference picks exactly as `cheapest_for` did |
 | `entity` | `parts`, `intero` fields; `acquire_part`, `feel`, `summarise_parts`, `still_the_same_part`, `release_part` | none for entities with no parts |
 | `proof` | seventh domain `vitals`; `Report::full` includes it | `brainos verify` prints one more section |
 | `host` | `nerves/`, `brainos parts`, features `nvml` and `socketcan` | none |
-| `nostd` | canary touches `part`; three new discipline tests | — |
+| `nostd` | canary touches `part` and `bpu`; three new discipline tests | — |
+| new: `part`, `bpu` | the part model and nerve trait; the BPU seam | — |
 
 `unsafe` was added in exactly two files, both in `host`, both named for it:
 `nerves/nvml_ffi.rs` (dlopen of the vendor library) and

@@ -54,15 +54,30 @@
 > separate `no_std` workspace beside this tree: the state graph with
 > provenance and consolidation, KIRA v2 with a sealed `Granted` and capability
 > attenuation, §8 with ROS 2 and MHS adapters, Stage 4 multi-body simultaneity,
-> Stage 5 brain placement, two exhaustive property domains, Stage 7 fleet and
-> marketplace, entity export v1.0, and a body-side runtime that links
+> Stage 5 brain placement, seven property domains, Stage 7 fleet and
+> marketplace, entity export, and a body-side runtime that links
 > `miniblur/core` so the new stack and the firmware agree about the hexapod by
-> construction. 536 tests. Nothing in this tree changed.
+> construction. 941 tests on 2026-11-10. It builds for both UEFI targets,
+> x86_64 and aarch64.
 >
 > ```sh
 > cd os && cargo run --release --bin brainos -- stack    # intent → gate → wire → body → gait
-> cd os && cargo run --release --bin brainos -- verify   # both property domains
+> cd os && cargo run --release --bin brainos -- verify   # all seven property domains
+> cd os && cargo run --release --bin brainos -- parts    # every part of this machine, live
 > ```
+>
+> **Parts and nerves (November 2026).** Every piece of hardware — a fan, a
+> GPU, a disk, a battery, a motor node — is a body part, acquired through
+> §8 and gated by KIRA like any other, reached through a *nerve*. Three
+> nerves are verified on live hardware; there is a seam and a bit-exact
+> mock for the BPU. What is verified, what is only built and the runbook
+> for everything that needs hands: **[`docs/NERVES.md`](docs/NERVES.md)**.
+>
+> **Reading the code.** Every Rust file opens with the same five lines:
+> its level in the architecture, its purpose, what it defines, what it
+> uses and what uses it. The whole map, by level, is
+> **[`docs/CODE_MAP.md`](docs/CODE_MAP.md)**; `tools/bfs_cards.py` keeps
+> both current and a test fails if they drift.
 >
 > What it is, what it proves and — at length — what it does not:
 > **[`docs/OS_STATUS.md`](docs/OS_STATUS.md)**. Transcripts in

@@ -24,13 +24,14 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 /// Crates that must compile with no operating system beneath them.
-const CORE_CRATES: [&str; 17] = [
+const CORE_CRATES: [&str; 18] = [
     "abi",
     "crypto",
     "rt",
     "memory",
     "body",
     "part",
+    "bpu",
     "kira",
     "cognition",
     "worlds",
