@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Stores the entity's journal on disk as two slot files per segment with fsync and no renames, so a power cut leaves the previous copy intact
+//! BFS  DEFINES  StoreError, FileStore
+//! BFS  USES     brainos: abi, crypto, memory | external: std
+//! BFS  USED BY  host/lib, host/tests/host_suite
+//!
 //! A file-backed journal store.
 //!
 //! Two files per segment — `episodes.a`, `episodes.b`, and so on — which

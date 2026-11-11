@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - envelopes, reflexes, scheduler, watchdogs  [crate brainos-rt]
+//! BFS  PURPOSE  Numeric limits (angle, speed, current, ...) approved once by the gate; fast loops may command anything inside them and are clamped or stopped
+//! BFS  DEFINES  EnvelopeId, Limit, Channel, Envelope, Violation
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  adapters/mhs, adapters/native, adapters/ros2, adapters/tests/adapters_suite, blur/schema, body/acquire, body/hal, body/policy, +24 more
+//!
 //! Envelopes — the pre-authorized region a reflex operates inside.
 //!
 //! This is the object that makes "Tier 0 never proposes into KIRA"

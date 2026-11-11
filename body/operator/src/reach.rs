@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  TCP server that lets remote devices join as extra bodies: signed handshake, adds their verbs to the body map, sends commands, drops them on disconnect
+//! BFS  DEFINES  OFFERABLE, SEAT, BodyInfo, ReachHub, valid_name, challenge_bytes, listen, beacon, split_body
+//! BFS  USES     this crate: hexapod, ipc, kira_gate | brainos: mind, miniblur-core | external: anyhow, serde-json, std, tokio
+//! BFS  USED BY  operator/hands/mod, operator/kira_gate
+//!
 //! Stage 4 §2 — Reach: the entity in every device it can reach.
 //!
 //! A device that cannot boot the key runs `reach/brainos-reach.py` and OFFERS

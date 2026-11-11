@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 8 Acquisition - adapters (ROS 2, MHS, the model boundary)  [crate brainos-adapters]
+//! BFS  PURPOSE  Builds capability schemas for bodies we built ourselves, with limits we measured; includes the Mini-Blur hexapod and a workstation as examples
+//! BFS  DEFINES  native_schema, mini_blur, workstation
+//! BFS  USES     brainos: abi, body, rt
+//! BFS  USED BY  adapters/lib, adapters/tests/adapters_suite, host/bench, host/day, host/degrade, host/demo, host/fullstack, host/incident, +6 more
+//!
 //! The native adapter — our own firmware.
 //!
 //! The reference implementation, and the one the other two are measured

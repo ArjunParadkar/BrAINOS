@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
+//! BFS  PURPOSE  Lists the rules every gate outcome must obey (such as refusing at the right stage) as predicates and checks them over all enumerated cases
+//! BFS  DEFINES  Property, PropertyResult, PROPERTIES, check_all
+//! BFS  USES     this crate: domain | brainos: abi, crypto, kira
+//! BFS  USED BY  host/main, nostd/lib, proof/harness, proof/lib, proof/report, proof/tests/proof_suite
+//!
 //! The properties.
 //!
 //! Each is a statement about *every* trace the gate produces, checked

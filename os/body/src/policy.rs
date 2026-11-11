@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 8 Acquisition - a device becomes a region of the body  [crate brainos-body]
+//! BFS  PURPOSE  BodyPolicy: the three KIRA stages (validate, simulate, policy) a body supplies, plus SchemaPolicy, the default built from a schema
+//! BFS  DEFINES  Arg, Args, Refusal, Posture, BodyPolicy, NullPolicy, SchemaPolicy
+//! BFS  USES     this crate: calibration, hal, region, schema, vital | brainos: abi, rt
+//! BFS  USED BY  adapters/boundary, blur/policy, blur/session, blur/tests/blur_suite, body/lib, body/tests/body_suite, entity/entity, entity/tests/entity_suite, +11 more
+//!
 //! Per-body policy — the invariants that are the body's, not the gate's.
 //!
 //! §3.3: KIRA is one pipeline; the invariants are the body's. A hexapod's
@@ -142,6 +148,20 @@ pub trait BodyPolicy: Send {
 
     /// Telemetry updates the policy's view of the body.
     fn observe(&mut self, _t: &Telemetry) {}
+
+    /// One reading of one sense of one part — possibly *another* part.
+    ///
+    /// `observe` carries a walking body's own six numbers. This carries
+    /// anything any part reports, and every bound policy hears every
+    /// reading, because the invariant it exists for crosses parts: a fan
+    /// must not be slowed while the processor it cools is too hot, and
+    /// the fan's policy can only refuse that if it can hear the
+    /// processor. A policy keeps the latest value of the senses it
+    /// guards and nothing else — a view of right now, not a history.
+    ///
+    /// The default ignores it, so every policy written before parts
+    /// existed behaves exactly as it did.
+    fn feel(&mut self, _f: &crate::vital::Felt) {}
 
     /// The envelope this body's reflexes run inside, for the audit trail
     /// and for re-binding after a reconnect.

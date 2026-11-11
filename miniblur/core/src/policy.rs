@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Phase 0 - Mini-Blur hexapod as numbers (shared by firmware and seat)  [crate miniblur-core]
+//! BFS  PURPOSE  The hexapod's safety rules as three functions (validate, simulate, policy), run by KIRA at the seat and again by the board before any move
+//! BFS  DEFINES  Mode, BodyState, parse_servo_target, validate, simulate, policy
+//! BFS  USES     this crate: gait, geometry, power, schema, stability
+//! BFS  USED BY  core/runtime, operator/hexapod, sim/main
+//!
 //! The hexapod's invariants as KIRA sees them (Execution Plan §4.5) — and as
 //! the board's reflex loop sees them. One set of functions, called from two
 //! places: `validate` at stage 4, `simulate` at stage 5, `policy` at stage 6.

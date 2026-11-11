@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 3 KIRA - the eight-stage gate; the only path to action  [crate brainos-kira]
+//! BFS  PURPOSE  Runs a signed request through the eight stages in order and returns either a Granted token or a refusal naming the stage; always audits
+//! BFS  DEFINES  REQUEST_WINDOW, Verdict, Outcome, Kira
+//! BFS  USES     this crate: action, audit, capability, floors, rules, stages | brainos: abi, body, crypto, rt
+//! BFS  USED BY  entity/entity, host/blur_gate2, host/degrade, host/fullstack, host/life, host/migrate, host/model, host/ros2_stack, +6 more
+//!
 //! The pipeline.
 //!
 //! Eight stages, fixed order, no skipping, one place where a `Granted`

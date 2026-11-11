@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Tests that the BrAIn Key loads only when seed and public key match, and that signatures and attestations verify under exactly one identity
+//! BFS  DEFINES  -
+//! BFS  USES     this crate: common | brainos: mind
+//! BFS  USED BY  (entry point or test)
+//!
 //! Stage 1.1 — identity and attestation: the BrAIn Key is real
 //! cryptography, and tampered key material is refused at load.
 

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
+//! BFS  PURPOSE  Cuts power at every byte of a journal write on three storage models and checks recovery returns a complete, committed, non-older state
+//! BFS  DEFINES  Medium, Violation, DurabilityReport, verify_durability, verify_bit_rot
+//! BFS  USES     brainos: abi, crypto, memory
+//! BFS  USED BY  host/main, proof/report, proof/tests/durability_suite
+//!
 //! The fifth domain: losing power at every possible instant.
 //!
 //! Robots lose power. Not as an edge case — as a normal Tuesday. A

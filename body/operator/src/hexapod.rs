@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Seat-side hexapod support: wraps miniblur-core's checks as a KIRA body policy fed by live telemetry, and keeps servo calibration in memory
+//! BFS  DEFINES  HexapodPolicy, remembered, apply_remembered, remember, push_records
+//! BFS  USES     brainos: mind, miniblur-core | external: std
+//! BFS  USED BY  operator/reach
+//!
 //! Mini-Blur at the seat (Execution Plan §4.5, §4.6): the hexapod's KIRA
 //! policy, and its calibration in the state graph.
 //!

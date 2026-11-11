@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Phase 0 - Mini-Blur hexapod as numbers (shared by firmware and seat)  [crate miniblur-core]
+//! BFS  PURPOSE  Dependency-free JSON helper for the wire protocol: get a string, number, bool or nested object by key from one object, and write escaped strings
+//! BFS  DEFINES  get_str, get_f32, get_u64, get_bool, get_obj, push_str
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  core/runtime, core/schema, core/wire
+//!
 //! A tiny flat-JSON scanner and writer for the wire protocol. Not a JSON
 //! library: it reads string / number / bool values by key from one object,
 //! extracts a nested object by key as a slice, and writes escaped strings.

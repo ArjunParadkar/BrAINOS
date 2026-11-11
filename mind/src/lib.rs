@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Crate root for the hardware-free half of the entity: identity key, the KIRA gate, memory, the thinking loop and the script interpreter
+//! BFS  DEFINES  body, experience, instance, journal, key, kira, proposal, script, state
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  crate core, crate operator
+//!
 //! brainos-mind — everything about the entity that is not a body.
 //!
 //! The abstraction table (Architecture §1) splits cleanly in two. This

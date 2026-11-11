@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Experiment measuring whether a skill learned by one entity helps another, comparing same-deployment, random-deployment, solo and oracle starts
+//! BFS  DEFINES  Deployment, Arm, Slice, Career, FleetResult, fleet
+//! BFS  USES     this crate: compound | brainos: abi, cognition, crypto, entity, memory
+//! BFS  USED BY  host/tests/fleet_suite
+//!
 //! Does experience transfer between entities, or only within one?
 //!
 //! `compound` answered the first half of §2.4: an entity with experience

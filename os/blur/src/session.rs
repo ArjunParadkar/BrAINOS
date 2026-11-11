@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  Maps a granted skill request to the motion limits it allows, and the body-side check that verifies the grant's signature before obeying it
+//! BFS  DEFINES  SKILL_STAND, SKILL_SIT, SKILL_LIE, SKILL_STANDUP, SKILL_WALK, SKILL_HOP, SKILL_POSE, SKILL_GRIP, skill_code, session_envelope, session_ms, Refused, +1 more
+//! BFS  USES     this crate: descriptor, supervisor | brainos: abi, body, crypto, kira
+//! BFS  USED BY  blur/policy, blur/tests/blur_suite, host/blur_gate2
+//!
 //! Skill sessions: what one KIRA grant lets BLUR do, and the check the
 //! body runs before it believes the grant.
 //!

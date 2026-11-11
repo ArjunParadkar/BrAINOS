@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 7 - fleet registry and skill marketplace  [crate brainos-fleet]
+//! BFS  PURPOSE  Models a datacenter host that runs an entity's heavier thinking under a time-limited placement, without ever holding its key, memory or gate
+//! BFS  DEFINES  HostError, Tenancy, Placement, Host, HostWorkingSet
+//! BFS  USES     brainos: abi, crypto
+//! BFS  USED BY  fleet/lib, fleet/tests/fleet_suite
+//!
 //! Hosted brain placement — the datacenter business.
 //!
 //! §2.3: "Brain placement: BrAInOS instances running off-body, bodies

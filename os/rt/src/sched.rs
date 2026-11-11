@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - envelopes, reflexes, scheduler, watchdogs  [crate brainos-rt]
+//! BFS  PURPOSE  Fixed-priority scheduler for periodic loops: refuses task sets that cannot meet their deadlines and reports every deadline missed
+//! BFS  DEFINES  TaskId, Tick, TaskSpec, Unschedulable, Slot, Scheduler, MissKind, Miss, liu_llayland_bound_ppm_table, liu_layland_bound_ppm
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  nostd/lib, rt/lib, rt/tests/rt_suite
+//!
 //! A deterministic real-time scheduler.
 //!
 //! UNIX schedules processes, fairly, so that forty strangers share a

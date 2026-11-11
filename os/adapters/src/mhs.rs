@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 8 Acquisition - adapters (ROS 2, MHS, the model boundary)  [crate brainos-adapters]
+//! BFS  PURPOSE  Translates a Model Hardware Standard (MHS) device's JSON tool listing, including its min/max bounds, into a CapabilitySchema the entity can use
+//! BFS  DEFINES  MhsError, from_mhs
+//! BFS  USES     this crate: json | brainos: abi, body, rt
+//! BFS  USED BY  adapters/lib, adapters/tests/adapters_suite, host/fullstack, host/life, host/migrate, host/tests/fullstack_suite, proof/hostile
+//!
 //! The MHS adapter.
 //!
 //! MHS is Anthropic's Model Hardware Standard: a shared specification

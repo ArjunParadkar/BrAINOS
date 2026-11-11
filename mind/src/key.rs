@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  The BrAIn Key: the ed25519 keypair that is the entity's identity; loads it from hex, checks seed matches public key, signs and verifies
+//! BFS  DEFINES  BrainKey, Attestation, to_hex
+//! BFS  USES     external: ed25519-dalek
+//! BFS  USED BY  mind/instance, mind/kira, mind/tests/common/mod, mind/tests/identity, operator/export, operator/reach, operator/skills
+//!
 //! The BrAIn Key — identity as cryptographic root (Architecture §5).
 //!
 //! UNIX users/permission bits are replaced by one keypair from which all

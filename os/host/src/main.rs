@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  The brainos command-line program: parses the subcommand and runs the matching scenario, printing a transcript
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, crypto, export, host, kira, proof | external: std
+//! BFS  USED BY  (entry point or test)
+//!
 //! `brainos` — run it and see.
 //!
 //! Four subcommands, each of which produces an artifact rather than a

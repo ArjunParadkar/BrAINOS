@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Verbs for inspecting the entity itself: list/forget remote bodies and learned skills, add/list/stop standing tasks, show model pool status
+//! BFS  DEFINES  body_list, body_forget, skill_list, skill_forget, task_every, task_when, task_list, task_stop, pool_status
+//! BFS  USES     this crate: HandCtx, skills, tasks | external: serde-json
+//! BFS  USED BY  -
+//!
 //! Stage 4 — proprioception and control of the entity itself:
 //! its bodies (Reach), its learned skills, its standing tasks, its brains.
 

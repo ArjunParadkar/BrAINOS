@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 1 Silicon - the BrAIn Key, hashes, Merkle log, quorum  [crate brainos-crypto]
+//! BFS  PURPOSE  The closed list of labels prefixed to everything signed or hashed, so a signature made for one kind of message never verifies as another
+//! BFS  DEFINES  Tag, tagged, tagged_into
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  blur/acquire, blur/census, blur/firmware, body/acquire, body/schema, crypto/key, crypto/lib, crypto/merkle, +19 more
+//!
 //! Domain separation tags.
 //!
 //! Every signature and structural hash in BrAInOS is made over

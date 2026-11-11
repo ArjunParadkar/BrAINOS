@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 3.8 - the three worlds (self, human, internet)  [crate brainos-worlds]
+//! BFS  PURPOSE  Crate root for the three worlds the entity deals with (itself, its human, the internet): origin-tagging of incoming data and message filtering
+//! BFS  DEFINES  advocate, ingress, world
+//! BFS  USES     this crate: advocate, ingress, world
+//! BFS  USED BY  crate entity, crate host, crate nostd
+//!
 //! brainos-worlds — self, internet, human.
 //!
 //! The entity inhabits three worlds with distinct trust posture. The

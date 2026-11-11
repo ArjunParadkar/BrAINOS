@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests that experience improves an entity's decisions, the no-structure control shows no gain, and the metric cannot be gamed by declining
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: crypto, host
+//! BFS  USED BY  (entry point or test)
+//!
 //! The moat claim, tested.
 //!
 //! §1.5: "the moat is made of accumulated experience, and today we have

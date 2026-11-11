@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
+//! BFS  PURPOSE  Defines the eight-dimension space of gate test cases, enumerates every combination, and says which stage should refuse each one
+//! BFS  DEFINES  SUBJECT_VERB_IS_IRREVERSIBLE, Sig, Freshness, Binding, Args, Fitness, Rule, Danger, Minter, Case, Domain, Scenario
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  host/main, nostd/lib, proof/harness, proof/lib, proof/properties, proof/tests/proof_suite
+//!
 //! The bounded domain.
 //!
 //! Everything the harness enumerates. The dimensions were chosen because

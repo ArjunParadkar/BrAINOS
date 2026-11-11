@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Cross-module operator tests: 40 spoken commands map to the right reflex verb, the gate denies dangerous shell commands, stream events parse
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: mind, operator-lib | external: std
+//! BFS  USED BY  (entry point or test)
+//!
 //! Operator unit tests: reflex table, KIRA policy, SSE parser, CDP framing.
 
 // ── reflex table ─────────────────────────────────────────────────────────────

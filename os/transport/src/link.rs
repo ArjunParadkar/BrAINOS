@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Foundation - the wire (frames, sessions, links)  [crate brainos-transport]
+//! BFS  PURPOSE  Tracks when the other side was last heard (good, quiet, lost, closed) plus ping timing; reports silence but never stops a body itself
+//! BFS  DEFINES  Health, LinkStats, Link
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  transport/lib, transport/tests/transport_suite
+//!
 //! Link health.
 //!
 //! This layer answers one question — *when did I last hear from the

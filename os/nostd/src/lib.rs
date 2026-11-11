@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Discipline - the no_std canary and its checks  [crate brainos-nostd-check]
+//! BFS  PURPOSE  A library that touches every crate below host, so building it for a bare target proves none of them needs an operating system
+//! BFS  DEFINES  touch_everything
+//! BFS  USES     brainos: abi, adapters, blur, body, cognition, crypto, entity, export, fleet, kira, +6 more
+//! BFS  USED BY  -
+//!
 //! The `no_std` canary.
 //!
 //! Every crate in this workspace except `host` claims to compile with no
@@ -214,5 +220,20 @@ pub fn touch_everything() -> u64 {
     n += brainos_blur::wire::is_estop(&f) as u64;
     n += down.frames.push(f) as u64;
     let _ = &mut auto;
+
+    // part — every piece of hardware as a body part
+    n += brainos_part::class::PartClass::ALL.len() as u64;
+    let probe = brainos_part::schema::PartSchema::new(
+        brainos_part::class::PartClass::Sensor,
+        "probe",
+        "canary",
+    )
+    .sense(brainos_part::schema::SenseSpec::new(
+        "temp.c",
+        brainos_part::schema::Quantity::Temperature,
+        -40.0,
+        150.0,
+    ));
+    n += probe.facets().as_bytes()[0] as u64;
     n
 }

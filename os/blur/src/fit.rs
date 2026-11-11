@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  Least-squares fit of joint motion under a known torque pulse, separating the motor's effect from gravity and springs to find which way the motor turns it
+//! BFS  DEFINES  DOUBLET, SLOT_MS, DOUBLET_MS, profile, phi, MAX_SAMPLES, Fit, FitResult, combine
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  blur/acquire, blur/autonomic, blur/calibrate, blur/tests/blur_suite
+//!
 //! The probe's arithmetic: which way did the joint go *because of the
 //! motor*?
 //!

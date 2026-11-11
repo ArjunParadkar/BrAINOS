@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 8 Acquisition - a device becomes a region of the body  [crate brainos-body]
+//! BFS  PURPOSE  Defines regions (parts of a body, each advertising verbs) and the BodyMap of all parts the entity currently has, used to refuse verbs no part offers
+//! BFS  DEFINES  RegionClass, Region, BodyMap
+//! BFS  USES     this crate: schema | brainos: abi
+//! BFS  USED BY  adapters/mhs, adapters/native, adapters/ros2, adapters/tests/adapters_suite, blur/acquire, blur/schema, body/acquire, body/lib, +15 more
+//!
 //! Regions — the parts of the body, and the body map.
 //!
 //! §8: a device is a region of the body, not a program the entity runs.

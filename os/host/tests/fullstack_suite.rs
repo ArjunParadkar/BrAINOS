@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests the full entity-to-body path: legal motions play out, bad links and replays are safe, and a subverted gate cannot make the body fall
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, adapters, bodyd, host, miniblur-core, rt, transport
+//! BFS  USED BY  (entry point or test)
+//!
 //! The whole stack, tested.
 //!
 //! The test that matters is `a_subverted_seat_cannot_make_the_body_fall`.

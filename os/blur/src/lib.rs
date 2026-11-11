@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  Crate root for BLUR v36, the 26-actuator cheetah robot: lists the modules for its wire format, acquisition, calibration, policies and safety loop
+//! BFS  DEFINES  acquire, attitude, autonomic, bus, calibrate, census, descriptor, firmware, fit, mlp, policy, refs_gen, +4 more
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  crate host, crate nostd
+//!
 //! brainos-blur — BLUR v36, the body the entity is learning to inhabit.
 //!
 //! A small-cat-sized printed cheetah: 26 actuators (12 × 2806.5 on

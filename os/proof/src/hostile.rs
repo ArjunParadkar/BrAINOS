@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
+//! BFS  PURPOSE  Fuzzes every byte decoder with random and bit-flipped input to check it never panics, never half-decodes, and re-encodes to identical bytes
+//! BFS  DEFINES  Target, targets, TargetReport, HostileReport, verify_hostile
+//! BFS  USES     brainos: abi, adapters, body, bodyd, crypto, memory, transport
+//! BFS  USED BY  proof/lib, proof/report, proof/tests/proof_suite
+//!
 //! Hostile input.
 //!
 //! Every decoder in this workspace reads bytes somebody else produced:

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Scenario that works a shift, seals an audit bundle for an incident window, verifies it with only a public key, and shows four ways of lying fail
+//! BFS  DEFINES  Incident, reconstruct, narrate
+//! BFS  USES     brainos: abi, adapters, body, cognition, crypto, entity, kira
+//! BFS  USED BY  host/tests/incident_suite
+//!
 //! After something goes wrong.
 //!
 //! A robot works a shift in a workshop it shares with people. At the end

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
+//! BFS  PURPOSE  Tests that the gate, envelope and hostile-input domains are fully enumerated, every property holds, and the harness cannot pass vacuously
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, proof, rt
+//! BFS  USED BY  (entry point or test)
+//!
 //! Stage 6, run.
 //!
 //! This suite is unusual: most of it is one test that enumerates the

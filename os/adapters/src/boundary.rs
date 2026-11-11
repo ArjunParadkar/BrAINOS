@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 8 Acquisition - adapters (ROS 2, MHS, the model boundary)  [crate brainos-adapters]
+//! BFS  PURPOSE  Parses a model's text output into a typed Request against the body's advertised schema, so a model can only propose verbs that exist, never act
+//! BFS  DEFINES  NotAProposal, MAX_ARGS, request_from_model, describe_vocabulary
+//! BFS  USES     this crate: json | brainos: abi, body, kira
+//! BFS  USED BY  adapters/tests/adapters_suite, host/model
+//!
 //! Where a model's output stops being text.
 //!
 //! §4 rests on a sentence: *a cognitive resource proposes; KIRA

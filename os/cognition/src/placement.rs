@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 4 Cognition - tiers, placement, attention, escalation  [crate brainos-cognition]
+//! BFS  PURPOSE  Where each tier of thinking runs (Site), what tissue it runs on (Substrate), and the Plan that assigns both
+//! BFS  DEFINES  Site, Substrate, Placement, Plan
+//! BFS  USES     this crate: resource | brainos: abi
+//! BFS  USED BY  cognition/lib, cognition/resource, cognition/tests/cognition_suite, entity/entity, host/degrade, host/life, nostd/lib, part/policy, +1 more
+//!
 //! Brain placement — Stage 5.
 //!
 //! "Cognition runs wherever it should — on-body for reflexes, edge for
@@ -63,6 +69,78 @@ impl Site {
     }
 }
 
+/// What kind of tissue compute is made of.
+///
+/// `Site` says *where* compute is. `Substrate` says *what it is*, and
+/// the two are independent: a GPU can be on board or in a datacenter,
+/// and a BPU can be either. The distinction matters to placement
+/// because the tissues differ in ways latency does not capture — what
+/// they can run, what it costs in energy, and whether changing what
+/// they hold wears them out.
+///
+/// A substrate is how a Compute-class *part* (`brainos-part`) shows up
+/// in cognition: acquiring a GPU or a BPU through §8 is what makes a
+/// `Resource` on that substrate exist, and the part's vitals are what
+/// make it unavailable again.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, PartialOrd, Ord)]
+#[repr(u8)]
+pub enum Substrate {
+    /// a microcontroller: where reflexes run
+    Mcu = 0,
+    /// a general-purpose processor
+    Cpu = 1,
+    /// a graphics processor
+    Gpu = 2,
+    /// a neural accelerator (fixed-function inference silicon)
+    Npu = 3,
+    /// the BrAIn Processing Unit: analog compute-in-memory, weights
+    /// held as device conductances (`brainos-bpu`)
+    Bpu = 4,
+}
+
+impl Substrate {
+    pub const ALL: [Substrate; 5] = [
+        Substrate::Mcu,
+        Substrate::Cpu,
+        Substrate::Gpu,
+        Substrate::Npu,
+        Substrate::Bpu,
+    ];
+
+    pub const fn name(self) -> &'static str {
+        match self {
+            Substrate::Mcu => "mcu",
+            Substrate::Cpu => "cpu",
+            Substrate::Gpu => "gpu",
+            Substrate::Npu => "npu",
+            Substrate::Bpu => "bpu",
+        }
+    }
+
+    /// Does loading a model onto this tissue consume its lifetime?
+    ///
+    /// True only of the BPU, whose weights are physical device states
+    /// with a finite number of writes. It is why loading a model there
+    /// is a consequential, KIRA-gated verb and not a file copy, and why
+    /// the lifecycle is train elsewhere, deploy here.
+    pub const fn wears_on_write(self) -> bool {
+        matches!(self, Substrate::Bpu)
+    }
+
+    /// May a tier be asked to run on this tissue at all?
+    ///
+    /// Tier 0 runs on the body's own microcontroller and nowhere else —
+    /// the same rule `Plan::place` enforces for sites. Nothing above
+    /// Tier 0 runs on one: an MCU that is busy deliberating is an MCU
+    /// that is late for its control loop.
+    pub const fn can_host(self, tier: Tier) -> bool {
+        match tier {
+            Tier::Autonomic => matches!(self, Substrate::Mcu),
+            _ => !matches!(self, Substrate::Mcu),
+        }
+    }
+}
+
 /// Where one tier's work happens.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Placement {
@@ -88,6 +166,9 @@ impl Placement {
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Plan {
     placements: [Site; 4],
+    /// which tissue each tier would rather run on, if one is present
+    /// and healthy. `None` means no preference: take the cheapest.
+    tissue: [Option<Substrate>; 4],
 }
 
 impl Default for Plan {
@@ -102,6 +183,7 @@ impl Plan {
     pub fn all_on_body() -> Plan {
         Plan {
             placements: [Site::Body, Site::OnBoard, Site::OnBoard, Site::OnBoard],
+            tissue: [None; 4],
         }
     }
 
@@ -110,6 +192,7 @@ impl Plan {
     pub fn distributed() -> Plan {
         Plan {
             placements: [Site::Body, Site::OnBoard, Site::Edge, Site::Remote],
+            tissue: [None; 4],
         }
     }
 
@@ -119,6 +202,7 @@ impl Plan {
     pub fn thin_body() -> Plan {
         Plan {
             placements: [Site::Body, Site::Edge, Site::Edge, Site::Remote],
+            tissue: [None; 4],
         }
     }
 
@@ -140,6 +224,32 @@ impl Plan {
         }
         self.placements[tier as usize] = site;
         true
+    }
+
+    /// The tissue a tier would rather run on.
+    pub fn substrate_for(&self, tier: Tier) -> Option<Substrate> {
+        self.tissue[tier as usize]
+    }
+
+    /// State a preference: this tier should run on this tissue when it
+    /// is there and healthy. Refused when the tissue cannot host the
+    /// tier at all (`Substrate::can_host`).
+    ///
+    /// A preference, not a requirement, and that is the whole point:
+    /// `ResourcePool::pick` falls back to whatever else can do the work
+    /// when the preferred tissue is absent or unwell. An entity that
+    /// *required* a particular chip would be an entity that stops
+    /// thinking when that chip overheats.
+    pub fn prefer(&mut self, tier: Tier, substrate: Substrate) -> bool {
+        if !substrate.can_host(tier) {
+            return false;
+        }
+        self.tissue[tier as usize] = Some(substrate);
+        true
+    }
+
+    pub fn no_preference(&mut self, tier: Tier) {
+        self.tissue[tier as usize] = None;
     }
 
     pub fn is_coherent(&self) -> bool {

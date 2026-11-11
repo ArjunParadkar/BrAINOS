@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Foundation - the wire (frames, sessions, links)  [crate brainos-transport]
+//! BFS  PURPOSE  Tests for transport: frames round-trip, wrong keys and corruption are refused, replayed commands are refused, link health is reported
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, crypto, transport
+//! BFS  USED BY  (entry point or test)
+//!
 //! The wire suite.
 //!
 //! The property that matters most here is the one that is easiest to

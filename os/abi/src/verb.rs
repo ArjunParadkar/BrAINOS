@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Foundation - shared vocabulary (ids, time, verbs, codec, errors)  [crate brainos-abi]
+//! BFS  PURPOSE  Parses and validates action names of the form `namespace.action` (e.g. `legs.walk`); the namespace is what a permission is scoped by
+//! BFS  DEFINES  VERB_MAX, HALF_MAX, Verb, Namespace
+//! BFS  USES     this crate: codec, error, text
+//! BFS  USED BY  abi/lib, abi/tests/abi_suite, adapters/boundary, adapters/mhs, adapters/native, adapters/ros2, adapters/tests/adapters_suite, blur/policy, +57 more
+//!
 //! Verbs — the names of things that can be done.
 //!
 //! A verb is `namespace.action`, both lowercase ASCII, both bounded.

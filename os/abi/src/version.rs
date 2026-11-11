@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Foundation - shared vocabulary (ids, time, verbs, codec, errors)  [crate brainos-abi]
+//! BFS  PURPOSE  The major.minor.patch version of this shared vocabulary and the rule for accepting a peer: same major, peer minor not newer than ours
+//! BFS  DEFINES  AbiVersion, ABI
+//! BFS  USES     this crate: codec, error
+//! BFS  USED BY  abi/lib, abi/tests/abi_suite, blur/acquire, blur/tests/blur_suite, body/acquire, body/tests/body_suite, entity/entity, host/blur_sil, +1 more
+//!
 //! ABI versioning.
 //!
 //! An entity outlives its bodies, and it will meet bodies built against

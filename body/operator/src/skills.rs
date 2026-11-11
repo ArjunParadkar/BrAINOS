@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Saves the exact steps of a successful turn as a key-signed skill tied to the utterance, so the same request later replays without a model
+//! BFS  DEFINES  NEVER_COMPILE, Step, Skill, SkillStore, Match, normalize, describe
+//! BFS  USES     this crate: reflex | brainos: mind | external: serde, serde-json, std
+//! BFS  USED BY  operator/export, operator/hands/entity_hand, operator/hands/mod
+//!
 //! Stage 4 §3 — procedural compilation.
 //!
 //! A deliberate (or fast) turn whose every hand succeeded is compiled into a

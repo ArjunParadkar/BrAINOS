@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  The operator daemon: starts all services and answers each utterance by trying skill replay, then reflex rules, then the fast and deliberate models
+//! BFS  DEFINES  -
+//! BFS  USES     this crate: config, ipc, kira_gate, skills | brainos: mind | external: anyhow, serde-json, std, tokio, tracing-subscriber
+//! BFS  USED BY  (entry point or test)
+//!
 //! brainos-operator — Stage 3 production body, Stage 4 entity.
 //!
 //! Socket path: $BRAINOS_SOCK > config > $XDG_RUNTIME_DIR/brainos/operator.sock

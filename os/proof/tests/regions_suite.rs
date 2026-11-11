@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
+//! BFS  PURPOSE  Tests that each body part is governed by its own limits and that the check catches the old single-envelope defect it was written for
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: proof
+//! BFS  USED BY  (entry point or test)
+//!
 //! A body made of several parts.
 
 use brainos_proof::regions::verify_regions;

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  voice.listen and voice.speak verbs: record for N seconds and return the transcript, or speak text aloud, using the shared Voice object
+//! BFS  DEFINES  listen, speak
+//! BFS  USES     this crate: HandCtx, voice | external: serde-json
+//! BFS  USED BY  -
+//!
 //! Voice hand — the model-callable face of `crate::voice` (record+transcribe, speak).
 
 use serde_json::Value;

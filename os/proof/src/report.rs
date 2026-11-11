@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
+//! BFS  PURPOSE  Runs every property domain and renders the combined report, including the statement that this is bounded checking and not a proof
+//! BFS  DEFINES  Coverage, Verdict, Report
+//! BFS  USES     this crate: adversary, durability, envelopes, harness, hostile, properties, regions
+//! BFS  USED BY  host/main, host/tests/host_suite, proof/harness, proof/lib, proof/tests/proof_suite
+//!
 //! The report.
 //!
 //! A machine-generated statement of what was checked and what held. It

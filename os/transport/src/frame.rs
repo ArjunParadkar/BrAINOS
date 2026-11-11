@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Foundation - the wire (frames, sessions, links)  [crate brainos-transport]
+//! BFS  PURPOSE  The on-wire message layout (magic, kind, counter, length, payload, 16-byte keyed checksum) and how to seal one and open one safely
+//! BFS  DEFINES  MAGIC, HEADER_LEN, MAC_LEN, OVERHEAD, MAX_PAYLOAD, MAX_FRAME, Kind, FrameError, Frame
+//! BFS  USES     brainos: crypto
+//! BFS  USED BY  bodyd/protocol, bodyd/tests/bodyd_suite, host/bench, host/demo, host/fullstack, host/limits, host/tests/fullstack_suite, nostd/lib, +5 more
+//!
 //! Framing.
 //!
 //! ```text

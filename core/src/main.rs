@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - Domain 1 flesh: the UEFI boot core  [crate brainos-core]
+//! BFS  PURPOSE  UEFI entry point: loads key and memory, acquires limbs, then loops taking input, asking the model, gating each action through KIRA and running it
+//! BFS  DEFINES  -
+//! BFS  USES     this crate: console, efi | brainos: mind | external: body, experience, instance, key, kira, state
+//! BFS  USED BY  (entry point or test)
+//!
 //! BrAInOS portable core — Phase 2: embodiment over the tether.
 //!
 //! The abstraction table (Architecture §1) lives in these modules:

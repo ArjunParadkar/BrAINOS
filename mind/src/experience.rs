@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  One thinking tick: predicts the next sense input, stays idle when the prediction holds, and asks the big model only when surprised
+//! BFS  DEFINES  SenseFrame, Intent, tick, consolidate
+//! BFS  USES     this crate: instance, state
+//! BFS  USED BY  -
+//!
 //! The experience loop — continuous cognition replacing the scheduler
 //! (Architecture §7, §15).
 //!

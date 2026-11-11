@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests buying a skill end to end: publish, owner countersign, install, origin visible beforehand, and the buyer's own evidence overrules it
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, cognition, crypto, entity, fleet, memory
+//! BFS  USED BY  (entry point or test)
+//!
 //! Buying a skill, end to end.
 //!
 //! The marketplace could always decide whether a package *may* be

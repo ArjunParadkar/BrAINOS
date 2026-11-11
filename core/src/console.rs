@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - Domain 1 flesh: the UEFI boot core  [crate brainos-core]
+//! BFS  PURPOSE  Wraps UEFI for the rest of the core: text screen, keyboard, clock, RAM size, framebuffer, files on the key and world volumes, and the boot log
+//! BFS  DEFINES  WORLD_MARKER, screen_text, set_fast_boot, fast_boot, DIM, GRAY, WHITE, AMBER, GREEN, CYAN, RED, Ctx, +2 more
+//! BFS  USES     this crate: efi
+//! BFS  USED BY  core/editor, core/net
+//!
 //! Embodiment plumbing for the laptop body: text console, framebuffer,
 //! clock, RAM probe, and files on the key medium. This is the thin layer
 //! the body-map regions act through; cognition never calls EFI directly.

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests that over a simulated day the entity notices each fault promptly, ignores noise, stays affordable, and copes with a small-memory body
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: host
+//! BFS  USED BY  (entry point or test)
+//!
 //! Can it be left running?
 //!
 //! Every other suite asks whether something works. This one asks whether

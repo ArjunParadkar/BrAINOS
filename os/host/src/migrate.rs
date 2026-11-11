@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Scenario that exports an entity, destroys the first vendor's side, imports it onto a different robot, and reports what survived and what did not
+//! BFS  DEFINES  Migration, migrate, narrate
+//! BFS  USES     this crate: fullstack | brainos: abi, adapters, body, cognition, crypto, entity, export, kira, memory
+//! BFS  USED BY  host/tests/migrate_suite
+//!
 //! Changing vendors.
 //!
 //! §1 of the master document is specific about what ownership means:

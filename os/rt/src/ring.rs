@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - envelopes, reflexes, scheduler, watchdogs  [crate brainos-rt]
+//! BFS  PURPOSE  Fixed-size queues and a sliding window of readings for code with no allocator; when full they drop and count instead of blocking or growing
+//! BFS  DEFINES  Ring, Spsc, Window
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  rt/lib, rt/tests/rt_suite
+//!
 //! Fixed-capacity buffers.
 //!
 //! Domain 2 has no allocator, so every queue between a sensor and a loop

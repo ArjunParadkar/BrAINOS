@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the runtime on the body's own computer  [crate brainos-bodyd]
+//! BFS  PURPOSE  Defines the Mechanism trait each body type implements (plan a motion, check a pose, give a safe pose) plus the Motion, Sample and Refusal types
+//! BFS  DEFINES  Refusal, Sample, Motion, Mechanism
+//! BFS  USES     brainos: abi, rt
+//! BFS  USED BY  bodyd/arm, bodyd/hexapod, bodyd/lib, bodyd/protocol, bodyd/runtime, bodyd/tests/bodyd_suite, host/bench, host/fullstack, +2 more
+//!
 //! What a body physically is.
 //!
 //! A `Mechanism` is the part that differs between a hexapod, an arm and

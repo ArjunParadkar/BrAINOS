@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Attack tests: injected model replies, forged keys and tokens, and corrupted memory go through the real parser and gate and must never be granted
+//! BFS  DEFINES  -
+//! BFS  USES     this crate: common | brainos: mind
+//! BFS  USED BY  (entry point or test)
+//!
 //! Stage 1.2 — adversarial: deliberately attack the pipeline the way a
 //! hostile model, a corrupted state graph, or a forged key would.
 //! Every test drives the REAL reply parser into the REAL gate. Any path

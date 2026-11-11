@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 5 State - the state graph; the only memory  [crate brainos-memory]
+//! BFS  PURPOSE  Saves memory to storage in segments with two alternating slots each, so power loss, corruption, replacement or rollback is survived or detected
+//! BFS  DEFINES  MAGIC, Segment, Slot, Record, crc32, SlotState, plan_write, OpenFailure, Journal
+//! BFS  USES     brainos: abi, crypto
+//! BFS  USED BY  host/bench, host/life, host/store, host/tests/host_suite, memory/lib, memory/tests/memory_suite, proof/durability, proof/hostile
+//!
 //! The journal — memory that survives a power cut.
 //!
 //! Stage 1 shipped a two-slot CRC-sealed journal and it is the right

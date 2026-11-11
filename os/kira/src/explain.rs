@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 3 KIRA - the eight-stage gate; the only path to action  [crate brainos-kira]
+//! BFS  PURPOSE  Turns each refusal code into plain sentences for the owner: what was refused, why, and what would change it (or that nothing will)
+//! BFS  DEFINES  Remedy, Explanation, explain, say_refusal
+//! BFS  USES     brainos: abi | external: DenyCode
+//! BFS  USED BY  entity/entity, kira/tests/explain_suite
+//!
 //! Telling the owner why.
 //!
 //! A robot that refuses and cannot say why in words its owner

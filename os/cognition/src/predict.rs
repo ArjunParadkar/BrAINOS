@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 4 Cognition - tiers, placement, attention, escalation  [crate brainos-cognition]
+//! BFS  PURPOSE  A running-average forward model that predicts each sensor channel's next value and scores surprise as the miss divided by that channel's usual error
+//! BFS  DEFINES  MAX_CHANNELS, Prediction, Surprise, Forward
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  cognition/ambient, cognition/escalate, cognition/lib, cognition/tests/cognition_suite, host/degrade, nostd/lib
+//!
 //! Prediction and surprise.
 //!
 //! The experience loop is built on predictive coding: the entity

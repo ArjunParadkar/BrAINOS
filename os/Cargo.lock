@@ -168,10 +168,24 @@ dependencies = [
  "brainos-fleet",
  "brainos-kira",
  "brainos-memory",
+ "brainos-part",
  "brainos-proof",
  "brainos-rt",
  "brainos-transport",
  "brainos-worlds",
+]
+
+[[package]]
+name = "brainos-part"
+version = "0.3.0"
+dependencies = [
+ "brainos-abi",
+ "brainos-body",
+ "brainos-cognition",
+ "brainos-crypto",
+ "brainos-kira",
+ "brainos-memory",
+ "brainos-rt",
 ]
 
 [[package]]

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 1 Silicon - the BrAIn Key, hashes, Merkle log, quorum  [crate brainos-crypto]
+//! BFS  PURPOSE  Collects k distinct member signatures out of n before an irreversible operation (deactivate, revoke body, export memory, rotate key)
+//! BFS  DEFINES  QuorumError, Operation, Share, Statement, Quorum
+//! BFS  USES     this crate: domain, key, sha256 | brainos: abi
+//! BFS  USED BY  crypto/lib, crypto/tests/crypto_suite, proof/adversary
+//!
 //! Quorum operations — the fifth anchor of the Key (§3.2, "deactivation").
 //!
 //! Some operations should not be possible for one party acting alone,

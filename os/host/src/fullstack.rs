@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Wires entity, gate, wire protocol and body runtime with real gait and tip-over checks; shows the body refuses a fall even if the gate is subverted
+//! BFS  DEFINES  Stack, SeatVerdict, PlayResult, subverted_seat, SubversionResult, Line, run, MANUFACTURER_DESCRIPTION, AcquiredBody, acquire_from_manufacturer, manufacturer_demo, TwoBodies, +3 more
+//! BFS  USES     brainos: abi, adapters, body, bodyd, crypto, entity, kira, memory, miniblur-core, rt, +1 more
+//! BFS  USED BY  host/life, host/migrate, host/tests/fullstack_suite
+//!
 //! The whole stack, end to end.
 //!
 //! `demo.rs` shows the entity: memory, the gate, two bodies, an export.

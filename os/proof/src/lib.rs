@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
+//! BFS  PURPOSE  Crate root: lists the property domains that brainos verify runs and re-exports the report types
+//! BFS  DEFINES  adversary, durability, domain, envelopes, hostile, harness, properties, regions, report
+//! BFS  USES     this crate: domain, envelopes, harness, hostile, properties, report
+//! BFS  USED BY  crate host, crate nostd
+//!
 //! brainos-proof — Stage 6, honestly labelled.
 //!
 //! The roadmap says Stage 6 is "formal verification of KIRA's eight

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 7 - fleet registry and skill marketplace  [crate brainos-fleet]
+//! BFS  PURPOSE  A directory of known entities and their self-reported health and progress; it can list who is unwell or quiet but has no way to command anyone
+//! BFS  DEFINES  RegistryError, Health, Report, Entry, Registry, Fleet
+//! BFS  USES     brainos: abi, crypto
+//! BFS  USED BY  fleet/lib, fleet/tests/fleet_suite, nostd/lib
+//!
 //! The registry — a directory, not a controller.
 //!
 //! Every method on this type either reads, or records something an

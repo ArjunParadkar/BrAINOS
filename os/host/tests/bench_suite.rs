@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests that the benchmark method is sound, budgets are met by wide margins, and an entity fits on an ESP32 only with tuned bounds
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, host
+//! BFS  USED BY  (entry point or test)
+//!
 //! Tests for the measurements.
 //!
 //! A test that asserts a timing is a test that fails when someone else's

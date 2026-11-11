@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Builds the system prompt telling the model who it is (Blur), its rules and which verbs exist right now; also decides when to escalate
+//! BFS  DEFINES  PERSONA_STABLE, build_system, build_wake, FILLER_CUES, should_escalate
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  operator/deliberate, operator/fast
+//!
 //! Persona system prompt — the entity's self-model for the deliberate tier.
 //!
 //! Adapted from tools/body_daemon.py SYSTEM_TEMPLATE and WAKE.

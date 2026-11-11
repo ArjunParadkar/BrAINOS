@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - envelopes, reflexes, scheduler, watchdogs  [crate brainos-rt]
+//! BFS  PURPOSE  Fast sensor-to-command loops that act only inside their pre-approved limits; if they cannot, they stop the body and record why
+//! BFS  DEFINES  StopReason, Stop, ReflexOutcome, Frame, Reflex, ReflexBank, SafePose
+//! BFS  USES     this crate: envelope | brainos: abi
+//! BFS  USED BY  bodyd/runtime, bodyd/tests/bodyd_suite, host/fullstack, host/tests/fullstack_suite, rt/lib, rt/tests/rt_suite
+//!
 //! Reflexes — Tier 0 cognition, which is to say none.
 //!
 //! A reflex is a pure function from a sensor frame to a command, running

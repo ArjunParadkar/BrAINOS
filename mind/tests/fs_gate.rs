@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Tests that file verbs (mkdir, delete, move, stat, search, chunked read) pass the gate on safe paths and are refused on escapes or the volume marker
+//! BFS  DEFINES  -
+//! BFS  USES     this crate: common | brainos: mind
+//! BFS  USED BY  (entry point or test)
+//!
 //! Stage 2.1 — the full filesystem limb faces the same gate as everything
 //! else: every new verb well-typed, both ends of a move validated, chunked
 //! reads bounded, and the volume marker protected like memory itself.

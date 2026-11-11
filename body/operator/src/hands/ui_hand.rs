@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  UI verbs: message the face (on-screen UI process) to show or close an HTML panel, draw or clear a pointing overlay, or display a line of text
+//! BFS  DEFINES  build, update, close_surface, teach, point, clear, say
+//! BFS  USES     this crate: HandCtx, ipc | external: serde-json, std
+//! BFS  USED BY  -
+//!
 //! UI hands — emit IPC surface/teach messages to the face.
 
 use crate::ipc::{send, OpMsg};

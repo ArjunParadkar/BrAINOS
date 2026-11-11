@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  The conversation turn list shared by the fast and deliberate tiers, capped at 60 turns so the model context stays bounded
+//! BFS  DEFINES  MAX_TURNS, Turn, History
+//! BFS  USES     external: serde, std
+//! BFS  USED BY  -
+//!
 //! Conversation history — shared between fast and deliberate tiers.
 //! Capped at 60 turns (30 user + 30 assistant) to bound context growth.
 

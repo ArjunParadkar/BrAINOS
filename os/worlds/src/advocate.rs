@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 3.8 - the three worlds (self, human, internet)  [crate brainos-worlds]
+//! BFS  PURPOSE  Scores incoming messages for signs of manipulation (urgency, scarcity, authority, money or secrecy requests) and holds suspect ones for the human to review
+//! BFS  DEFINES  Pressure, Judgement, Advocate
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  entity/entity, host/worlds_run, nostd/lib, worlds/lib, worlds/tests/worlds_suite
+//!
 //! Advocacy — the entity filtering on its human's behalf.
 //!
 //! "The entity filters what reaches its human — offers, requests,

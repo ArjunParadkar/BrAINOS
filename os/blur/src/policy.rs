@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  BLUR's own checks for gate stages 4-6: per-joint argument ranges, a simulated rollout that must not fall or hit anyone, and live state like e-stop
+//! BFS  DEFINES  Prediction, Predictor, BodyState, BlurPolicy
+//! BFS  USES     this crate: descriptor, schema, session, supervisor | brainos: abi, body
+//! BFS  USED BY  blur/tests/blur_suite, host/blur_gate2
+//!
 //! KIRA stages 4–6 for BLUR.
 //!
 //! * **VALIDATE** — what the schema cannot say: a `body.pose` angle

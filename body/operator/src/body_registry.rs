@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Checks which host programs exist and builds the body map with only the verb groups this machine can really perform
+//! BFS  DEFINES  build, verb_available
+//! BFS  USES     brainos: mind
+//! BFS  USED BY  -
+//!
 //! Probe the real body and build the BodyMap.
 //!
 //! Only limbs whose backing binary (or subsystem) actually exists on the

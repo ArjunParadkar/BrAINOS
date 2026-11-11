@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Tests that the two-slot journal rejects a record torn at any byte or with any flipped bit, and that a power cut mid-write keeps the older copy
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: mind
+//! BFS  USED BY  (entry point or test)
+//!
 //! Stage 1.4 — crash consistency: the two-slot journal must survive a
 //! torn write at EVERY byte boundary, and corruption anywhere in a
 //! record must invalidate it entirely — never half-load it.

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Foundation - shared vocabulary (ids, time, verbs, codec, errors)  [crate brainos-abi]
+//! BFS  PURPOSE  `Text<N>`: a fixed-capacity UTF-8 string that needs no allocator, cuts on a character boundary, and records when it truncated
+//! BFS  DEFINES  Text
+//! BFS  USES     this crate: codec, error
+//! BFS  USED BY  abi/lib, abi/tests/abi_suite, abi/verb, body/calibration, body/vital, bodyd/mechanism, bodyd/runtime, cognition/escalate, +23 more
+//!
 //! `Text<N>` — a string with a ceiling.
 //!
 //! Domain 2 runs in a servo loop on a microcontroller with no allocator,

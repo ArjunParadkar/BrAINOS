@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Finds the Anthropic API key: reads it from the key's secure partition (p3), else an env var or key file; can also write it back to p3
+//! BFS  DEFINES  load_api_key, parse_records, write_api_key_to_p3
+//! BFS  USES     external: anyhow, std
+//! BFS  USED BY  -
+//!
 //! API key reader/writer — the ANTHROPIC record on p3 (BRAINOS-SECURE).
 //!
 //! p3 is the software-emulated secure element minted by tools/make_key.py.

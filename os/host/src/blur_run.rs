@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Runs BLUR Gate 1: the entity acquires the simulated BLUR robot end to end, and each deliberately faulty body must be caught at the expected step
+//! BFS  DEFINES  ENTITY_SEED, BODY_SEED, Run, Live, acquire_live, acquire_once_live, acquire_once, describe, gate1, ZERO_TOL_RAD, ZERO_TOL_M, zeros_ok, +1 more
+//! BFS  USES     this crate: blur_sil | brainos: abi, blur, body, crypto, entity | external: std
+//! BFS  USED BY  host/blur_gate2
+//!
 //! `brainos blur …` — BLUR's acquisition against the twin, and Gate 1.
 //!
 //! Gate 1 is: the entity acquires the simulated BLUR end to end through

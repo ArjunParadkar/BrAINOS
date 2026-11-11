@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 8 Acquisition - a device becomes a region of the body  [crate brainos-body]
+//! BFS  PURPOSE  The minimal hardware interface: Actuator, Sensor and BodyLink traits plus Command, Reading and Telemetry values, so upper layers never see a specific bus
+//! BFS  DEFINES  Command, Reading, ActuatorFault, Actuator, Sensor, Telemetry, BodyLink
+//! BFS  USES     brainos: abi, rt
+//! BFS  USED BY  blur/policy, blur/tests/blur_suite, body/lib, body/policy, body/tests/body_suite, entity/entity, entity/tests/entity_suite, host/bench, +15 more
+//!
 //! The hardware abstraction, such as it is.
 //!
 //! Deliberately thin. Everything above this line reasons about verbs,

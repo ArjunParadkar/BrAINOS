@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 1 Silicon - the BrAIn Key, hashes, Merkle log, quorum  [crate brainos-crypto]
+//! BFS  PURPOSE  HMAC-SHA256 (RFC 2104) keyed checksum, used for key derivation and for cheap per-frame authentication between parties sharing a secret
+//! BFS  DEFINES  HmacSha256
+//! BFS  USES     this crate: sha256
+//! BFS  USED BY  crypto/hkdf, crypto/lib, crypto/rng, crypto/tests/crypto_suite, transport/frame
+//!
 //! HMAC-SHA256, from RFC 2104.
 //!
 //! Used for key derivation (via HKDF) and for the transport's frame

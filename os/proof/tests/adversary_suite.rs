@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
+//! BFS  PURPOSE  Tests that every attack in the adversary list is stopped, at the place it should be, and that the list is non-empty and described
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: proof
+//! BFS  USED BY  (entry point or test)
+//!
 //! Every attack, one test.
 
 use brainos_proof::adversary::{verify_adversary, Ending};

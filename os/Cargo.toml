@@ -26,6 +26,7 @@ members = [
     "rt",
     "memory",
     "body",
+    "part",
     "bodyd",
     "blur",
     "kira",
@@ -53,6 +54,7 @@ brainos-crypto = { path = "crypto" }
 brainos-rt = { path = "rt" }
 brainos-memory = { path = "memory" }
 brainos-body = { path = "body" }
+brainos-part = { path = "part" }
 brainos-bodyd = { path = "bodyd" }
 brainos-blur = { path = "blur" }
 brainos-kira = { path = "kira" }

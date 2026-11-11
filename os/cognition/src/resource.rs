@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 4 Cognition - tiers, placement, attention, escalation  [crate brainos-cognition]
+//! BFS  PURPOSE  Tier (how far up the entity reaches), Resource (one thing that can think) and ResourcePool (pick the cheapest one that can do the job)
+//! BFS  DEFINES  Tier, Capability, Resource, ResourcePool
+//! BFS  USES     this crate: placement | brainos: abi
+//! BFS  USED BY  cognition/ambient, cognition/escalate, cognition/lib, cognition/placement, cognition/tests/cognition_suite, entity/entity, host/day, host/degrade, +2 more
+//!
 //! Cognitive resources and the tiers they sit in.
 //!
 //! A resource is described by four things: what it is good at, how long
@@ -14,7 +20,7 @@
 //! a function. Continuity is not in the model; it is in what holds the
 //! model.
 
-use crate::placement::Site;
+use crate::placement::{Site, Substrate};
 use alloc::string::String;
 use alloc::vec::Vec;
 use brainos_abi::text::Text;
@@ -95,6 +101,10 @@ pub struct Resource {
     pub name: &'static str,
     pub tier: Tier,
     pub site: Site,
+    /// what kind of tissue it runs on. Defaults from the site — a
+    /// microcontroller on the body, a processor anywhere else — and is
+    /// set explicitly (`on`) when a Compute part says otherwise.
+    pub substrate: Substrate,
     pub capabilities: Vec<Capability>,
     /// measured latency, not declared. Updated from use.
     observed: LatencyStats,
@@ -122,6 +132,11 @@ impl Resource {
             name,
             tier,
             site,
+            substrate: if matches!(site, Site::Body) {
+                Substrate::Mcu
+            } else {
+                Substrate::Cpu
+            },
             capabilities: Vec::new(),
             observed: LatencyStats::default(),
             cost: match tier {
@@ -141,6 +156,20 @@ impl Resource {
             scope,
             about: alloc::string::ToString::to_string(about),
         });
+        self
+    }
+
+    /// Say what tissue this resource runs on.
+    pub fn on(mut self, substrate: Substrate) -> Resource {
+        self.substrate = substrate;
+        self
+    }
+
+    /// Set what an invocation costs. Used when the cost comes from
+    /// somewhere real — a Compute part's energy projection — instead of
+    /// the per-tier default.
+    pub fn costing(mut self, cost: u32) -> Resource {
+        self.cost = cost;
         self
     }
 
@@ -199,6 +228,8 @@ impl Resource {
         t.push_str(self.tier.name());
         t.push('@');
         t.push_str(self.site.name());
+        t.push('/');
+        t.push_str(self.substrate.name());
         t.push_str("] ");
         if !self.available {
             t.push_str("UNAVAILABLE ");
@@ -268,6 +299,53 @@ impl ResourcePool {
             .filter(|r| r.covers(verb))
             .filter(|r| r.meets_budget())
             .min_by_key(|r| (r.cost, r.tier as u8))
+    }
+
+    /// Like `cheapest_for`, but honouring a tissue preference.
+    ///
+    /// If a resource on the preferred substrate is available, covers the
+    /// verb and is meeting its budget, it wins — the cheapest such, if
+    /// there are several. Otherwise this is exactly `cheapest_for`.
+    /// Falling through is the property that matters: a preferred chip
+    /// that has gone unavailable costs capability, never the ability to
+    /// answer.
+    pub fn pick(
+        &self,
+        verb: &brainos_abi::verb::Verb,
+        at_least: Tier,
+        prefer: Option<Substrate>,
+    ) -> Option<&Resource> {
+        if let Some(want) = prefer {
+            let preferred = self
+                .resources
+                .iter()
+                .filter(|r| r.available && r.tier >= at_least && r.tier.proposes())
+                .filter(|r| r.substrate == want)
+                .filter(|r| r.covers(verb) && r.meets_budget())
+                .min_by_key(|r| (r.cost, r.tier as u8));
+            if preferred.is_some() {
+                return preferred;
+            }
+        }
+        self.cheapest_for(verb, at_least)
+    }
+
+    /// Mark one named resource unavailable or available again. This is
+    /// how a Compute part's vitals reach placement: the part goes
+    /// critical, its resource stops being offered.
+    pub fn set_available(&mut self, name: &str, available: bool) -> bool {
+        match self.get_mut(name) {
+            Some(r) => {
+                let changed = r.available != available;
+                r.available = available;
+                changed
+            }
+            None => false,
+        }
+    }
+
+    pub fn on_substrate(&self, s: Substrate) -> impl Iterator<Item = &Resource> {
+        self.resources.iter().filter(move |r| r.substrate == s)
     }
 
     /// The best resource for a situation regardless of cost — used when

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 3 KIRA - the eight-stage gate; the only path to action  [crate brainos-kira]
+//! BFS  PURPOSE  The typed request the gate accepts (verb, which body, arguments, tick) and its signed form, so free text never reaches the gate
+//! BFS  DEFINES  Action, Request, Proposal
+//! BFS  USES     brainos: abi, body, crypto
+//! BFS  USED BY  adapters/boundary, adapters/tests/adapters_suite, blur/session, entity/entity, entity/tests/entity_suite, host/bench, host/blur_gate2, host/demo, +8 more
+//!
 //! What can be asked for.
 //!
 //! A proposal is not text. By the time anything reaches the gate it is a

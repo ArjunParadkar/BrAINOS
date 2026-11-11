@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  Collects each CAN node's chip ID into a census and compares it with the recorded build sheet to catch swapped, missing, duplicate or unknown nodes
+//! BFS  DEFINES  NodeIdentity, Conflict, Census, CensusBuilder, BuildSheet, CensusFault, check_census, missing_nodes
+//! BFS  USES     this crate: descriptor, wire | brainos: crypto
+//! BFS  USED BY  blur/acquire, blur/autonomic, blur/firmware, blur/schema, blur/tests/blur_suite, host/blur_run, host/blur_sil
+//!
 //! The census: which pieces of silicon are on BLUR's buses right now.
 //!
 //! The Teensy broadcasts CENSUS on all three buses and every node

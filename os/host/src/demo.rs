@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  The Phase 0 demo in simulation: the entity acts on a laptop, then on a simulated hexapod whose action reflects memory from the laptop
+//! BFS  DEFINES  Line, DemoResult, run, wire_demo
+//! BFS  USES     brainos: abi, adapters, body, cognition, crypto, entity, export, kira, memory, transport
+//! BFS  USED BY  host/tests/host_suite
+//!
 //! The demo, as code rather than as a script.
 //!
 //! §2.2's Phase 0 deliverable is "a single recorded demo: the entity

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  code.run verb: writes Python, bash or node source to a scratch file, runs it with a 30 s timeout, returns the output and deletes the file
+//! BFS  DEFINES  run
+//! BFS  USES     this crate: HandCtx | external: serde-json, std
+//! BFS  USED BY  -
+//!
 //! code.run hand — executes Python3/bash/node in a scratch directory.
 
 use serde_json::Value;

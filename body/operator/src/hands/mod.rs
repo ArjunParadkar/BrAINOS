@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Routes each verb to its handler (or to a remote body), defines the shared context handlers receive, and provides run_cmd with a timeout
+//! BFS  DEFINES  app, code_hand, entity_hand, fs_hand, input_hand, notes, screen, shell, sys_hand, task_hand, ui_hand, voice_hand, +6 more
+//! BFS  USES     this crate: config, kira_gate, pool, reach, skills, tasks, voice | external: serde-json, std, tokio
+//! BFS  USED BY  operator/tasks
+//!
 //! Hand registry and dispatch.
 //!
 //! Every verb routes to a typed handler. The handler receives the raw

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 3 KIRA - the eight-stage gate; the only path to action  [crate brainos-kira]
+//! BFS  PURPOSE  Packages audit records with inclusion proofs and a signed root so an outsider can verify them with only the entity's public key
+//! BFS  DEFINES  EvidenceError, Exhibit, Bundle
+//! BFS  USES     this crate: audit | brainos: abi, crypto
+//! BFS  USED BY  host/incident, kira/tests/evidence_suite
+//!
 //! An evidence bundle: what happened, provable to someone who does not
 //! trust you.
 //!

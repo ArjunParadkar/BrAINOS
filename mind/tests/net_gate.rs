@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Tests that web.get/web.save pass the gate only with a network region and a well-formed URL; malformed or unaddressable URLs are refused
+//! BFS  DEFINES  -
+//! BFS  USES     this crate: common | brainos: mind
+//! BFS  USED BY  (entry point or test)
+//!
 //! Stage 2.3 — the network organ faces the gate like any other limb.
 //!
 //! KIRA's URL floor is about SHAPE, not reputation: it cannot know whether

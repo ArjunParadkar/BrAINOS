@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Message types and Unix-socket server for the line-per-message JSON exchanged between the operator and the face (the on-screen UI process)
+//! BFS  DEFINES  OpMsg, TaskStep, FaceMsg, IpcServer, send, send_state
+//! BFS  USES     external: anyhow, serde, serde-json, std, tokio
+//! BFS  USED BY  operator/deliberate, operator/hands/ui_hand, operator/reach, operator/tasks
+//!
 //! IPC contract between operator and face (§4).
 //!
 //! Unix socket at $XDG_RUNTIME_DIR/brainos/operator.sock.

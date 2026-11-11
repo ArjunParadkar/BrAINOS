@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 5 State - the state graph; the only memory  [crate brainos-memory]
+//! BFS  PURPOSE  Tests for memory: only the owning entity can write, experience measurably improves skills, beliefs revise on evidence, the journal survives
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, crypto, memory
+//! BFS  USED BY  (entry point or test)
+//!
 //! The Stage 3 suite.
 //!
 //! The claim being defended is the one the whole company rests on: an

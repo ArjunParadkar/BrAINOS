@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests that internet sessions are bounded and their results stay untrusted, and that the message filter is ordered, visible and can be turned off
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: host
+//! BFS  USED BY  (entry point or test)
+//!
 //! Going online, and coming back.
 
 use brainos_host::worlds_run::{run, Kind};

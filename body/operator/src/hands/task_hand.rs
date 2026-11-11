@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Placeholder task.plan/status/cancel verbs: they only acknowledge, because the deliberate tier does the real multi-step planning itself
+//! BFS  DEFINES  plan, status, cancel
+//! BFS  USES     this crate: HandCtx | external: serde-json
+//! BFS  USED BY  -
+//!
 use serde_json::Value;
 use super::HandCtx;
 

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  screen.look verb: takes a screenshot with grim and returns its file path plus a short list of the visible windows
+//! BFS  DEFINES  look
+//! BFS  USES     this crate: HandCtx | external: base64, serde-json
+//! BFS  USED BY  -
+//!
 use base64::Engine;
 use serde_json::Value;
 use super::{HandCtx, run_cmd};

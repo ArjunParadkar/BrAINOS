@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 8 Acquisition - a device becomes a region of the body  [crate brainos-body]
+//! BFS  PURPOSE  The five-step protocol by which a device becomes a body: discover, handshake, schema, incorporate, calibrate; fixes the BodyId
+//! BFS  DEFINES  Step, StepError, Acquisition, part_digest, default_envelope, acquire_native, AcquireResult
+//! BFS  USES     this crate: calibration, region, schema | brainos: abi, crypto, rt
+//! BFS  USED BY  blur/acquire, blur/tests/blur_suite, body/lib, body/tests/body_suite, entity/entity, host/blur_run, kira/tests/gate_suite
+//!
 //! The §8 acquisition protocol, as a state machine.
 //!
 //! Five steps, in order, no skipping. The machine exists rather than a
@@ -34,7 +40,7 @@ use brainos_abi::time::Tick;
 use brainos_abi::version::{AbiVersion, ABI};
 use brainos_crypto::key::{body_identity, BrainKey, Challenge, ChallengePurpose, PublicKey, Signature};
 use brainos_crypto::rng::Drbg;
-use brainos_crypto::sha256::Sha256;
+use brainos_crypto::sha256::{Hash, Sha256};
 use brainos_crypto::domain::Tag;
 
 /// Where a device is in the protocol.
@@ -244,6 +250,34 @@ impl Acquisition {
     /// the schema digest, so from here on, a device that changes what it
     /// claims to do is a different body.
     pub fn describe(&mut self, schema: CapabilitySchema) -> core::result::Result<(), StepError> {
+        self.describe_with(schema, None)
+    }
+
+    /// Step 3 for a *part*: the same step, with more in the identity.
+    ///
+    /// A part declares more than verbs — a class, senses, vitals and
+    /// their limits (`brainos-part`). `facets` is the digest of those.
+    /// It is mixed into the identity so that a part which comes back
+    /// with the same verbs but different declared limits — a fan that
+    /// now says its processor may run 20 °C hotter — is a different
+    /// part and must be acquired again, for the same reason a changed
+    /// verb makes a different body.
+    ///
+    /// `describe` is this with no facets, and produces exactly the
+    /// identity it always did.
+    pub fn describe_part(
+        &mut self,
+        schema: CapabilitySchema,
+        facets: &Hash,
+    ) -> core::result::Result<(), StepError> {
+        self.describe_with(schema, Some(facets))
+    }
+
+    fn describe_with(
+        &mut self,
+        schema: CapabilitySchema,
+        facets: Option<&Hash>,
+    ) -> core::result::Result<(), StepError> {
         if self.step != Step::Attested {
             return self.fail(StepError::OutOfOrder { at: self.step });
         }
@@ -264,7 +298,10 @@ impl Acquisition {
         let Some(dk) = self.device_key else {
             return self.fail(StepError::DeviceUnattested);
         };
-        let digest = schema.digest();
+        let digest = match facets {
+            None => schema.digest(),
+            Some(f) => part_digest(&schema.digest(), f),
+        };
         self.absorb("schema", digest.as_bytes());
         self.body = Some(body_identity(&dk, &digest));
         self.schema = Some(schema);
@@ -418,6 +455,18 @@ impl Acquisition {
         }
         s
     }
+}
+
+/// The digest a part's identity is taken over: its capability schema
+/// and its facets together. Public so that anything holding a part's
+/// attestation key and its full description can recompute its id
+/// without running an acquisition.
+pub fn part_digest(schema_digest: &Hash, facets: &Hash) -> Hash {
+    let mut h = Sha256::tagged(Tag::Schema);
+    h.field(b"part");
+    h.field(schema_digest.as_bytes());
+    h.field(facets.as_bytes());
+    h.finish()
 }
 
 /// Build the default envelope for a region class from a schema.

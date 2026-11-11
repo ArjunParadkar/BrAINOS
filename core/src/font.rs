@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - Domain 1 flesh: the UEFI boot core  [crate brainos-core]
+//! BFS  PURPOSE  Returns the 5x7 pixel bitmap for a character, used to draw the large banner text on the framebuffer at boot
+//! BFS  DEFINES  glyph
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  -
+//!
 //! 5x7 bitmap glyphs for the banner. Each row is 5 bits, MSB = leftmost.
 
 pub fn glyph(c: u8) -> [u8; 7] {

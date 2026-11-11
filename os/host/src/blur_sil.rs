@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Spawns the MuJoCo simulation of BLUR and runs the controller-board loop against it, exchanging one nerve datagram per millisecond
+//! BFS  DEFINES  repo_root, python, Twin, TwinOptions, Nerves, SilPort
+//! BFS  USES     brainos: abi, blur, body, crypto | external: std
+//! BFS  USED BY  host/blur_gate2, host/blur_run
+//!
 //! BLUR in the loop: the Autonomic layer and the entity against the
 //! MuJoCo twin, over the real nerve formats.
 //!

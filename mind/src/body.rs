@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  The body map: the list of device regions (screen, keys, mic, network...) the entity has now, which KIRA checks before allowing an action
+//! BFS  DEFINES  RegionClass, Region, Acquisition, BodyMap
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  mind/instance, mind/kira, mind/tests/body_policy, mind/tests/common/mod, mind/tests/net_gate, operator/body_registry, operator/reach
+//!
 //! The body map — devices as regions you become (Architecture §8).
 //!
 //! This replaces device drivers. A device is not a tool the instance uses;

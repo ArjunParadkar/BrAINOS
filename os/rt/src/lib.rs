@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - envelopes, reflexes, scheduler, watchdogs  [crate brainos-rt]
+//! BFS  PURPOSE  Crate root: the fast, allocation-free control layer that runs without thinking (limits, reflex loops, scheduler, watchdogs, queues)
+//! BFS  DEFINES  budget, envelope, reflex, ring, sched, watchdog
+//! BFS  USES     this crate: budget, envelope, reflex, ring, sched, watchdog
+//! BFS  USED BY  crate adapters, crate blur, crate body, crate bodyd, crate cognition, crate entity, crate host, crate kira, +3 more
+//!
 //! brainos-rt — Domain 2, the autonomic layer.
 //!
 //! This is the part of the entity that does not think. A gait is a timing

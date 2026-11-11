@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
+//! BFS  PURPOSE  Enumerates seat-limit and body-limit combinations and checks the real body runtime never applies a command outside their intersection
+//! BFS  DEFINES  SeatBound, Calibrated, Geometry, Posture, Ask, Power, EnvelopeCase, EnvelopeDomain, EnvelopeOutcome, run_envelope_case, EnvelopeReport, verify_envelopes
+//! BFS  USES     brainos: abi, bodyd, miniblur-core, rt
+//! BFS  USED BY  proof/lib, proof/report, proof/tests/proof_suite
+//!
 //! The second domain: two envelopes, exhaustively.
 //!
 //! The KIRA domain checks the gate. This one checks the property the

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Tests that a policy bound to one body region supplies KIRA's validate/simulate/policy stages for that body's verbs only, using a toy legged body
+//! BFS  DEFINES  -
+//! BFS  USES     this crate: common | brainos: mind
+//! BFS  USED BY  (entry point or test)
+//!
 //! Per-body policy (Execution Plan §4.5): KIRA is one pipeline; the
 //! invariants are the body's. A policy bound at §8 step 4 supplies stages
 //! 4–6 for limb uses through its region — and only tightens. These tests

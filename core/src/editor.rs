@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - Domain 1 flesh: the UEFI boot core  [crate brainos-core]
+//! BFS  PURPOSE  One-line input editor for the console: insert, backspace, delete, arrows, home/end, redrawn in place with sideways scroll for long lines
+//! BFS  DEFINES  LineEditor
+//! BFS  USES     this crate: console
+//! BFS  USED BY  -
+//!
 //! A real line editor for the console body region.
 //!
 //! Before this, typed input was append-only: every key that was not a

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Tier 2 thinking: asks a local model (llama-server or ollama) for a JSON act/chat/escalate answer within a short timeout, else hands off to tier 3
+//! BFS  DEFINES  FastResponse, FastTier, build_fast_system
+//! BFS  USES     this crate: config, persona, pool | external: anyhow, serde, serde-json, std
+//! BFS  USED BY  -
+//!
 //! Tier 2: fast local model (llama-server or ollama).
 //!
 //! POST to llama.cpp /completion with json_schema grammar, or to

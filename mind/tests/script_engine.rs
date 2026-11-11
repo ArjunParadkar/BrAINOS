@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Tests the script interpreter: arithmetic, loops, functions, strings, lists, and that runaway programs, overflow and type errors stop with a reason
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: mind
+//! BFS  USED BY  (entry point or test)
+//!
 //! Stage 1.1 — the entity's own compute: bounded, deterministic, honest
 //! about every failure mode.
 

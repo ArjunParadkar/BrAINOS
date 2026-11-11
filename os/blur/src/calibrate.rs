@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  Turns torque-pulse, homing and IMU measurements into a calibration (joint zeros, travel, IMU tilt and bias) or a fault naming the part that is wrong
+//! BFS  DEFINES  PROBE_FRAC, PROBE_MAX_FRAC, MIN_MOTION, TRAVEL_TOL_FRAC, TRAVEL_TOL_ABS, WINCH_TOL_FRAC, home_cap_frac, probe_tau, ProbeResult, HomeResult, ImuResult, CalFault, +11 more
+//! BFS  USES     this crate: descriptor, fit, wire | brainos: abi, body
+//! BFS  USED BY  blur/acquire, blur/autonomic, blur/tests/blur_suite, host/blur_gate2, host/blur_run
+//!
 //! §8 step 5 for BLUR: turning probe results into a calibration, or into
 //! a refusal that says which part is wrong.
 //!

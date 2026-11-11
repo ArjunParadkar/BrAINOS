@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Freedom principle - export reader with no BrAInOS crate  [crate read-export]
+//! BFS  PURPOSE  Runs the standalone reader on a committed real export to prove it reads without our code, rejects corrupted files, and pins the file format
+//! BFS  DEFINES  -
+//! BFS  USES     external: std
+//! BFS  USED BY  (entry point or test)
+//!
 //! The freedom principle, as a test.
 //!
 //! `fixture.brainex` is a real export, produced by `brainos export` and

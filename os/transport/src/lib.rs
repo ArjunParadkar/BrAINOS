@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Foundation - the wire (frames, sessions, links)  [crate brainos-transport]
+//! BFS  PURPOSE  Crate root: carries bytes between entity and body with whole frames, authentication, replay refusal and link liveness, and nothing more
+//! BFS  DEFINES  frame, link, loopback, session
+//! BFS  USES     this crate: frame, link, loopback, session
+//! BFS  USED BY  crate bodyd, crate host, crate nostd, crate proof
+//!
 //! brainos-transport — the nerve, not the mind.
 //!
 //! This crate carries bytes between an entity and a body and knows

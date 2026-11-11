@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Phase 0 - Domain 2 firmware for the ESP32-S3  [crate miniblur-a]
+//! BFS  PURPOSE  ESP32-S3 hexapod firmware: verifies the seat's signature, takes commands over USB serial, re-checks limits, drives ten servos, stops on lost link
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: miniblur-core | external: ed25519-dalek, esp-backtrace, esp-hal, esp-println
+//! BFS  USED BY  (entry point or test)
+//!
 //! Mini-Blur board A — Domain 2 on the ESP32-S3 (Execution Plan §4, WP0.4/0.8).
 //!
 //! This is the body's reflex layer: ten servos on MCPWM, the tripod gait

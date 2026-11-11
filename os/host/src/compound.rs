@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Experiment in a simulated world measuring whether an entity's choices to attempt or decline improve with experience, with a no-structure control
+//! BFS  DEFINES  Situation, World, Policy, Window, Run, run, Experiment, experiment, Regime, Curiosity, Adaptation, world_changes, +2 more
+//! BFS  USES     brainos: abi, cognition, crypto, entity, memory
+//! BFS  USED BY  host/fleet_experiment, host/tests/compound_suite
+//!
 //! Does an entity with experience actually get better?
 //!
 //! §2.4 says the moat becomes visible as a published curve: *entity age

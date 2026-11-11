@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  The Instance struct that bundles key, memory graph, body map, goals and KIRA into the one entity, and proposes actions through the gate
+//! BFS  DEFINES  Goals, Instance
+//! BFS  USES     this crate: body, key, kira, state
+//! BFS  USED BY  mind/experience, mind/tests/adversarial, mind/tests/body_policy, mind/tests/common/mod, mind/tests/fs_gate, mind/tests/net_gate, operator/reach
+//!
 //! The instance — a persistent cognitive entity (Architecture §1, §2).
 //!
 //! This replaces the process. There is exactly one on this key, and it is

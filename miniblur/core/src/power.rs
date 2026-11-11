@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Phase 0 - Mini-Blur hexapod as numbers (shared by firmware and seat)  [crate miniblur-core]
+//! BFS  PURPOSE  Estimates a gait plan's peak servo current against the supply rail limit, and checks battery voltage against the floor for walking
+//! BFS  DEFINES  PowerLimits
+//! BFS  USES     this crate: MAX_SERVOS, gait, servo
+//! BFS  USED BY  bodyd/hexapod, bodyd/tests/bodyd_suite, core/policy, core/schema
+//!
 //! The servo rail budget and the battery floor. MG90S draws ~0.35 A moving
 //! and ~0.7 A stalled; a small UBEC feeds 3 A. A gait that moves too many
 //! servos at once browns out the rail, and a brown-out mid-write is exactly

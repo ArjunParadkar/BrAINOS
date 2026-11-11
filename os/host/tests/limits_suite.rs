@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests that retrieval works at shipped bounds and degrades gracefully, audit roots and proofs stay cheap, and every limit is labelled
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: host
+//! BFS  USED BY  (entry point or test)
+//!
 //! Where this breaks — asserted, so that a regression in any of these
 //! is a failing test rather than a slow surprise.
 

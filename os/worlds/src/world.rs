@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 3.8 - the three worlds (self, human, internet)  [crate brainos-worlds]
+//! BFS  PURPOSE  Defines the three worlds (self, human, internet), how far each is trusted, and the time- and size-limited Session needed before touching the internet
+//! BFS  DEFINES  World, Posture, Session
+//! BFS  USES     brainos: abi, memory
+//! BFS  USED BY  entity/entity, host/worlds_run, nostd/lib, worlds/ingress, worlds/lib, worlds/tests/worlds_suite
+//!
 //! The three worlds and the posture the entity holds toward each.
 
 use brainos_abi::text::Text;

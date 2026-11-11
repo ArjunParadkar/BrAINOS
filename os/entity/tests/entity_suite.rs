@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 4 Entity - one Key, one state graph, every body at once  [crate brainos-entity]
+//! BFS  PURPOSE  Tests one entity inhabiting several bodies with a single memory, ending with the two-body demo where the second body uses what the first learned
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, body, cognition, crypto, entity, kira, memory, rt
+//! BFS  USED BY  (entry point or test)
+//!
 //! The Stage 4 suite — one self, many bodies, one memory.
 //!
 //! The Phase 0 demo is exactly two bodies sharing one entity at once,

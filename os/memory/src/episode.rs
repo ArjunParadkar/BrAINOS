@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 5 State - the state graph; the only memory  [crate brainos-memory]
+//! BFS  PURPOSE  The record of one attempt or observation with how it ended (succeeded, failed, denied, stopped, ...); the raw material skills are learned from
+//! BFS  DEFINES  Outcome, Episode
+//! BFS  USES     this crate: graph, law, provenance | brainos: abi
+//! BFS  USED BY  entity/entity, entity/tests/entity_suite, export/tests/export_suite, host/bench, host/compound, host/day, host/degrade, host/demo, +9 more
+//!
 //! Episodic memory — what happened.
 //!
 //! An episode is not a log line. A log line is text with a timestamp; an

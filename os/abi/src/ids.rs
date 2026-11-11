@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Foundation - shared vocabulary (ids, time, verbs, codec, errors)  [crate brainos-abi]
+//! BFS  PURPOSE  Fixed 32-byte ids (entity, body, session, ...) as separate types so one kind cannot be passed as another and names are never strings
+//! BFS  DEFINES  Id32, Fingerprint, NodeId
+//! BFS  USES     this crate: codec, error
+//! BFS  USED BY  abi/lib, abi/tests/abi_suite, adapters/boundary, adapters/tests/adapters_suite, blur/acquire, blur/calibrate, blur/policy, blur/session, +65 more
+//!
 //! Identities — every name in the system, as bytes.
 //!
 //! The UNIX habit is to name things with strings and then decide

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 1 Silicon - the BrAIn Key, hashes, Merkle log, quorum  [crate brainos-crypto]
+//! BFS  PURPOSE  Deterministic random generator: each platform seeds it once with at least 32 bytes of entropy and it supplies every nonce after that
+//! BFS  DEFINES  Drbg
+//! BFS  USES     this crate: hmac, sha256 | brainos: abi
+//! BFS  USED BY  blur/acquire, blur/tests/blur_suite, body/acquire, body/tests/body_suite, crypto/lib, crypto/tests/crypto_suite, entity/entity, host/blur_gate2, +12 more
+//!
 //! A hash-based DRBG.
 //!
 //! Nonces need to be unpredictable and the platforms this runs on do not

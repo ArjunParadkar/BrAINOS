@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  The 1 kHz run-time safety layer: latching e-stop first, then reflexes (balance, fall brace, get-up, crouch), then clamping commands to the granted limits
+//! BFS  DEFINES  Envelope, Grant, Command, Reflex, Mode, Stats, SEAT_TIMEOUT_MS, VBAT_CUTOFF_MV, VBAT_HOLD_MS, FALL_TILT_DEG, FALL_TILT_FAST_DEG, FALL_RATE, +27 more
+//! BFS  USES     this crate: attitude, autonomic, descriptor, mlp, refs_gen, wire
+//! BFS  USED BY  blur/autonomic, blur/policy, blur/session, blur/tests/blur_suite, host/blur_gate2
+//!
 //! Domain 2 at run time: the envelope, the reflexes, the e-stop.
 //!
 //! Called from `Autonomic::step` every millisecond once the body is

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 3 KIRA - the eight-stage gate; the only path to action  [crate brainos-kira]
+//! BFS  PURPOSE  Writes every gate decision, granted or denied, into a Merkle log so any past decision can be proven and none can be quietly edited
+//! BFS  DEFINES  Decision, AuditRecord, AuditTrail
+//! BFS  USES     this crate: action, capability, stages | brainos: abi, crypto
+//! BFS  USED BY  host/incident, kira/evidence, kira/gate, kira/lib, kira/tests/evidence_suite, kira/tests/gate_suite, proof/adversary
+//!
 //! The audit trail.
 //!
 //! Stage 8 runs whatever happened, and what it writes goes into a Merkle

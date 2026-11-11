@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Phase 0 - Mini-Blur hexapod as numbers (shared by firmware and seat)  [crate miniblur-core]
+//! BFS  PURPOSE  The Body state machine that executes commands: re-checks policy, plays gait plans to a ServoBus tick by tick, reports telemetry, stops on lost link
+//! BFS  DEFINES  ServoBus, Playing, Body, target_of
+//! BFS  USES     this crate: Pose, gait, json, policy, schema, servo, watchdog
+//! BFS  USED BY  miniblur-a/main, operator/deliberate, sim/main
+//!
 //! The body's side of a command: Domain 2 executing what KIRA granted — and
 //! refusing, on its own authority, what its own envelope forbids. The
 //! simulator and the firmware both drive a `Body` through this; only the

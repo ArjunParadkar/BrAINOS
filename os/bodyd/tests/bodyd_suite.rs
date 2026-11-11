@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the runtime on the body's own computer  [crate brainos-bodyd]
+//! BFS  PURPOSE  Tests that the body runtime, hexapod and arm refuse or stop on unsafe commands even when the seat approved them, plus the protocol encoding
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, bodyd, miniblur-core, rt, transport
+//! BFS  USED BY  (entry point or test)
+//!
 //! The body-side suite.
 //!
 //! One property matters more than the rest and most of this file is

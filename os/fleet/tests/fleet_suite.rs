@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 7 - fleet registry and skill marketplace  [crate brainos-fleet]
+//! BFS  PURPOSE  Tests the registry, marketplace and hosting, checking that a fleet operator can observe every entity but cannot make any of them act
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, crypto, fleet
+//! BFS  USED BY  (entry point or test)
+//!
 //! The Stage 7 suite.
 //!
 //! The property running through all of it: a fleet operator can *see*

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 4 Cognition - tiers, placement, attention, escalation  [crate brainos-cognition]
+//! BFS  PURPOSE  The always-running sense, predict, compare, attend loop; each tick it outputs an Intent (idle, think, tell the human, attend a body) and never acts
+//! BFS  DEFINES  SenseFrame, Intent, severity_band, FORGIVE_AFTER, Attention, Ambient
+//! BFS  USES     this crate: escalate, predict, resource, salience | brainos: abi
+//! BFS  USED BY  cognition/lib, cognition/tests/cognition_suite, entity/entity, entity/tests/entity_suite, host/compound, host/day, host/degrade, host/demo, +5 more
+//!
 //! Ambient operation — the loop that replaces turn-taking.
 //!
 //! "A sense → predict → error → attend loop replaces turn-based

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  KIRA, the gate every action must pass: runs a signed request through eight stages and returns a signed time-limited token or a refusal
+//! BFS  DEFINES  Action, Capability, Sealed, STAGES, StageResult, Verdict, Policy, BodyPolicy, Kira, danger_haystack, request_message, fs_path_of, +5 more
+//! BFS  USES     this crate: body, key, state
+//! BFS  USED BY  core/main, mind/instance, mind/tests/adversarial, mind/tests/body_policy, mind/tests/fs_gate, mind/tests/kira_regression, mind/tests/net_gate, operator/hexapod, +1 more
+//!
 //! KIRA — the policy engine (Architecture §6).
 //!
 //! Every action the instance wishes to take passes through this eight-stage

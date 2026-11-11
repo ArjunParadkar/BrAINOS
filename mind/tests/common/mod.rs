@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Test helpers shared by the suites: a fixed-seed key, an instance with no body, and one with screen, voice, host-tool and internal regions
+//! BFS  DEFINES  key, bare_instance, embodied_instance
+//! BFS  USES     brainos: mind
+//! BFS  USED BY  (entry point or test)
+//!
 //! Shared scaffolding for the Stage 1 suites: real keys, real instances,
 //! real body maps — no mocks of anything KIRA actually consults.
 #![allow(dead_code)] // each test binary uses the subset it needs

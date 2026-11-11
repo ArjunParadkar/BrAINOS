@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 4 Entity - one Key, one state graph, every body at once  [crate brainos-entity]
+//! BFS  PURPOSE  The Entity struct: owns the Key, the state graph, the body map, the gate and cognition, and is the only thing that may write memory
+//! BFS  DEFINES  Wake, Entity, instant_from_tick
+//! BFS  USES     this crate: goals, life, simultaneity | brainos: abi, body, cognition, crypto, fleet, kira, memory, worlds
+//! BFS  USED BY  entity/lib, entity/tests/entity_suite, export/archive, export/tests/export_suite, host/bench, host/compound, host/day, host/degrade, +12 more
+//!
 //! The entity.
 //!
 //! One `MemoryHandle`. One `BodyMap`. One `Kira`. One `Life`. Every body

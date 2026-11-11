@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 1 Silicon - the BrAIn Key, hashes, Merkle log, quorum  [crate brainos-crypto]
+//! BFS  PURPOSE  Crate root: the entity's signing key plus hand-written SHA-256, HMAC, HKDF, random generator, Merkle audit log and k-of-n sign-off
+//! BFS  DEFINES  domain, hkdf, hmac, key, merkle, quorum, rng, sha256
+//! BFS  USES     this crate: domain, hkdf, hmac, key, merkle, quorum, rng, sha256
+//! BFS  USED BY  crate blur, crate body, crate bodyd, crate cognition, crate entity, crate export, crate fleet, crate host, +6 more
+//!
 //! brainos-crypto — identity, integrity, and the audit anchor.
 //!
 //! Domain 1 of the trust hierarchy is a hardware root of trust, and

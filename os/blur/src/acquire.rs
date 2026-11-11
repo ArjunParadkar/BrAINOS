@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  Runs the five acquisition steps (discover, handshake, schema, policy, calibrate) against a BLUR body and reports the step where any fault was caught
+//! BFS  DEFINES  Hello, Port, Stage, Finding, Report, Record, Acquirer, current_limits, explain
+//! BFS  USES     this crate: autonomic, calibrate, census, descriptor, firmware, fit, schema, wire | brainos: abi, body, crypto
+//! BFS  USED BY  host/blur_gate2, host/blur_run, host/blur_sil
+//!
 //! §8 for BLUR, end to end, over the protocol state machine in
 //! `brainos-body`.
 //!

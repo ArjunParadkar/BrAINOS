@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 3 KIRA - the eight-stage gate; the only path to action  [crate brainos-kira]
+//! BFS  PURPOSE  Tests for refusal explanations: every refusal code has one, no two share a reason, and unfixable refusals say so plainly
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, kira
+//! BFS  USED BY  (entry point or test)
+//!
 //! Telling the owner why.
 //!
 //! A robot that refuses and cannot say why in words its owner

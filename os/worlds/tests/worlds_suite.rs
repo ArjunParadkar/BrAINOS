@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 3.8 - the three worlds (self, human, internet)  [crate brainos-worlds]
+//! BFS  PURPOSE  Tests world trust levels, bounded internet sessions, tagging and refusal of incoming data, and the manipulation filter with its human override
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, memory, worlds
+//! BFS  USED BY  (entry point or test)
+//!
 //! The three-worlds suite.
 
 use brainos_abi::time::Tick;

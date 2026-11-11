@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Window verbs: list, focus, move, resize, close, fullscreen, tile and switch workspace by calling hyprctl (swaymsg as fallback)
+//! BFS  DEFINES  list, focus, move_win, resize, workspace, close, fullscreen, tile
+//! BFS  USES     this crate: HandCtx | external: serde-json
+//! BFS  USED BY  -
+//!
 use serde_json::Value;
 use super::{HandCtx, run_cmd};
 

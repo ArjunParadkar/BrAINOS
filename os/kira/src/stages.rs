@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 3 KIRA - the eight-stage gate; the only path to action  [crate brainos-kira]
+//! BFS  PURPOSE  The per-stage result (pass, refuse, skipped) and the trace of exactly eight of them, in order, that every gate run leaves behind
+//! BFS  DEFINES  StageOutcome, Evidence, Trace
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  kira/audit, kira/gate, kira/lib
+//!
 //! The stages, and the evidence they leave.
 //!
 //! A `Trace` always has exactly eight entries, always in `Stage::ALL`

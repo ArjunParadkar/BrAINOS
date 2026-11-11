@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 5 State - the state graph; the only memory  [crate brainos-memory]
+//! BFS  PURPOSE  Crate root: the entity's memory (episodes, general facts, skills, beliefs), how it is searched, consolidated and saved to storage
+//! BFS  DEFINES  belief, consolidate, episode, graph, index, journal, law, provenance, skill
+//! BFS  USES     this crate: belief, consolidate, episode, graph, index, journal, law, provenance, +1 more
+//! BFS  USED BY  crate cognition, crate entity, crate export, crate host, crate kira, crate nostd, crate part, crate proof, +1 more
+//!
 //! brainos-memory — Domain 5, the state graph.
 //!
 //! This crate is the answer to "what does it remember?", which is one of

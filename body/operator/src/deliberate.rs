@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Tier 3 thinking: streams a turn from the Anthropic API with a tool per available verb, and loops on tool calls until the model is done
+//! BFS  DEFINES  ToolCall, TurnResult, tool_definitions, tool_definitions_for, DeliberateTier, kira_target, tool_name_to_verb, verb_to_tool_name
+//! BFS  USES     this crate: config, ipc, persona, pool, sse | brainos: miniblur-core | external: anyhow, bytes, futures-util, reqwest, serde-json, std, +1 more
+//! BFS  USED BY  -
+//!
 //! Tier 3: deliberate cognition via Fable API (claude-fable-5, streaming).
 //!
 //! Stream-based: returns `DelibEvent` items via a channel.

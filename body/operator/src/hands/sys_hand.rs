@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  System verbs: volume, brightness, wifi, bluetooth, battery, power, lock, notifications, clipboard, time and date, via host command-line tools
+//! BFS  DEFINES  volume, brightness, wifi, bluetooth, battery, power, lock, notify, clipboard, time_now, date_now
+//! BFS  USES     this crate: HandCtx | external: chrono, serde-json, tokio
+//! BFS  USED BY  -
+//!
 use serde_json::Value;
 use super::{HandCtx, run_cmd};
 use chrono::Local;

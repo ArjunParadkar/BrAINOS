@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
+//! BFS  PURPOSE  Builds a real gate, body map, policy and signed proposal for each test case, runs it, and collects the outcomes into a report
+//! BFS  DEFINES  subject_verb, drive_verb, schema, the_body, other_body, run, run_all, verify
+//! BFS  USES     this crate: domain, properties, report | brainos: abi, body, crypto, kira, rt
+//! BFS  USED BY  proof/lib, proof/report, proof/tests/proof_suite
+//!
 //! The rig that turns a `Case` into a real gate evaluation.
 //!
 //! Everything here builds the *actual* types — a real `Kira`, a real

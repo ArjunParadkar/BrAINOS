@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Carries one entity through ten product stages (new body, outage, torn write, export, new vendor) checking identity, age, skills and audit hold
+//! BFS  DEFINES  Moment, Life, live, narrate
+//! BFS  USES     this crate: alloc_free, fullstack | brainos: abi, adapters, body, cognition, crypto, entity, export, fleet, kira, memory
+//! BFS  USED BY  host/tests/life_suite
+//!
 //! One entity, one continuous history, every capability in sequence.
 //!
 //! Every other scenario in this crate builds a fresh entity, does one

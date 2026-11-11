@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 7 - fleet registry and skill marketplace  [crate brainos-fleet]
+//! BFS  PURPOSE  Crate root for running many entities: a read-only registry, a skill marketplace that needs the owner's signature, and hosted off-body thinking
+//! BFS  DEFINES  hosting, marketplace, registry
+//! BFS  USES     this crate: hosting, marketplace, registry
+//! BFS  USED BY  crate entity, crate host, crate nostd
+//!
 //! brainos-fleet — Stage 7, and the thing that makes it different.
 //!
 //! A fleet is *thousands of entities, each with many bodies, each

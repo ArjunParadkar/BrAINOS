@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 4 Entity - one Key, one state graph, every body at once  [crate brainos-entity]
+//! BFS  PURPOSE  Lifetime counters that survive every restart (age, wakes, bodies inhabited, actions granted and denied, stops, unclean shutdowns) to show improvement
+//! BFS  DEFINES  Span, Life
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  entity/entity, entity/lib, entity/tests/entity_suite, export/archive, export/tests/export_suite, host/demo, host/tests/host_suite, nostd/lib
+//!
 //! A life, as distinct from a session.
 //!
 //! Today's AI is a function: input, output, forget. Every deployment

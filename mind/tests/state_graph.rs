@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Tests the memory graph: save/load roundtrip, the 48-episode ring, skill learning, retrieval, and loading corrupted data without a panic
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: mind
+//! BFS  USED BY  (entry point or test)
+//!
 //! Stage 1.1 — memory: persistence roundtrip, the episodic ring, the
 //! skill graph, and survival of corrupted input without panic.
 

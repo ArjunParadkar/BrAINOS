@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  The list of configured models by role (fast, deliberate, vision) with health tracking: picks the first healthy one and fails over on error
+//! BFS  DEFINES  ModelSpec, Pool
+//! BFS  USES     external: serde, serde-json, std
+//! BFS  USED BY  operator/config, operator/deliberate, operator/fast, operator/hands/mod
+//!
 //! Stage 4 §5 — the model pool: an array of models thinking as one mind.
 //!
 //! Models are stateless muscles. The operator owns the ONE history and ONE

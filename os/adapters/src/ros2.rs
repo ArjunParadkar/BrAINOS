@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 8 Acquisition - adapters (ROS 2, MHS, the model boundary)  [crate brainos-adapters]
+//! BFS  PURPOSE  Turns a ROS 2 node graph (topics, services, optional limits) into a CapabilitySchema; commands with no declared limits stay visible but unmovable
+//! BFS  DEFINES  Ros2Error, Topic, Service, NodeGraph, from_node_graph, actionable_fraction_pct
+//! BFS  USES     brainos: abi, body, rt
+//! BFS  USED BY  adapters/lib, adapters/tests/adapters_suite, host/fullstack, host/ros2_stack, host/tests/fullstack_suite, nostd/lib
+//!
 //! The ROS 2 adapter — Phase 1's main engineering deliverable.
 //!
 //! A ROS 2 robot exposes a node graph: topics with message types, and

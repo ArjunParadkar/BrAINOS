@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the runtime on the body's own computer  [crate brainos-bodyd]
+//! BFS  PURPOSE  Crate root for the code running beside the motors: it re-checks every command against the body's own limits and stops, whatever the seat approved
+//! BFS  DEFINES  arm, hexapod, mechanism, protocol, runtime
+//! BFS  USES     this crate: arm, hexapod, mechanism, protocol, runtime
+//! BFS  USED BY  crate host, crate proof
+//!
 //! brainos-bodyd — what runs on the machine with the motors.
 //!
 //! Everything else in this workspace runs at the seat: the entity, its

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Feeds ten model outputs, ordinary to hostile, through parsing, signing and the gate to show text alone cannot gain authority or invent new verbs
+//! BFS  DEFINES  Stopped, Attempt, ModelRun, run, narrate
+//! BFS  USES     brainos: abi, adapters, body, crypto, entity, kira
+//! BFS  USED BY  host/tests/model_suite
+//!
 //! What a model can and cannot do.
 //!
 //! §4 rests on a sentence — *a cognitive resource proposes; KIRA

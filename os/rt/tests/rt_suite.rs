@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - envelopes, reflexes, scheduler, watchdogs  [crate brainos-rt]
+//! BFS  PURPOSE  Tests for rt: reflexes stay inside their limits, a dead link stops the body, unmeetable schedules are refused, fired watchdogs stay fired
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, rt
+//! BFS  USED BY  (entry point or test)
+//!
 //! The Domain 2 suite.
 //!
 //! What these tests defend: a reflex cannot leave its envelope, a body

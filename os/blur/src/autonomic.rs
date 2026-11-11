@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  The Teensy's once-per-millisecond step function and the acquisition procedures it runs: count the nodes, pulse a joint, find its stops, take a calibration
+//! BFS  DEFINES  CENSUS_TICKS, HOME_RAMP, HOME_KP_FRAC, HOME_STALL_ERR, HOME_TIMEOUT_TICKS, SP_EVERY, JointSeen, Request, Outcome, Autonomic
+//! BFS  USES     this crate: calibrate, census, descriptor, fit, supervisor, wire
+//! BFS  USED BY  blur/acquire, blur/supervisor, blur/tests/blur_suite, host/blur_gate2, host/blur_run, host/blur_sil, nostd/lib
+//!
 //! Domain 2 on the Teensy 4.1: the part of BLUR that never waits.
 //!
 //! `Autonomic::step` is called once per millisecond with what the pins

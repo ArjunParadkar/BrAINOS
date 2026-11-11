@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Writes an entity's memory, signed skills, notes, calibration and audit log to a hashed export folder, verifies it, and imports it onto a key
+//! BFS  DEFINES  FORMAT_VERSION, Manifest, Counts, load_key, export, verify, Imported, import
+//! BFS  USES     this crate: journal_io, skills | brainos: mind | external: anyhow, serde, sha2, std
+//! BFS  USED BY  -
+//!
 //! Entity export v1.0 (Execution Plan §11; Master Document 0.4 "Freedom",
 //! bylaw "Entity sovereignty"). The customer owns the entity. Export writes
 //! the complete state of an entity — everything that makes it *this* one —

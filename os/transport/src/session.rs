@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Foundation - the wire (frames, sessions, links)  [crate brainos-transport]
+//! BFS  PURPOSE  The handshake where entity and body prove who they are and derive a shared key; before it only handshake frames pass, after it no replays
+//! BFS  DEFINES  SessionKey, WireError, Peer, Wire
+//! BFS  USES     this crate: frame | brainos: abi, crypto
+//! BFS  USED BY  host/demo, host/fullstack, proof/adversary, transport/lib, transport/tests/transport_suite
+//!
 //! Attested sessions.
 //!
 //! A session is a key and a counter. It exists after both sides have

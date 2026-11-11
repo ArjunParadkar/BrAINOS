@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Phase 0 - the simulated Mini-Blur body  [crate miniblur-sim]
+//! BFS  PURPOSE  Simulated hexapod: connects to the seat over TCP with the same protocol as the real board, servos held as floats; also bench and selftest modes
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: miniblur-core | external: ed25519-dalek, std
+//! BFS  USED BY  (entry point or test)
+//!
 //! miniblur-sim — a Mini-Blur that exists as numbers (Execution Plan §4.1
 //! WP0.5). It speaks the Reach wire protocol to the seat exactly as the
 //! ESP32-S3 firmware will, backed by `miniblur-core`'s model, so the whole

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 3 KIRA - the eight-stage gate; the only path to action  [crate brainos-kira]
+//! BFS  PURPOSE  Baseline refusals applied to every body: destructive command patterns, files the entity depends on, malformed URLs and unsafe paths
+//! BFS  DEFINES  normalize, DESTRUCTIVE, destructive_hit, LOAD_BEARING, is_load_bearing, is_fetchable, is_safe_path
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  kira/gate, kira/lib, kira/tests/gate_suite
+//!
 //! The generic floors.
 //!
 //! Every body policy may tighten; these run first and nothing loosens

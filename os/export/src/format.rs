@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Freedom principle - entity export  [crate brainos-export]
+//! BFS  PURPOSE  Produces the plain-text specification of the export format that is embedded in every archive, so anyone can write a reader without us
+//! BFS  DEFINES  describe_format
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  export/archive, export/lib, export/tests/export_suite
+//!
 //! The format specification, emitted by the code that implements it.
 //!
 //! This text ships *inside* every archive, as a section. That is the

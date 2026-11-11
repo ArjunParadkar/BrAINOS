@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Freedom principle - export reader with no BrAInOS crate  [crate read-export]
+//! BFS  PURPOSE  Standalone program, using no BrAInOS crate, that reads an entity export file, verifies its signature and Merkle root, and prints what it holds
+//! BFS  DEFINES  -
+//! BFS  USES     external: ed25519-dalek, std
+//! BFS  USED BY  (entry point or test)
+//!
 //! A standalone reader for a BrAInOS entity export.
 //!
 //! ```sh

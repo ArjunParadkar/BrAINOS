@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 5 State - the state graph; the only memory  [crate brainos-memory]
+//! BFS  PURPOSE  Tags every memory with its source (self, body, human, internet, peer, model) so untrusted sources are capped and can be filtered out
+//! BFS  DEFINES  Origin, Provenance
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  entity/entity, host/limits, host/worlds_run, memory/belief, memory/consolidate, memory/episode, memory/graph, memory/index, +8 more
+//!
 //! Provenance — where a memory came from, attached to the memory.
 //!
 //! §3.8 gives the entity three worlds with different trust postures, and

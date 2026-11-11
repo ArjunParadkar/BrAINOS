@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
+//! BFS  PURPOSE  Runs a list of real attacks (forged signatures, widened delegations, edited audit logs) and checks each fails for the expected reason
+//! BFS  DEFINES  Ending, AttackResult, attacks, AdversaryReport, verify_adversary
+//! BFS  USES     brainos: abi, body, crypto, kira, memory, rt, transport
+//! BFS  USED BY  host/main, proof/report, proof/tests/adversary_suite
+//!
 //! The fourth domain: someone trying to get away with it.
 //!
 //! The first three domains ask whether the system does the right thing.

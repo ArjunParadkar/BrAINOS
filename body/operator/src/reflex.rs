@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Tier 1: a regex table mapping common spoken commands straight to a verb and target with no model call; no match means try the next tier
+//! BFS  DEFINES  ReflexIntent, match_intent, normalize_utterance, needs_confirm
+//! BFS  USES     external: regex, std
+//! BFS  USED BY  operator/skills
+//!
 //! Tier 1: compiled reflex intent table.
 //!
 //! A pure Rust match + small regex table. No model call.

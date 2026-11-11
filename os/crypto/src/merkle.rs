@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 1 Silicon - the BrAIn Key, hashes, Merkle log, quorum  [crate brainos-crypto]
+//! BFS  PURPOSE  Append-only hash tree: one 32-byte root commits to every entry, any entry can be proven present, and any edit or deletion changes the root
+//! BFS  DEFINES  Root, leaf_hash, node_hash, MerkleLog, Side, Proof
+//! BFS  USES     this crate: domain, sha256
+//! BFS  USED BY  crypto/lib, crypto/tests/crypto_suite, export/archive, fleet/registry, fleet/tests/fleet_suite, host/limits, kira/audit, kira/evidence, +2 more
+//!
 //! The audit anchor: an append-only Merkle log.
 //!
 //! §3.3 says AUDIT always runs and the record is immutable. "Immutable"

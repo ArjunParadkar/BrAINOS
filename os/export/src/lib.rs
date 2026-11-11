@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Freedom principle - entity export  [crate brainos-export]
+//! BFS  PURPOSE  Crate root for exporting an entity's complete state to a signed, self-documenting file and importing it back, so an owner can leave with everything
+//! BFS  DEFINES  archive, format
+//! BFS  USES     this crate: archive, format
+//! BFS  USED BY  crate host, crate nostd
+//!
 //! brainos-export — leaving.
 //!
 //! > *The customer owns the entity. Permanently. The Key is theirs; the

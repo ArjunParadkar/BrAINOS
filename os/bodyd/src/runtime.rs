@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the runtime on the body's own computer  [crate brainos-bodyd]
+//! BFS  PURPOSE  The body's control loop: each tick it reads commands, checks watchdogs and limits, plays one motion sample or stops, then reports telemetry
+//! BFS  DEFINES  State, Pass, Measured, BodyRuntime
+//! BFS  USES     this crate: mechanism, protocol | brainos: abi, rt
+//! BFS  USED BY  bodyd/lib, bodyd/tests/bodyd_suite, host/bench, host/fullstack, host/tests/fullstack_suite, proof/envelopes
+//!
 //! The Domain 2 loop.
 //!
 //! One pass does five things, in this order, and the order is the safety

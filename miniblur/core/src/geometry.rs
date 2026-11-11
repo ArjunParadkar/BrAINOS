@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Phase 0 - Mini-Blur hexapod as numbers (shared by firmware and seat)  [crate miniblur-core]
+//! BFS  PURPOSE  Leg dimensions and forward kinematics: turns swing/lift joint angles into each foot's position in the body frame, for the tip-over check
+//! BFS  DEFINES  Vec2, LegGeom
+//! BFS  USES     this crate: LegId | external: libm
+//! BFS  USED BY  bodyd/hexapod, bodyd/tests/bodyd_suite, core/policy, core/schema, core/stability, host/bench, host/fullstack, host/tests/fullstack_suite, +2 more
+//!
 //! Leg geometry and forward kinematics — enough to know where each foot is
 //! for a given pose, which is all the stability check needs.
 //!

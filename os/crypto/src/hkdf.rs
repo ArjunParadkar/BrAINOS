@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 1 Silicon - the BrAIn Key, hashes, Merkle log, quorum  [crate brainos-crypto]
+//! BFS  PURPOSE  HKDF-SHA256 (RFC 5869) key derivation, used to give each body its own subkey so a compromised body never exposes the root key
+//! BFS  DEFINES  hkdf_sha256
+//! BFS  USES     this crate: hmac, sha256
+//! BFS  USED BY  crypto/key, crypto/lib, crypto/tests/crypto_suite, transport/session
+//!
 //! HKDF-SHA256, from RFC 5869.
 //!
 //! One place needs it and it matters: per-body subkeys. When the entity

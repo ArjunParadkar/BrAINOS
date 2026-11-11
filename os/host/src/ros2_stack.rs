@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Scenario taking on a ROS 2 robot twice, without and with declared limits, to show a robot that declares no limits is visible but cannot be moved
+//! BFS  DEFINES  Inhabited, Ros2Run, run, narrate
+//! BFS  USES     brainos: abi, adapters, body, crypto, entity, kira
+//! BFS  USED BY  host/tests/ros2_suite
+//!
 //! A robot we did not build, on the middleware everybody actually uses.
 //!
 //! `fullstack::manufacturer_demo` inhabits an arm described in its

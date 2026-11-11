@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  Builds the list of skills BLUR advertises with their limits, and checks every joint the schema claims matches a part that answered the census
+//! BFS  DEFINES  LABEL, WALK_VX, WALK_VY, WALK_YAW, STAND_HEIGHT, HOP_HEIGHT, schema_with, blur_schema, claimed_joints, SchemaFault, check_schema
+//! BFS  USES     this crate: census, descriptor | brainos: abi, body, rt
+//! BFS  USED BY  blur/acquire, blur/policy, blur/tests/blur_suite, host/blur_gate2, host/blur_run, nostd/lib
+//!
 //! What BLUR says it can do, and the check that it is telling the truth
 //! about its own parts.
 //!

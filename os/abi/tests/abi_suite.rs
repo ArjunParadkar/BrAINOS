@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Foundation - shared vocabulary (ids, time, verbs, codec, errors)  [crate brainos-abi]
+//! BFS  PURPOSE  Tests for the abi crate: each value encodes exactly one way, refusals carry the right stage and code, and verb scopes cannot be widened
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  (entry point or test)
+//!
 //! The ABI suite. These tests exist to defend three properties the rest
 //! of the system assumes without checking: encodings are canonical,
 //! refusals are correctly labelled, and verbs cannot be widened.

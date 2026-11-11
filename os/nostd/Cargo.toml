@@ -27,3 +27,4 @@ brainos-proof = { workspace = true }
 brainos-fleet = { workspace = true }
 brainos-export = { workspace = true }
 brainos-blur = { workspace = true }
+brainos-part = { workspace = true }

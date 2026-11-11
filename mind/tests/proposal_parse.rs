@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Tests that split_reply turns model text into prose plus at most one verb|target proposal, including trimming and empty-action cases
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: mind
+//! BFS  USED BY  (entry point or test)
+//!
 //! Stage 1.1 — the proposal boundary: model text parses into at most one
 //! typed proposal, deterministically.
 

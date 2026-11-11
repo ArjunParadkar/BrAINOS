@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  The body's half of the handshake: holds BLUR's signing key, answers the entity's challenge, checks the entity is an owner, and signs the census
+//! BFS  DEFINES  absorb, census_payload, Firmware
+//! BFS  USES     this crate: census | brainos: body, crypto
+//! BFS  USED BY  blur/acquire, blur/tests/blur_suite, host/blur_run, host/blur_sil
+//!
 //! The body's side of §8: who BLUR is, and whom it lets in.
 //!
 //! BLUR's attestation key lives on the Teensy (the motor nodes cannot

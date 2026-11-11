@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 4 Entity - one Key, one state graph, every body at once  [crate brainos-entity]
+//! BFS  PURPOSE  Arbiter for one entity driving several bodies: gives exclusive claims on shared resources, settles conflicts, and drops claims of bodies gone silent
+//! BFS  DEFINES  Resource, Claim, Conflict, Resolution, SILENCE_GRACE, Arbiter, resolve
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  entity/entity, entity/lib, entity/tests/entity_suite, host/fullstack
+//!
 //! Stage 4 — what "many bodies at once" actually costs.
 //!
 //! The easy part is free: there is one state graph, so nothing is

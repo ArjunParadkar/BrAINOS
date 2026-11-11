@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 4 Entity - one Key, one state graph, every body at once  [crate brainos-entity]
+//! BFS  PURPOSE  Stores the entity's goals in four levels (fixed drives, human requests, derived subgoals, micro-goals) and expires derived goals that go stale or fail
+//! BFS  DEFINES  Level, GoalId, Goal, Goals, DRIVES
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  entity/entity, entity/lib, entity/tests/entity_suite
+//!
 //! The goal hierarchy (§13).
 //!
 //! Four levels, and only the first two are policy. Levels 2 and 3 are

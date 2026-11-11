@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 4 Cognition - tiers, placement, attention, escalation  [crate brainos-cognition]
+//! BFS  PURPOSE  Decides when to use a costlier thinking tier (surprise, consequence, missing skill, repeated failure) and limits it with a spending budget
+//! BFS  DEFINES  Reason, Limit, Escalation, Budget, decide, cost_of
+//! BFS  USES     this crate: predict, resource | brainos: abi
+//! BFS  USED BY  cognition/ambient, cognition/lib, cognition/tests/cognition_suite, entity/entity, host/degrade
+//!
 //! Escalation — when to reach higher, and when to stop.
 //!
 //! Escalation is a decision with a cost, so it is made explicitly rather

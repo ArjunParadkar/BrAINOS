@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Tests every KIRA stage on the grant path and each denial path: token signing and expiry, replayed requests, missing limbs, the audit record
+//! BFS  DEFINES  -
+//! BFS  USES     this crate: common | brainos: mind
+//! BFS  USED BY  (entry point or test)
+//!
 //! Stage 1.1 — KIRA regression: all eight stages, grant and deny, every
 //! failure path. These tests link the same rlib the booted core runs.
 

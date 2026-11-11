@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Command-line tool to export an entity's full state from a key to a folder, verify an export, or import it onto a key (optionally a new one)
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: operator-lib | external: std
+//! BFS  USED BY  -
+//!
 //! `brainos-export` — entity export v1.0 (Execution Plan §11). The freedom
 //! principle as a command: the owner takes their entity's complete state off
 //! the key, and can put it on another.

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - Domain 1 flesh: the UEFI boot core  [crate brainos-core]
+//! BFS  PURPOSE  Serial-port (COM3) line protocol to the host body daemon: sends prompts, speech and limb acks; reads model replies, limb offers, heard/seen text
+//! BFS  DEFINES  init, drain, send_prompt, send_speak, send_context, send_action, send_limb_ack, Event, LineReader
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  -
+//!
 //! The body link — the tether that makes the host a limb (Phase 2).
 //!
 //! The core stays bare-metal and pure; it hand-writes no audio, USB or

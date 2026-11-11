@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 5 State - the state graph; the only memory  [crate brainos-memory]
+//! BFS  PURPOSE  The idle-time pass that turns repeated episodes into general facts, promotes and chains verbs that worked into skills, and prunes the rest
+//! BFS  DEFINES  CRYSTALLIZE_AT, PROMOTE_AT, CHAIN_AT, MAX_CHAIN, ConsolidationReport, Dream, consolidate
+//! BFS  USES     this crate: episode, graph, law, provenance, skill | brainos: abi
+//! BFS  USED BY  entity/entity, entity/tests/entity_suite, export/tests/export_suite, host/bench, host/compound, host/day, host/demo, host/fleet_experiment, +5 more
+//!
 //! Consolidation — "dreaming", and the engine of the moat.
 //!
 //! An entity that only accumulates episodes has a longer history, not a

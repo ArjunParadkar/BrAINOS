@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests that one entity's identity, age, learned skills and early audit proofs all survive the ten-stage whole-life scenario
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: host
+//! BFS  USED BY  (entry point or test)
+//!
 //! One entity through the whole product, in one history.
 //!
 //! Every other suite builds a fresh entity and checks one property.

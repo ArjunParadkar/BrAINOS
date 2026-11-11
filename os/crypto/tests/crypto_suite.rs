@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 1 Silicon - the BrAIn Key, hashes, Merkle log, quorum  [crate brainos-crypto]
+//! BFS  PURPOSE  Tests for crypto: SHA-256/HMAC match published vectors, labels keep signatures apart, the Merkle log catches tampering, one signer is no quorum
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, crypto | external: ed25519-dalek
+//! BFS  USED BY  (entry point or test)
+//!
 //! The crypto suite.
 //!
 //! SHA-256 and HMAC are checked against published vectors, because "our

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  Loads a trained neural-network policy from a flat binary blob and runs it (observations in, joint-target offsets out) with no allocation per call
+//! BFS  DEFINES  MAGIC, MAX_WIDTH, Layer, Mlp, MlpError
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  blur/supervisor, blur/tests/blur_suite, host/blur_gate2
+//!
 //! Policy inference: a small multilayer perceptron, `no_std`, no
 //! allocation per call.
 //!

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests that model text cannot request unadvertised verbs, fake authorization or inject instructions, and that refusals are explained to people
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: host
+//! BFS  USED BY  (entry point or test)
+//!
 //! What a model can and cannot do.
 
 use brainos_host::model::{run, Stopped};

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 5 State - the state graph; the only memory  [crate brainos-memory]
+//! BFS  PURPOSE  Claims about the world right now, whose confidence is recomputed from supporting and contradicting evidence rather than last-write-wins
+//! BFS  DEFINES  Belief, Revision, ABANDON_BELOW, assert_belief, contradict, recompute, held, admissible
+//! BFS  USES     this crate: graph, law, provenance | brainos: abi
+//! BFS  USED BY  memory/lib, memory/tests/memory_suite
+//!
 //! Beliefs — the world model, held with confidence and revisable.
 //!
 //! A belief is distinguished from a semantic memory by being *about the

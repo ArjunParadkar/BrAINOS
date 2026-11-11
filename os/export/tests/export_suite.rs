@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Freedom principle - entity export  [crate brainos-export]
+//! BFS  PURPOSE  Tests that an export is complete, carries its own spec, detects any tampering, refuses other format versions, and imports back as the same entity
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, crypto, entity, export, memory
+//! BFS  USED BY  (entry point or test)
+//!
 //! The freedom-principle suite.
 //!
 //! "Export of an entity's state graph is a first-class, documented,

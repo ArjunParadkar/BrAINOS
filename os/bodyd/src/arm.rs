@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the runtime on the body's own computer  [crate brainos-bodyd]
+//! BFS  PURPOSE  A planar multi-joint arm as a second Mechanism, with joint limits, a static shoulder-torque budget and a check that the hand stays clear of the base
+//! BFS  DEFINES  MAX_JOINTS, Joint, ArmConfig, Arm, native_schema
+//! BFS  USES     this crate: mechanism | brainos: abi, rt | external: libm
+//! BFS  USED BY  bodyd/lib, bodyd/tests/bodyd_suite, host/fullstack
+//!
 //! An arm — the second mechanism, and the reason the trait exists.
 //!
 //! The hexapod and this share a runtime, a wire, an envelope model, a

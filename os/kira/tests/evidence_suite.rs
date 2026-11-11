@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 3 KIRA - the eight-stage gate; the only path to action  [crate brainos-kira]
+//! BFS  PURPOSE  Tests for evidence bundles: they verify with the public key alone, and edited, forged, out-of-window, cherry-picked or empty ones fail
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, crypto, kira
+//! BFS  USED BY  (entry point or test)
+//!
 //! The evidence bundle, at the unit level.
 
 use brainos_abi::ids::BodyId;

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the runtime on the body's own computer  [crate brainos-bodyd]
+//! BFS  PURPOSE  Defines the only messages between seat and body (a verb Command down; telemetry, refusal and stop Reports up) and their byte encoding
+//! BFS  DEFINES  Command, Report, Wire
+//! BFS  USES     this crate: mechanism | brainos: abi, transport
+//! BFS  USED BY  bodyd/lib, bodyd/runtime, bodyd/tests/bodyd_suite, host/fullstack, host/tests/fullstack_suite, proof/envelopes, proof/hostile
+//!
 //! What the seat and the body say to each other.
 //!
 //! Deliberately small. The seat sends a verb and its arguments; the body

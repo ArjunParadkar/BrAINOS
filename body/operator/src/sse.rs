@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Parses the Anthropic streaming API's server-sent events (event:/data: blocks) into typed events: text deltas, tool-use blocks, stop reasons
+//! BFS  DEFINES  SseEvent, ContentBlock, Delta, MessageDeltaData, parse_raw_events, parse_event
+//! BFS  USES     external: anyhow, serde, serde-json
+//! BFS  USED BY  operator/deliberate
+//!
 //! SSE event parser for the Anthropic streaming API.
 //!
 //! Parses a stream of `event: <type>\ndata: <json>\n\n` blocks.

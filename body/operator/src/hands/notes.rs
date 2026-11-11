@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Notes verbs: append a timestamped line to the entity's private notebook on the key, or read it back, optionally filtered by topic
+//! BFS  DEFINES  write, read
+//! BFS  USES     this crate: HandCtx, journal_io | external: serde-json
+//! BFS  USED BY  -
+//!
 //! Notes hand — reads/writes the private notebook via journal_io.
 
 use serde_json::Value;

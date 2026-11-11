@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Measures where the system stops scaling (bodies held, memory retrieval, audit log size) and labels each limit as hard, configured or soft
+//! BFS  DEFINES  Kind, Limit, Limits, RetrievalPoint, AuditPoint, measure
+//! BFS  USES     brainos: abi, adapters, body, crypto, kira, memory, rt, transport | external: std
+//! BFS  USED BY  host/tests/limits_suite
+//!
 //! Where this breaks.
 //!
 //! Every claim in the architecture has an implied scale, and a claim

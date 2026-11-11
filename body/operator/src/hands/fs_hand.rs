@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  File verbs (list, read, write, mkdir, delete, move, stat, search) rooted at the configured home directory, rejecting ".." and sensitive system paths
+//! BFS  DEFINES  list, read, write, mkdir, delete, move_file, stat, search
+//! BFS  USES     this crate: HandCtx, run_cmd | external: serde-json, std
+//! BFS  USED BY  -
+//!
 //! Filesystem hand — operates under config.fs.home_dir.
 //! All paths are validated (no ../, no absolute escapes).
 

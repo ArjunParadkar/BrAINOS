@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Times the core operations against their latency budgets and reports memory footprint and whether an entity fits on the ESP32-S3 board
+//! BFS  DEFINES  Measurement, run, implications, footprint, fits_on_the_board, Fit, memory_per_episode
+//! BFS  USES     brainos: abi, adapters, body, bodyd, crypto, entity, kira, memory, miniblur-core, rt, +1 more | external: std
+//! BFS  USED BY  host/tests/bench_suite
+//!
 //! Measured numbers.
 //!
 //! The architecture makes latency claims — sub-100 ms reflexes, a gait

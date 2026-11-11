@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Splits a model reply "say~~verb|target" into spoken text plus at most one action proposal, which must still pass KIRA
+//! BFS  DEFINES  split_reply
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  core/main, mind/tests/adversarial, mind/tests/proposal_parse
+//!
 //! The proposal boundary — where model text stops being text.
 //!
 //! A Model M reply is untrusted input, exactly like anything else that

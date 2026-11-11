@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 5 State - the state graph; the only memory  [crate brainos-memory]
+//! BFS  PURPOSE  MemoryHandle: the one non-copyable token, issued to the entity, required for every memory write, so bodies and models cannot own memory
+//! BFS  DEFINES  MemoryHandle, Violation, DurableStore
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  entity/entity, export/archive, export/tests/export_suite, host/demo, host/limits, host/worlds_run, memory/belief, memory/consolidate, +7 more
+//!
 //! The Memory-Integrity Law, as a type.
 //!
 //! §3.7: *memory lives only in the entity's state graph; never in a

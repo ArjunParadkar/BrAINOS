@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Provides the host clocks: a real monotonic one zeroed at start, and a manual step clock that makes runs reproducible
+//! BFS  DEFINES  SystemClock, StepClock
+//! BFS  USES     brainos: abi | external: std
+//! BFS  USED BY  host/lib, host/tests/host_suite
+//!
 //! A monotonic clock from the host.
 
 use brainos_abi::time::{Clock, Instant};

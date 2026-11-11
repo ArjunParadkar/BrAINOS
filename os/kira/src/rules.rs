@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 3 KIRA - the eight-stage gate; the only path to action  [crate brainos-kira]
+//! BFS  PURPOSE  The rules the policy stage checks: built-in prohibitions that cannot be removed (drives) and rules set by the human owner
+//! BFS  DEFINES  Level, Drive, level_zero, Rule, RuleSet
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  host/main, kira/gate, kira/lib, kira/tests/gate_suite, proof/adversary, proof/harness
+//!
 //! Drives and rules — the policy stage's ruleset.
 //!
 //! §13 gives a goal hierarchy: Level 0 drives are instinctive and

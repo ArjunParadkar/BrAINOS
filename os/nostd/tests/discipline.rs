@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Discipline - the no_std canary and its checks  [crate brainos-nostd-check]
+//! BFS  PURPOSE  Source-level checks: no std or unsafe below host, the external dependency list, the UEFI build settings, and that BFS cards are current
+//! BFS  DEFINES  -
+//! BFS  USES     external: std
+//! BFS  USED BY  (entry point or test)
+//!
 //! The `no_std` discipline, checked mechanically.
 //!
 //! The strongest check is a bare-metal build, and it is one
@@ -18,12 +24,13 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 /// Crates that must compile with no operating system beneath them.
-const CORE_CRATES: [&str; 16] = [
+const CORE_CRATES: [&str; 17] = [
     "abi",
     "crypto",
     "rt",
     "memory",
     "body",
+    "part",
     "kira",
     "cognition",
     "worlds",
@@ -330,6 +337,35 @@ fn the_x86_uefi_target_pins_the_serial_curve_backend() {
         .join("\n");
     assert!(code.contains("[target.x86_64-unknown-uefi]"));
     assert!(code.contains("curve25519_dalek_backend=\"serial\""));
+}
+
+/// Every Rust file opens with a BFS card (level, purpose, defines,
+/// uses, used by) and `docs/CODE_MAP.md` is generated from them. The
+/// computed lines are only worth having if they are true, so this runs
+/// the generator in check mode: a file whose imports or public items
+/// changed without the card being regenerated fails here.
+///
+/// Fix: `tools/bfs_cards.py` from the repository root.
+#[test]
+fn every_bfs_card_and_the_code_map_are_current() {
+    let repo = workspace_root().parent().expect("os/ has a parent").to_path_buf();
+    let tool = repo.join("tools/bfs_cards.py");
+    assert!(tool.exists(), "tools/bfs_cards.py is missing");
+    let out = match std::process::Command::new("python3")
+        .arg(&tool)
+        .arg("--check")
+        .output()
+    {
+        Ok(o) => o,
+        // no python on this machine: the check cannot run, and saying
+        // so is better than pretending it passed
+        Err(e) => panic!("python3 is needed to check the BFS cards: {e}"),
+    };
+    assert!(
+        out.status.success(),
+        "BFS cards are stale; run tools/bfs_cards.py\n{}",
+        String::from_utf8_lossy(&out.stdout)
+    );
 }
 
 #[test]

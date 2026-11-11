@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  App verbs: open a desktop app by name or role (terminal, browser...) without waiting on it, list installed apps, and close one
+//! BFS  DEFINES  open, list, close
+//! BFS  USES     this crate: HandCtx | external: serde-json, std
+//! BFS  USED BY  -
+//!
 use serde_json::Value;
 use super::{HandCtx, run_cmd};
 

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Runs BLUR Gate 2 on the simulated robot: push recovery, limit clamping, e-stop cutting torque, and out-of-limit requests refused by the gate
+//! BFS  DEFINES  TwinPredictor, getup_blob, Reflexes, PushTrial, gate2
+//! BFS  USES     this crate: blur_run, blur_sil | brainos: abi, blur, body, crypto, entity, kira | external: std
+//! BFS  USED BY  -
+//!
 //! `brainos blur gate2` — the Autonomic layer and KIRA's physical
 //! policies, against the twin.
 //!

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  The call every hand makes to pass a verb and target through KIRA on the shared Instance, plus operator-only refusals (API key leak, wiping /brain)
+//! BFS  DEFINES  SharedInstance, gate, gate_via, gate_or_deny
+//! BFS  USES     this crate: reach | brainos: mind | external: anyhow, std
+//! BFS  USED BY  operator/hands/mod, operator/reach
+//!
 //! KIRA gateway for the operator body.
 //!
 //! Every hand execution goes through `Instance::propose(Action::UseLimb{...})`

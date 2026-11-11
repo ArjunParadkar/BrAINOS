@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - envelopes, reflexes, scheduler, watchdogs  [crate brainos-rt]
+//! BFS  PURPOSE  Timers that fire when a loop hangs, runs too fast, or stops making progress, and stay fired until something above clears them
+//! BFS  DEFINES  Wd, Bite, Watchdog, WatchdogSet
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  bodyd/runtime, rt/lib, rt/tests/rt_suite
+//!
 //! Watchdogs — the layer that assumes everything above it will fail.
 //!
 //! The §3.12 audit kept watchdogs and fail-safe defaults under "physics,

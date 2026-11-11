@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Standing tasks: utterances the entity re-issues to itself every N seconds or when a shell check comes true; saved in TASKS.JSON on the key
+//! BFS  DEFINES  MIN_EVERY_SECS, WHEN_POLL_SECS, Kind, Standing, Tasks
+//! BFS  USES     this crate: hands, ipc | external: serde, std, tokio
+//! BFS  USED BY  operator/hands/entity_hand, operator/hands/mod
+//!
 //! Stage 4 §6 — standing tasks: watchers and schedules.
 //!
 //! A standing task is an utterance the entity says to itself on a schedule

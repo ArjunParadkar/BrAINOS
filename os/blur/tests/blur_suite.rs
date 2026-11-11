@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  Tests every part of BLUR that runs without the simulator: descriptor, CAN budget, wire encoding, census, schema, firmware, calibration, policies
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, blur, body, crypto | external: std
+//! BFS  USED BY  (entry point or test)
+//!
 //! brainos-blur: the descriptor, the wire, the budget, and the checks
 //! §8 runs — everything that can be tested without the twin. The twin
 //! end-to-end is `brainos blur gate1`.

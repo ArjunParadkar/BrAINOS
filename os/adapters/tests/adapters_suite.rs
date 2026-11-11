@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 8 Acquisition - adapters (ROS 2, MHS, the model boundary)  [crate brainos-adapters]
+//! BFS  PURPOSE  Tests the ROS 2, MHS and native adapters and the model-output boundary without a robot, checking a body with no stated limits cannot be moved
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, adapters, body, kira, rt
+//! BFS  USED BY  (entry point or test)
+//!
 //! The adapter suite — Phase 1's deliverable, tested without a robot.
 //!
 //! The property being defended throughout: **a body that will not say

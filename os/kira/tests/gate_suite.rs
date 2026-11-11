@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 3 KIRA - the eight-stage gate; the only path to action  [crate brainos-kira]
+//! BFS  PURPOSE  Tests for the gate, including attacks (destructive commands, missing limbs, forged keys), each of which must be refused at the correct stage
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, body, crypto, kira, rt
+//! BFS  USED BY  (entry point or test)
+//!
 //! The KIRA suite, including the adversarial cases.
 //!
 //! Stage 1's original adversarial suite injected `rm -rf`, phantom

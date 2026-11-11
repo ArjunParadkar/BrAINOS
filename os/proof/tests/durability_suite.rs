@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
+//! BFS  PURPOSE  Tests that power loss at any instant, on every storage model and history depth, never corrupts an entity, and that a flipped bit is caught
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: proof
+//! BFS  USED BY  (entry point or test)
+//!
 //! Losing power at every possible instant.
 
 use brainos_proof::durability::{verify_bit_rot, verify_durability, Medium};

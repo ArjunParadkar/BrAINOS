@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Phase 0 - Mini-Blur hexapod as numbers (shared by firmware and seat)  [crate miniblur-core]
+//! BFS  PURPOSE  Crate root for the hexapod model shared by firmware and seat (legs, poses, gait, limits, wire format) so both run identical safety checks
+//! BFS  DEFINES  gait, geometry, json, policy, power, runtime, schema, servo, stability, watchdog, wire, LEGS, +5 more
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  crate bodyd, crate host, crate miniblur-a, crate operator, crate proof, crate sim
+//!
 //! miniblur-core — the Phase 0 body as numbers (Execution Plan §4).
 //!
 //! Everything a hexapod's Domain 2 needs to keep the body alive, and

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Phase 0 - Mini-Blur hexapod as numbers (shared by firmware and seat)  [crate miniblur-core]
+//! BFS  PURPOSE  The JSON description of the body (verbs, geometry, servo table, limits) sent in its hello, plus the calibration records the seat keeps in memory
+//! BFS  DEFINES  SCHEMA_VERSION, HANDS, Limits, Model, split_array, calibration_lines
+//! BFS  USES     this crate: Axis, gait, geometry, json, power, servo
+//! BFS  USED BY  core/policy, core/runtime, miniblur-a/main, operator/hexapod, operator/reach, sim/main
+//!
 //! §8 step 3 — the capability schema the body publishes in its hello, and
 //! step 5 — the calibration record the seat keeps in the state graph. Both
 //! are one JSON object (Execution Plan §4.6). The body emits it; the seat

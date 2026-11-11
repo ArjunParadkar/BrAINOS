@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - envelopes, reflexes, scheduler, watchdogs  [crate brainos-rt]
+//! BFS  PURPOSE  Times every pass of a task into a fixed histogram and reports when the measured worst case exceeds the run time the task declared
+//! BFS  DEFINES  Budget, BudgetReport
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  rt/lib, rt/tests/rt_suite
+//!
 //! Execution budgets — turning a declared WCET into a measured one.
 //!
 //! `TaskSpec::wcet` is a promise. This is how the promise is kept honest:

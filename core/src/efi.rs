@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - Domain 1 flesh: the UEFI boot core  [crate brainos-core]
+//! BFS  PURPOSE  Hand-written UEFI type and protocol definitions (system table, text I/O, files, graphics, network) so the core needs no external UEFI crate
+//! BFS  DEFINES  Handle, Event, Status, SUCCESS, NOT_READY, Guid, GOP_GUID, LOADED_IMAGE_GUID, SIMPLE_FS_GUID, SNP_GUID, HTTP_SB_GUID, HTTP_GUID, +36 more
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  core/console, core/mem, core/net
+//!
 //! Minimal hand-rolled UEFI FFI — the only thing between the portable core
 //! and bare firmware. No external crates. Everything above this file is
 //! architecture-blind (BrAInOS Architecture §16.2).

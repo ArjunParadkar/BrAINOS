@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Simulates a full working day of telemetry, faults and human speech to measure whether an entity interrupts only for what matters and stays cheap
+//! BFS  DEFINES  Happening, Day, run, Body, run_on, narrate
+//! BFS  USES     brainos: abi, adapters, body, cognition, crypto, entity, memory
+//! BFS  USED BY  host/tests/day_suite
+//!
 //! A day in the life.
 //!
 //! §2.3: *"A sense → predict → error → attend loop replaces turn-based

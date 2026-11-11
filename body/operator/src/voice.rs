@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Push-to-talk voice: records the mic with pw-record, transcribes with whisper-cli, and speaks replies with piper and pw-play
+//! BFS  DEFINES  Voice, Listen, clean_transcript, speakable
+//! BFS  USES     this crate: config | external: std, tokio
+//! BFS  USED BY  operator/hands/mod, operator/hands/voice_hand
+//!
 //! The voice loop — the entity's ears and mouth, inside the body.
 //!
 //! Push-to-talk from the face (`{"t":"ptt","on":true|false}`) drives this:

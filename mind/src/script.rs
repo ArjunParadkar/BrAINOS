@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Interpreter for the small script language behind the code.run verb: ints, strings, lists, functions, with hard limits on steps, depth and output
+//! BFS  DEFINES  Value, run
+//! BFS  USES     external: Value
+//! BFS  USED BY  mind/tests/script_engine
+//!
 //! A small deterministic interpreter — the entity's own compute (§9.2).
 //!
 //! `code.run` is a limb like any other: KIRA-gated, bounded, executed by

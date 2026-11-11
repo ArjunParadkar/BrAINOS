@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
+//! BFS  PURPOSE  Enumerates commands to a multi-part body and checks each is allowed only when inside the limits of the part it belongs to, not another's
+//! BFS  DEFINES  Part, PARTS, Disagreement, RegionReport, verify_regions_the_old_way, verify_regions
+//! BFS  USES     brainos: abi, body, rt
+//! BFS  USED BY  host/main, proof/report, proof/tests/regions_suite
+//!
 //! The sixth domain: a body made of several parts.
 //!
 //! Every body in this workspace had exactly one consequential region

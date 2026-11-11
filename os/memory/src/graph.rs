@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 5 State - the state graph; the only memory  [crate brainos-memory]
+//! BFS  PURPOSE  The entity's whole memory as typed nodes (with origin, confidence, time) joined by edges; anyone may read, only a MemoryHandle holder writes
+//! BFS  DEFINES  NodeKind, EdgeKind, Edge, Node, Bounds, StateGraph
+//! BFS  USES     this crate: law, provenance | brainos: abi
+//! BFS  USED BY  entity/entity, entity/tests/entity_suite, export/archive, export/tests/export_suite, host/bench, host/demo, host/limits, host/migrate, +10 more
+//!
 //! The state graph — what replaces the filesystem.
 //!
 //! A UNIX file is a byte stream with a name and a modification time. A

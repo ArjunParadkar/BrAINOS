@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 8 Acquisition - a device becomes a region of the body  [crate brainos-body]
+//! BFS  PURPOSE  Tests body acquisition: a device must prove its identity, changed capabilities mean a new body, unstated limits block motion, joining is not permission
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, body, crypto, rt
+//! BFS  USED BY  (entry point or test)
+//!
 //! The §8 suite.
 //!
 //! The properties defended here: a device cannot join without proving

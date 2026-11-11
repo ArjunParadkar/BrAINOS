@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 4 Cognition - tiers, placement, attention, escalation  [crate brainos-cognition]
+//! BFS  PURPOSE  Tests cognition: reflexes stay on the body, placements that miss their latency are refused, losing the datacenter only degrades, surprise is earned
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, cognition
+//! BFS  USED BY  (entry point or test)
+//!
 //! The Domain 4 / Stage 5 suite.
 //!
 //! What is defended: reflexes never leave the body, a placement that

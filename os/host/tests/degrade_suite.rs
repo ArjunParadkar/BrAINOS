@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests that losing the cloud link degrades rather than halts, memory keeps working, and degraded decisions name the dropped link as the cause
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: cognition, host
+//! BFS  USED BY  (entry point or test)
+//!
 //! Degrading honestly, asserted.
 
 use brainos_cognition::resource::Tier;

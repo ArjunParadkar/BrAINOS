@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - Domain 1 flesh: the UEFI boot core  [crate brainos-core]
+//! BFS  PURPOSE  Global heap allocator backed by UEFI pool allocations, so the core can use Vec, String and other alloc types on bare firmware
+//! BFS  DEFINES  init, UefiAlloc
+//! BFS  USES     this crate: efi
+//! BFS  USED BY  -
+//!
 //! Heap for the portable core, backed by UEFI pool allocations.
 //!
 //! BrAInOS has no filesystem and no processes, but it does have growing

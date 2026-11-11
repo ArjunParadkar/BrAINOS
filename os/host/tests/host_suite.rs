@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests what needs a real filesystem and clock: the journal survives power cuts and rollback, the demo runs, and the property report holds
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: abi, adapters, body, crypto, entity, host, memory, proof | external: std
+//! BFS  USED BY  (entry point or test)
+//!
 //! The integration suite.
 //!
 //! Everything else in this workspace is tested in isolation and with no

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 8 Acquisition - a device becomes a region of the body  [crate brainos-body]
+//! BFS  PURPOSE  Crate root: lists the modules that turn a device into a region of the body and re-exports their main types
+//! BFS  DEFINES  acquire, calibration, hal, policy, region, schema, vital
+//! BFS  USES     this crate: acquire, calibration, hal, policy, region, schema, vital
+//! BFS  USED BY  crate adapters, crate blur, crate entity, crate fleet, crate host, crate kira, crate nostd, crate part, +1 more
+//!
 //! brainos-body — devices as regions you become.
 //!
 //! This replaces device drivers. A device is not a tool the entity uses;
@@ -45,6 +51,7 @@ pub mod hal;
 pub mod policy;
 pub mod region;
 pub mod schema;
+pub mod vital;
 
 pub use acquire::{Acquisition, Step, StepError};
 pub use calibration::{Calibration, JointTrim};
@@ -52,3 +59,4 @@ pub use hal::{Actuator, Command, Reading, Sensor, Telemetry};
 pub use policy::{BodyPolicy, Posture, Refusal};
 pub use region::{BodyMap, Region, RegionClass};
 pub use schema::{CapabilitySchema, ParamKind, ParamSpec, VerbSpec};
+pub use vital::{Band, Felt, Health};

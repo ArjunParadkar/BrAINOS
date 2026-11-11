@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests the skill-transfer experiment: a matching-deployment skill helps, a mismatched one costs at first, then recovers through probing
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: host
+//! BFS  USED BY  (entry point or test)
+//!
 //! The fleet-transfer result, as assertions.
 //!
 //! The experiment ran twice under two adoption rules, and both runs are

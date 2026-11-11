@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 8 Acquisition - adapters (ROS 2, MHS, the model boundary)  [crate brainos-adapters]
+//! BFS  PURPOSE  Small hand-written JSON parser with hard limits on depth, string, array and input size, so untrusted device descriptions cannot crash or stall it
+//! BFS  DEFINES  MAX_DEPTH, MAX_STRING, MAX_ITEMS, MAX_INPUT, JsonError, Json
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  adapters/boundary, adapters/lib, adapters/mhs, adapters/tests/adapters_suite, proof/hostile
+//!
 //! A bounded JSON reader.
 //!
 //! Written rather than pulled in, for the reasons the whole core is

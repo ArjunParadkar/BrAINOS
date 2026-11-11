@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Scenario where the entity uses a bounded internet session whose results stay untrusted, then filters incoming messages for its human with reasons
+//! BFS  DEFINES  Message, Kind, WorldsRun, run, narrate
+//! BFS  USES     brainos: abi, crypto, entity, memory, worlds
+//! BFS  USED BY  host/tests/worlds_suite
+//!
 //! Going online, and coming back.
 //!
 //! §3.8 says the entity lives in three worlds: its own, which it

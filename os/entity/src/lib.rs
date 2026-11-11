@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 4 Entity - one Key, one state graph, every body at once  [crate brainos-entity]
+//! BFS  PURPOSE  Crate root: lists the modules that make one entity out of a Key, a memory and every body it holds
+//! BFS  DEFINES  entity, goals, life, simultaneity
+//! BFS  USES     this crate: entity, goals, life, simultaneity
+//! BFS  USED BY  crate export, crate host, crate nostd
+//!
 //! brainos-entity — the thing that is a someone.
 //!
 //! Everything below this crate is a domain. This is where they become

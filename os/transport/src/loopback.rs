@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Foundation - the wire (frames, sessions, links)  [crate brainos-transport]
+//! BFS  PURPOSE  In-memory two-way link for tests and the simulator that can drop, duplicate, reorder and corrupt frames on demand, repeatably
+//! BFS  DEFINES  Faults, Loopback
+//! BFS  USES     brainos: crypto
+//! BFS  USED BY  host/demo, host/fullstack, host/tests/fullstack_suite, transport/lib, transport/tests/transport_suite
+//!
 //! A loopback link, for the simulator and the test rig.
 //!
 //! Two queues and a configurable fault model. The fault model is the

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Operator settings (model endpoints, voice, file home, remote-body listener, model pool) loaded from operator.toml with a default for every field
+//! BFS  DEFINES  Config, ReachCfg, PoolCfg, TiersCfg, OperatorCfg, LlamaCfg, CdpCfg, AnthropicCfg, VoiceCfg, FsCfg, TaskCfg
+//! BFS  USES     this crate: pool | external: anyhow, serde, std
+//! BFS  USED BY  operator/deliberate, operator/fast, operator/hands/mod, operator/voice
+//!
 //! Operator configuration — read from /etc/brainos/operator.toml or --config.
 //! Every field has a sane dev-host default so the binary runs without any
 //! config file during local testing.

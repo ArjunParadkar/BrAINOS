@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 8 Acquisition - adapters (ROS 2, MHS, the model boundary)  [crate brainos-adapters]
+//! BFS  PURPOSE  Crate root for the adapters that turn a body's own description (ROS 2 graph, MHS tool list, our firmware) into a capability schema, with no I/O
+//! BFS  DEFINES  boundary, json, mhs, native, ros2
+//! BFS  USES     this crate: json, mhs, native, ros2
+//! BFS  USED BY  crate host, crate nostd, crate proof
+//!
 //! brainos-adapters — how a body we did not build becomes a body.
 //!
 //! §8 has five steps and the adapters are only steps 1–3: discover,

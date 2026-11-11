@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Web verbs: drive Chromium over its DevTools websocket to open a page, read its text, find/click/type into elements, and search DuckDuckGo
+//! BFS  DEFINES  CdpSession, open, read, find, click, type_into, search
+//! BFS  USES     this crate: HandCtx | external: anyhow, futures-util, serde-json, std, tokio-tungstenite
+//! BFS  USED BY  -
+//!
 //! Web hand — Chromium CDP over websocket.
 //!
 //! Discovers targets via GET /json, opens a websocket to the debugger,

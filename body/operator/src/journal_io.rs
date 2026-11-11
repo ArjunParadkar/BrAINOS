@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Loads and saves the memory graph in the EPI_A/EPI_B journal files on the key using mind's two-slot format, plus the notes file
+//! BFS  DEFINES  JournalIO
+//! BFS  USES     brainos: mind | external: anyhow, std
+//! BFS  USED BY  operator/export, operator/hands/notes
+//!
 //! Read and write the entity's episodic journal (EPI_A / EPI_B).
 //! Uses brainos_mind::journal for the two-slot CRC format.
 

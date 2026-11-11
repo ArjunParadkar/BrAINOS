@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Operator (Stage 3-4 milestones) - the seat daemon on the Linux body  [crate brainos-operator]
+//! BFS  PURPOSE  Keyboard and mouse verbs: type text, press a key combo, click at x,y and scroll, by calling the wtype or ydotool programs
+//! BFS  DEFINES  type_text, press_key, click, scroll
+//! BFS  USES     this crate: HandCtx | external: serde-json
+//! BFS  USED BY  -
+//!
 use serde_json::Value;
 use super::{HandCtx, run_cmd};
 

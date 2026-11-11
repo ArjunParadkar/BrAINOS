@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  Two-slot, checksummed record format for saving memory so a power cut mid-write leaves the previous copy readable; pure logic, no file I/O
+//! BFS  DEFINES  MAGIC, HEADER_LEN, MAX_PAYLOAD, crc32, seal, open, Slot, plan_write, newest
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  mind/tests/journal_crash
+//!
 //! Crash-consistent persistence for the entity's memory (Stage 1.4).
 //!
 //! The key medium is FAT under a firmware driver: there is no rename, no

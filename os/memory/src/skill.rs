@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 5 State - the state graph; the only memory  [crate brainos-memory]
+//! BFS  PURPOSE  Learned skills: per verb, the conditions it worked under (learned and re-tested, not declared), its effects and success counts per body
+//! BFS  DEFINES  SkillId, EVIDENCE_WINDOW, STALE_AFTER, MAX_PRECONDITIONS, LOCAL_TESTS_ENOUGH, PROBE_EVERY, Decision, Precondition, Step, BodyStats, Skill, SkillGraph
+//! BFS  USES     this crate: graph, law, provenance | brainos: abi
+//! BFS  USED BY  entity/entity, export/tests/export_suite, host/demo, host/fleet_experiment, host/limits, host/worlds_run, memory/consolidate, memory/lib, +3 more
+//!
 //! The skill graph — procedural memory, and the thing that compounds.
 //!
 //! §2.2 says a two-year-old entity should be measurably better than a

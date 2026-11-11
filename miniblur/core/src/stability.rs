@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Phase 0 - Mini-Blur hexapod as numbers (shared by firmware and seat)  [crate miniblur-core]
+//! BFS  PURPOSE  Tip-over check: finds the polygon of feet on the ground and how many mm the centre of mass sits inside it, for one pose or a whole gait plan
+//! BFS  DEFINES  CONTACT_MM, support_polygon, margin_mm, pose_margin_mm, plan_min_margin_mm
+//! BFS  USES     this crate: LegId, Pose, gait, geometry
+//! BFS  USED BY  bodyd/hexapod, core/policy, host/bench, sim/main
+//!
 //! The tip-over invariant: the centre of mass, projected onto the ground,
 //! must stay inside the support polygon of the feet that are down — with a
 //! margin. This is what KIRA's SIMULATE stage checks for a hexapod, and what

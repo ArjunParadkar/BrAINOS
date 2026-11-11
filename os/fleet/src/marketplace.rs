@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Stage 7 - fleet registry and skill marketplace  [crate brainos-fleet]
+//! BFS  PURPOSE  Skill packages signed by a publisher that install only after the entity's owner countersigns, so no vendor can push a capability onto a robot
+//! BFS  DEFINES  MarketError, Publisher, Manifest, SkillContents, Package, Acquisition, countersign, install, countersignature_covers
+//! BFS  USES     brainos: abi, crypto
+//! BFS  USED BY  entity/entity, fleet/lib, fleet/tests/fleet_suite, host/life, host/tests/market_suite
+//!
 //! The capability marketplace.
 //!
 //! Third parties publish skills; entities acquire them; every

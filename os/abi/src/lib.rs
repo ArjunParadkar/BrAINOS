@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Foundation - shared vocabulary (ids, time, verbs, codec, errors)  [crate brainos-abi]
+//! BFS  PURPOSE  Crate root: the shared types every other crate agrees on (ids, time, verbs, byte encoding, errors, version), with no dependencies
+//! BFS  DEFINES  codec, error, ids, text, time, verb, version
+//! BFS  USES     this crate: codec, error, ids, text, time, verb, version
+//! BFS  USED BY  crate adapters, crate blur, crate body, crate bodyd, crate cognition, crate crypto, crate entity, crate export, +10 more
+//!
 //! brainos-abi — the vocabulary.
 //!
 //! Five domains have to agree on what a body is, what a tick is, what a

@@ -1,0 +1,22 @@
+[package]
+name = "brainos-part"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Every piece of hardware as a body part: the part model, the Nerve trait, cross-part vitals, homeostasis and interoception."
+
+# Doctests are ON here, unlike the rest of the workspace: the
+# compile_fail examples in src/nerve.rs are the check that a nerve
+# cannot act without a Granted and cannot write memory.
+[lib]
+
+[dependencies]
+brainos-abi = { workspace = true }
+brainos-crypto = { workspace = true }
+brainos-rt = { workspace = true }
+brainos-body = { workspace = true }
+brainos-kira = { workspace = true }
+brainos-cognition = { workspace = true }
+
+[dev-dependencies]
+brainos-memory = { workspace = true }

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests that a ROS 2 robot with no declared limits cannot be moved, one with limits works, and sensor topics never become action verbs
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: host
+//! BFS  USED BY  (entry point or test)
+//!
 //! A robot we did not build, on the middleware everybody actually uses.
 
 use brainos_host::ros2_stack::run;

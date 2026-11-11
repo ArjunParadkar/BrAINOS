@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Phase 0 - Mini-Blur hexapod as numbers (shared by firmware and seat)  [crate miniblur-core]
+//! BFS  PURPOSE  Builds and parses the one-per-line JSON frames (hello, attest, ready/refused, cmd, result, ping/pong) exchanged between a body and the seat
+//! BFS  DEFINES  FromSeat, parse, challenge_bytes, hello, ready, refused, result, ping, pong, hex_decode, hex_encode
+//! BFS  USES     this crate: json
+//! BFS  USED BY  miniblur-a/main, sim/main
+//!
 //! The wire protocol — exactly what `reach/brainos-reach.py` speaks, so the
 //! seat's `reach.rs` incorporates the hexapod with no special case, and the
 //! simulator and the real board are interchangeable to the seat.

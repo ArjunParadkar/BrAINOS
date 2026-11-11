@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - the portable no_std mind  [crate brainos-mind]
+//! BFS  PURPOSE  The state graph: the entity's memory as typed nodes (belief, episode, semantic, skill, audit) with search, a capped episode ring and text save/load
+//! BFS  DEFINES  NodeId, NodeKind, LinkKind, StateNode, StateGraph, SENSE_RHYTHM
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  mind/experience, mind/instance, mind/kira, mind/tests/adversarial, mind/tests/kira_regression, mind/tests/state_graph, operator/export, operator/hexapod, +1 more
+//!
 //! The state graph — replacing files and the filesystem (Architecture §12).
 //!
 //! There is no filesystem. A UNIX file is a dumb byte stream; a state node

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Seed (Stages 1-2) - Domain 1 flesh: the UEFI boot core  [crate brainos-core]
+//! BFS  PURPOSE  HTTP GET through the firmware's own network stack (DHCP, then EFI_HTTP) and a once-per-boot probe that reports exactly which network step fails
+//! BFS  DEFINES  fetch, reachability_probe
+//! BFS  USES     this crate: console, efi
+//! BFS  USED BY  -
+//!
 //! The network reachability probe — diagnostic, KIRA-gated, bounded.
 //!
 //! This is NOT a limb: the entity gets no verb, cognition cannot invoke

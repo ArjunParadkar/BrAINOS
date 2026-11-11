@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the runtime on the body's own computer  [crate brainos-bodyd]
+//! BFS  PURPOSE  The Mini-Blur hexapod as a Mechanism: refuses any motion that would tip it over, pass a servo limit or overdraw the power rail, via miniblur-core
+//! BFS  DEFINES  TOP_SPEED_MPS, MARGIN_FLOOR_MM, MAX_MOTION, MIN_GAIT_SPEED, HexapodConfig, Hexapod
+//! BFS  USES     this crate: mechanism | brainos: abi, miniblur-core, rt
+//! BFS  USED BY  bodyd/lib, bodyd/tests/bodyd_suite, host/bench, host/fullstack, host/tests/fullstack_suite, proof/envelopes
+//!
 //! Mini-Blur as a `Mechanism`.
 //!
 //! This is the Phase 0 body, and every number in it comes from

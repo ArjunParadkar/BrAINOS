@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Scenario that cuts the datacenter link and checks the entity keeps acting, keeps its memory, and marks each degraded decision with the right cause
+//! BFS  DEFINES  Phase, Degradation, degrade, narrate, tier_costs
+//! BFS  USES     brainos: abi, adapters, body, cognition, crypto, entity, kira, memory
+//! BFS  USED BY  host/tests/degrade_suite
+//!
 //! When the cloud goes away.
 //!
 //! Stage 5 is brain placement, and its claim is that *where the mind

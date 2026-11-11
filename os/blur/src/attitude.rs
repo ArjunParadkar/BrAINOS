@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  Mahony filter that fuses the BMI270's gyro and accelerometer into a gravity direction and tilt angle, identical to the filter used in training
+//! BFS  DEFINES  ImuMount, Mahony, KP, KI, ACC_GATE
+//! BFS  USES     this crate: wire
+//! BFS  USED BY  blur/supervisor, blur/tests/blur_suite, host/blur_gate2
+//!
 //! The inner ear: which way is down, from the BMI270.
 //!
 //! A Mahony complementary filter on the unit quaternion: integrate the

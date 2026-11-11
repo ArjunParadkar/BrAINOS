@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests that an incident bundle can be verified by a third party without the log, cannot be forged, and shows any curation and its own limits
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: host
+//! BFS  USED BY  (entry point or test)
+//!
 //! Accountability, asserted.
 
 use brainos_host::incident::reconstruct;

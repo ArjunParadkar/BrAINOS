@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)  [crate brainos-blur]
+//! BFS  PURPOSE  Computes CAN bus load from motor count and rate, showing a 1 kHz joint loop cannot cross the bus, so motor nodes close it and setpoints go at 200 Hz
+//! BFS  DEFINES  BITRATE, PLAN_LOAD, SETPOINT_HZ, motors_on, capacity_fps, load_at, max_rate_hz, buses_needed_for
+//! BFS  USES     this crate: descriptor, wire
+//! BFS  USED BY  blur/tests/blur_suite, nostd/lib
+//!
 //! The CAN budget, and why the joint loop lives on the nodes.
 //!
 //! Every motor costs two frames per control cycle: a SETPOINT down and a

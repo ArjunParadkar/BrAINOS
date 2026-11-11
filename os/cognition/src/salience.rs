@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 4 Cognition - tiers, placement, attention, escalation  [crate brainos-cognition]
+//! BFS  PURPOSE  Scores how much an event matters with a fixed, readable weighted sum, with thresholds for interrupting the human, mentioning it, or staying quiet
+//! BFS  DEFINES  Salience, Salient
+//! BFS  USES     brainos: abi
+//! BFS  USED BY  cognition/ambient, cognition/lib, cognition/tests/cognition_suite
+//!
 //! Attention — deciding what, of everything happening, matters.
 //!
 //! An entity running ambiently sees far more than it should react to.

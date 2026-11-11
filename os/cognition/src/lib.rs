@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Domain 4 Cognition - tiers, placement, attention, escalation  [crate brainos-cognition]
+//! BFS  PURPOSE  Crate root: lists the cognition modules (tiers, placement, attention, escalation, prediction) and re-exports their main types
+//! BFS  DEFINES  ambient, escalate, placement, predict, resource, salience
+//! BFS  USES     this crate: ambient, escalate, placement, predict, resource, salience
+//! BFS  USED BY  crate entity, crate host, crate nostd, crate part
+//!
 //! brainos-cognition — Domain 4.
 //!
 //! The entity does not have agents. It has cognitive resources it
@@ -42,7 +48,7 @@ pub mod salience;
 
 pub use ambient::{Ambient, Attention, Intent, SenseFrame};
 pub use escalate::{Escalation, Reason as EscalationReason};
-pub use placement::{Placement, Plan, Site};
+pub use placement::{Placement, Plan, Site, Substrate};
 pub use predict::{Forward, Prediction, Surprise};
 pub use resource::{Capability as ResourceCapability, Resource, ResourcePool, Tier};
 pub use salience::{Salience, Salient};

@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Phase 0 - Mini-Blur hexapod as numbers (shared by firmware and seat)  [crate miniblur-core]
+//! BFS  PURPOSE  Servo table: which channel drives which leg joint, with center, direction and angle limits; converts a pose to per-channel angles and pulses
+//! BFS  DEFINES  ServoCal, ServoTable
+//! BFS  USES     this crate: Axis | external: Axis, LegId
+//! BFS  USED BY  bodyd/hexapod, bodyd/tests/bodyd_suite, core/power, core/runtime, core/schema, host/bench, host/fullstack, miniblur-a/main, +2 more
+//!
 //! The servo table — which channel drives which joint, and each channel's
 //! calibrated envelope. This is §8 step 5 (calibration) as a value: the
 //! seat keeps it in the state graph, hands it to the body at incorporation,

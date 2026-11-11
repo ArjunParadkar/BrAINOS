@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Section 3.8 - the three worlds (self, human, internet)  [crate brainos-worlds]
+//! BFS  PURPOSE  Checks everything arriving from outside for size and encoding, then wraps it in Tainted<T> so its origin travels with it and cannot be dropped
+//! BFS  DEFINES  Tainted, Verdict, Ingress
+//! BFS  USES     this crate: world | brainos: abi, memory
+//! BFS  USED BY  entity/entity, nostd/lib, worlds/lib, worlds/tests/worlds_suite
+//!
 //! Ingress — everything from outside, tainted at the door.
 //!
 //! The rule is mechanical: nothing crosses from an untrusted world into

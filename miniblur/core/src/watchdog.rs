@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Phase 0 - Mini-Blur hexapod as numbers (shared by firmware and seat)  [crate miniblur-core]
+//! BFS  PURPOSE  Lost-link timer: fires once when nothing is heard from the seat for timeout_ms so the body stops and stands; re-arms on the next message
+//! BFS  DEFINES  LinkWatch
+//! BFS  USES     nothing outside core/alloc
+//! BFS  USED BY  core/runtime
+//!
 //! Stop-on-lost-link. The seat pings every few seconds and every command is
 //! a heartbeat; if the body hears nothing for `timeout_ms` it stops the gait
 //! and stands. Domain 2 holds the body in a safe state until the mind

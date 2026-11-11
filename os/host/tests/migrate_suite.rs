@@ -1,3 +1,9 @@
+//! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
+//! BFS  PURPOSE  Tests each claim of the vendor-change scenario: same identity, memories and skills cross, the old body's verbs are refused, the new body works
+//! BFS  DEFINES  -
+//! BFS  USES     brainos: host
+//! BFS  USED BY  (entry point or test)
+//!
 //! The freedom principle, asserted rather than narrated.
 //!
 //! `brainos leave` prints the scenario for a human. These are the
