@@ -1,6 +1,6 @@
 //! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
 //! BFS  PURPOSE  Crate root: lists the property domains that brainos verify runs and re-exports the report types
-//! BFS  DEFINES  adversary, durability, domain, envelopes, hostile, harness, properties, regions, report
+//! BFS  DEFINES  adversary, durability, domain, envelopes, hostile, harness, properties, regions, vitals, report
 //! BFS  USES     this crate: domain, envelopes, harness, hostile, properties, report
 //! BFS  USED BY  crate host, crate nostd
 //!
@@ -54,6 +54,7 @@ pub mod hostile;
 pub mod harness;
 pub mod properties;
 pub mod regions;
+pub mod vitals;
 pub mod report;
 
 pub use domain::{Case, Domain, Scenario};

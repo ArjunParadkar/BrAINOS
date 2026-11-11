@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Finds memories relevant to a text query by keyword ranking (BM25) plus recency and salience; deterministic and needs no model
 //! BFS  DEFINES  Match, terms, Index, origin_penalty
 //! BFS  USES     this crate: graph, provenance | brainos: abi
-//! BFS  USED BY  entity/entity, export/tests/export_suite, host/limits, memory/lib, memory/tests/memory_suite, nostd/lib
+//! BFS  USED BY  entity/entity, entity/entity/parts, export/tests/export_suite, host/limits, memory/lib, memory/tests/memory_suite, nostd/lib
 //!
 //! Retrieval without embeddings.
 //!

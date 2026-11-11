@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Types and lookups for BLUR v36's design data (26 actuators, motor nodes, buses, springs, torque and range limits); the tables are generated in gen.rs
 //! BFS  DEFINES  Bus, MotorKind, EncoderSide, NodeKind, ActuatorSpec, NodeSpec, SpringKind, SpringSpec, PassiveJoint, N_ACT, ENC_BITS, ENC_COUNTS, +4 more
 //! BFS  USES     this crate: gen
-//! BFS  USED BY  blur/acquire, blur/autonomic, blur/bus, blur/calibrate, blur/census, blur/policy, blur/schema, blur/session, +6 more
+//! BFS  USED BY  blur/acquire, blur/autonomic, blur/bus, blur/calibrate, blur/census, blur/policy, blur/schema, blur/session, +8 more
 //!
 //! The body descriptor: BLUR v36 as numbers.
 //!

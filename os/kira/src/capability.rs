@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  The one-use permission token (Granted) that only the gate can construct, plus signed delegations that can be narrowed but never widened
 //! BFS  DEFINES  Seal, Granted, Caveat, Delegation, CoverageFailure, Grant
 //! BFS  USES     brainos: abi, crypto, rt
-//! BFS  USED BY  blur/session, host/bench, host/blur_gate2, host/limits, kira/audit, kira/gate, kira/lib, kira/tests/gate_suite, +1 more
+//! BFS  USED BY  blur/session, host/bench, host/blur_gate2, host/limits, kira/audit, kira/gate, kira/lib, kira/tests/gate_suite, +2 more
 //!
 //! `Granted` — and why it has no public constructor.
 //!

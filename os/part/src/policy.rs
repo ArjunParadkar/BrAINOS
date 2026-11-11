@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  PartPolicy: KIRA stages 4-6 for a part, refusing verbs that would break another part's vital or overspend a budget
 //! BFS  DEFINES  Guard, Meter, PartPolicy
 //! BFS  USES     this crate: class, schema | brainos: abi, body, cognition
-//! BFS  USED BY  part/lib
+//! BFS  USED BY  entity/entity/parts, entity/tests/parts_suite, host/tests/autonomic_survives, host/tests/nerves_live, part/lib, proof/vitals
 //!
 //! The policy bound to a part — and the vitals invariant.
 //!

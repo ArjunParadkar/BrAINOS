@@ -1,8 +1,8 @@
 //! BFS  LEVEL    Stage 6 - property domains (bounded checking, not a proof)  [crate brainos-proof]
 //! BFS  PURPOSE  Runs every property domain and renders the combined report, including the statement that this is bounded checking and not a proof
 //! BFS  DEFINES  Coverage, Verdict, Report
-//! BFS  USES     this crate: adversary, durability, envelopes, harness, hostile, properties, regions
-//! BFS  USED BY  host/main, host/tests/host_suite, proof/harness, proof/lib, proof/tests/proof_suite
+//! BFS  USES     this crate: adversary, durability, envelopes, harness, hostile, properties, regions, vitals
+//! BFS  USED BY  host/main, host/tests/host_suite, proof/harness, proof/lib, proof/tests/proof_suite, proof/tests/vitals_domain
 //!
 //! The report.
 //!
@@ -66,6 +66,7 @@ pub struct Report {
     pub durability: Option<crate::durability::DurabilityReport>,
     /// the sixth: a body made of several parts
     pub regions: Option<crate::regions::RegionReport>,
+    pub vitals: Option<crate::vitals::VitalsReport>,
 }
 
 impl Report {
@@ -87,6 +88,7 @@ impl Report {
             adversary: None,
             durability: None,
             regions: None,
+            vitals: None,
         }
     }
 
@@ -127,6 +129,14 @@ impl Report {
             self.verdict = Verdict::Violated;
         }
         self.regions = Some(r);
+        self
+    }
+
+    pub fn with_vitals(mut self, v: crate::vitals::VitalsReport) -> Report {
+        if !v.holds() {
+            self.verdict = Verdict::Violated;
+        }
+        self.vitals = Some(v);
         self
     }
 
@@ -411,13 +421,45 @@ impl Report {
             s.push('\n');
         }
 
+        if let Some(v) = &self.vitals {
+            s.push_str("Seventh domain — parts and vitals\n");
+            s.push_str("---------------------------------\n");
+            s.push_str("  Every piece of hardware is a part, and a verb on one part can harm\n");
+            s.push_str("  another: a fan slowed while the processor it cools is past its\n");
+            s.push_str("  limit. The property: a verb is permitted exactly when it is inside\n");
+            s.push_str("  its own part's bounds, is not predicted to break another part's\n");
+            s.push_str("  vital, and its part is fit — and a refusal names the real reason.\n");
+            s.push_str("  A reading that is missing, stale or not a number is never read as\n");
+            s.push_str("  \"fine\".\n\n");
+            push_field(&mut s, "cases enumerated", v.cases as u64);
+            push_field(&mut s, "permitted", v.permitted as u64);
+            push_field(&mut s, "refused at validate", v.refused_at_validate as u64);
+            push_field(&mut s, "refused at simulate", v.refused_at_simulate as u64);
+            push_field(&mut s, "refused at policy", v.refused_at_policy as u64);
+            push_field(
+                &mut s,
+                "cases only the cross-part guard decides",
+                v.decided_by_the_guard as u64,
+            );
+            s.push_str("  verdict: ");
+            if !v.holds() {
+                s.push_str("VIOLATED\n");
+            } else if !v.is_meaningful() {
+                s.push_str("VACUOUS — no case depends on the other part's reading\n");
+            } else {
+                s.push_str("holds\n");
+            }
+            s.push('\n');
+        }
+
         s.push_str("What this is\n------------\n");
         for line in [
             "  Bounded exhaustive model checking on the first two domains,",
             "  randomised plus mutation fuzzing on the third, directed attack on the",
-            "  fourth, and exhaustive enumeration on the fifth and sixth — every",
-            "  instant power can be lost, and every part of a body against every",
-            "  other part's limits. Every case in the",
+            "  fourth, and exhaustive enumeration on the fifth, sixth and seventh —",
+            "  every instant power can be lost, every part of a body against every",
+            "  other part's limits, and every verb on a part against its",
+            "  neighbour's vitals. Every case in the",
             "  first two was run through the real code, not a model of it, and every",
             "  property was asserted over every resulting trace. Within those",
             "  domains the properties hold for all inputs, not for the ones a test",
@@ -451,7 +493,7 @@ impl Report {
         s
     }
 
-    /// Everything: all three domains.
+    /// Everything: all seven domains.
     pub fn full() -> Report {
         crate::harness::verify()
             .with_envelopes(crate::envelopes::verify_envelopes())
@@ -459,6 +501,7 @@ impl Report {
             .with_adversary(crate::adversary::verify_adversary())
             .with_durability(crate::durability::verify_durability(4))
             .with_regions(crate::regions::verify_regions())
+            .with_vitals(crate::vitals::verify_vitals())
     }
 }
 

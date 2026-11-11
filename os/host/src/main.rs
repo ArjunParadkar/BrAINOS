@@ -1,7 +1,7 @@
 //! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
 //! BFS  PURPOSE  The brainos command-line program: parses the subcommand and runs the matching scenario, printing a transcript
 //! BFS  DEFINES  -
-//! BFS  USES     brainos: abi, crypto, export, host, kira, proof | external: std
+//! BFS  USES     brainos: abi, crypto, entity, export, host, kira, proof | external: std
 //! BFS  USED BY  (entry point or test)
 //!
 //! `brainos` — run it and see.
@@ -12,6 +12,7 @@
 //!   demo    the Phase 0 demo in simulation, end to end
 //!   verify  the Stage 6 property report over the whole bounded domain
 //!   wire    the transport under a deliberately bad link
+//!   parts   every part of this machine, acquired through its live nerves
 //!   stat    what this build actually contains
 
 use std::process::ExitCode;
@@ -39,6 +40,8 @@ fn main() -> ExitCode {
         "model" => model(),
         "worlds" => worlds(),
         "blur" => blur(&args[2..]),
+        "parts" => parts(),
+        "mind-stub" => mind_stub(),
         "help" | "-h" | "--help" => {
             usage();
             ExitCode::SUCCESS
@@ -48,6 +51,77 @@ fn main() -> ExitCode {
             usage();
             ExitCode::FAILURE
         }
+    }
+}
+
+/// Acquire every part of this machine through its live nerves and show
+/// what each one says. Reads only: nothing here writes to hardware.
+fn parts() -> ExitCode {
+    use brainos_abi::time::Tick;
+    use brainos_crypto::key::BrainKey;
+    use brainos_entity::entity::Entity;
+
+    let mut e = Entity::new(BrainKey::from_seed(&[0x5A; 32]), Tick(0));
+    if e.wake(None, None, Tick(1)).is_err() {
+        eprintln!("the entity did not wake");
+        return ExitCode::FAILURE;
+    }
+    let found = brainos_host::nerves::survey(&mut e);
+    println!("Parts of this machine, acquired through live nerves (read-only)\n");
+    println!(
+        "  {:<8} {:<44} {:<9} {:>6} {:>6} {:>5}  {}",
+        "nerve", "part", "class", "senses", "vitals", "verbs", "health"
+    );
+    for p in &found {
+        println!(
+            "  {:<8} {:<44} {:<9} {:>6} {:>6} {:>5}  {}{}",
+            p.nerve,
+            p.label.chars().take(44).collect::<String>(),
+            p.class,
+            p.senses,
+            p.vitals,
+            p.verbs,
+            if p.vitals == 0 { "no limits stated" } else { p.health.name() },
+            p.error.as_ref().map(|e| format!("  NOT ACQUIRED: {e}")).unwrap_or_default(),
+        );
+        for (name, value, unit) in &p.readings {
+            println!("             {name:<18} {value:>16.2} {unit}");
+        }
+    }
+    let acquired = found.iter().filter(|p| p.error.is_none()).count();
+    println!(
+        "\n  {} parts found, {} acquired through section 8; {} memories written about them",
+        found.len(),
+        acquired,
+        e.graph.len()
+    );
+    println!(
+        "  placement: the entity's resource pool has {} entr{}",
+        e.resources.len(),
+        if e.resources.len() == 1 { "y" } else { "ies" }
+    );
+    println!("\n  Identity of these parts is derived from the operating system's stable");
+    println!("  identifiers. It is not hardware attestation. See docs/NERVES.md.");
+    if acquired == 0 {
+        return ExitCode::FAILURE;
+    }
+    ExitCode::SUCCESS
+}
+
+/// A stand-in for a cognitive resource running as its own process: it
+/// asks, over and over, for the fan to be stopped. Used by the test
+/// that kills it (`host/tests/autonomic_survives.rs`). It holds no key
+/// and no authority; what it prints is a proposal, nothing more.
+fn mind_stub() -> ExitCode {
+    use std::io::Write;
+    let out = std::io::stdout();
+    loop {
+        let mut o = out.lock();
+        if writeln!(o, "propose fan.set duty_pct 0").is_err() || o.flush().is_err() {
+            return ExitCode::SUCCESS;
+        }
+        drop(o);
+        std::thread::sleep(std::time::Duration::from_millis(10));
     }
 }
 
@@ -1195,13 +1269,13 @@ fn stat() -> ExitCode {
     println!("  domain separation tags {}", Tag::ALL.len());
     println!("  gate properties       {}", PROPERTIES.len());
 
-    rule("The six property domains");
+    rule("The seven property domains");
     println!(
         "  Reported together because \"proof domain size: 8,640\" was the gate's
   number and this line used to print it as if it were the whole of what
   is checked. It is one of six.\n"
     );
-    let rows: [(&str, String, &str); 6] = [
+    let rows: [(&str, String, &str); 7] = [
         (
             "the gate",
             format!("{} cases", Domain::SIZE),
@@ -1237,6 +1311,14 @@ fn stat() -> ExitCode {
                 brainos_proof::regions::verify_regions().cases
             ),
             "exhaustive; and asserted to fail against the old code",
+        ),
+        (
+            "parts and vitals",
+            format!(
+                "{} cases",
+                brainos_proof::vitals::verify_vitals().cases
+            ),
+            "exhaustive; and asserted to fail against a policy with no guard",
         ),
     ];
     for (name, size, note) in rows {

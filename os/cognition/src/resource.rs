@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Tier (how far up the entity reaches), Resource (one thing that can think) and ResourcePool (pick the cheapest one that can do the job)
 //! BFS  DEFINES  Tier, Capability, Resource, ResourcePool
 //! BFS  USES     this crate: placement | brainos: abi
-//! BFS  USED BY  cognition/ambient, cognition/escalate, cognition/lib, cognition/placement, cognition/tests/cognition_suite, entity/entity, host/day, host/degrade, +2 more
+//! BFS  USED BY  cognition/ambient, cognition/escalate, cognition/lib, cognition/placement, cognition/tests/cognition_suite, entity/entity, entity/entity/parts, entity/tests/parts_suite, +5 more
 //!
 //! Cognitive resources and the tiers they sit in.
 //!

@@ -1,8 +1,8 @@
 //! BFS  LEVEL    Stage 4 Entity - one Key, one state graph, every body at once  [crate brainos-entity]
 //! BFS  PURPOSE  The Entity struct: owns the Key, the state graph, the body map, the gate and cognition, and is the only thing that may write memory
 //! BFS  DEFINES  Wake, Entity, instant_from_tick
-//! BFS  USES     this crate: goals, life, simultaneity | brainos: abi, body, cognition, crypto, fleet, kira, memory, worlds
-//! BFS  USED BY  entity/lib, entity/tests/entity_suite, export/archive, export/tests/export_suite, host/bench, host/compound, host/day, host/degrade, +12 more
+//! BFS  USES     this crate: goals, life, parts, simultaneity | brainos: abi, body, cognition, crypto, fleet, kira, memory, part, worlds
+//! BFS  USED BY  entity/lib, entity/tests/entity_suite, entity/tests/parts_suite, export/archive, export/tests/export_suite, host/bench, host/compound, host/day, +18 more
 //!
 //! The entity.
 //!
@@ -51,6 +51,10 @@ use brainos_memory::index::Index;
 use brainos_memory::law::MemoryHandle;
 use brainos_memory::provenance::Provenance;
 use brainos_memory::skill::SkillGraph;
+use brainos_part::intero::Interoceptor;
+
+mod parts;
+pub use parts::{part_identity, ComputeOffer, PartError, PartRecord, Wiring};
 use brainos_worlds::advocate::Advocate;
 use brainos_worlds::ingress::Ingress;
 use brainos_worlds::world::Session;
@@ -81,6 +85,10 @@ pub struct Entity {
     // bodies (§8)
     pub bodies: BodyMap,
     pub arbiter: Arbiter,
+
+    // parts: every piece of hardware, held the same way (entity/parts.rs)
+    pub parts: Vec<PartRecord>,
+    pub intero: Interoceptor,
 
     // the gate (Domain 3)
     pub kira: Kira,
@@ -119,6 +127,8 @@ impl Entity {
             index: Index::new(),
             bodies: BodyMap::new(),
             arbiter: Arbiter::new(),
+            parts: Vec::new(),
+            intero: Interoceptor::default(),
             kira: Kira::new(id),
             ambient: Ambient::new(Budget::plentiful()),
             resources: ResourcePool::new(),

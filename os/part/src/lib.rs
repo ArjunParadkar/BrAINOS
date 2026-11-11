@@ -1,8 +1,8 @@
 //! BFS  LEVEL    Parts and nerves - every piece of hardware as a body part  [crate brainos-part]
 //! BFS  PURPOSE  Crate root: lists the part-model modules and states the five rules every part and nerve must obey
-//! BFS  DEFINES  class, policy, schema
-//! BFS  USES     this crate: class, policy, schema
-//! BFS  USED BY  crate nostd
+//! BFS  DEFINES  class, homeostat, intero, nerve, policy, schema, sim
+//! BFS  USES     this crate: class, homeostat, intero, nerve, policy, schema
+//! BFS  USED BY  crate entity, crate host, crate nostd, crate proof
 //!
 //! brainos-part — every piece of hardware is a body part.
 //!
@@ -20,6 +20,7 @@
 //! | `nerve` | the `Nerve` trait every protocol implements, and `Mandate`, the only thing a nerve will act on |
 //! | `homeostat` | Domain 2 regulation (thermal -> fan, charge -> load) with no model call |
 //! | `intero` | interoception: which readings are worth remembering |
+//! | `sim` | a simulated fan and GPU behind the trait, for tests (not hardware) |
 //!
 //! It extends §8 rather than standing beside it. A part is acquired by
 //! the same five steps, gets a `BodyId` the same way, is authorized
@@ -47,15 +48,16 @@
 extern crate alloc;
 
 pub mod class;
-// pub mod homeostat;
-// pub mod intero;
-// pub mod nerve;
+pub mod homeostat;
+pub mod intero;
+pub mod nerve;
 pub mod policy;
 pub mod schema;
+pub mod sim;
 
 pub use class::{Domain, PartClass};
-// pub use homeostat::{Homeostat, ReflexAct};
-// pub use intero::{Interoceptor, Noted, NotedKind};
-// pub use nerve::{Found, Mandate, MandateError, Nerve, NerveFault};
+pub use homeostat::{Homeostat, InstallError, ReflexAct};
+pub use intero::{Interoceptor, Noted, NotedKind};
+pub use nerve::{Found, Mandate, MandateError, Nerve, NerveFault, Sensed};
 pub use policy::{Guard, Meter, PartPolicy};
 pub use schema::{PartSchema, Quantity, SchemaFault, SenseSpec, VitalKind, VitalSpec};

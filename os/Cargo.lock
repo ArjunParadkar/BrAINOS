@@ -88,6 +88,7 @@ dependencies = [
  "brainos-fleet",
  "brainos-kira",
  "brainos-memory",
+ "brainos-part",
  "brainos-rt",
  "brainos-worlds",
 ]
@@ -127,6 +128,7 @@ dependencies = [
  "brainos-fleet",
  "brainos-kira",
  "brainos-memory",
+ "brainos-part",
  "brainos-proof",
  "brainos-rt",
  "brainos-transport",
@@ -199,6 +201,7 @@ dependencies = [
  "brainos-crypto",
  "brainos-kira",
  "brainos-memory",
+ "brainos-part",
  "brainos-rt",
  "brainos-transport",
  "miniblur-core",

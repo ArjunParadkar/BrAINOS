@@ -339,6 +339,60 @@ fn the_x86_uefi_target_pins_the_serial_curve_backend() {
     assert!(code.contains("curve25519_dalek_backend=\"serial\""));
 }
 
+/// The Memory-Integrity Law, for nerves, at the source level.
+///
+/// The types already stop a nerve writing memory: every mutating
+/// method on the state graph needs a `MemoryHandle`, and nothing in
+/// the `Nerve` trait hands one over (`part/src/nerve.rs` has the
+/// compile-fail examples). What the types cannot stop is code that
+/// *issues itself* a handle, because `MemoryHandle::issue` is public —
+/// the entity lives in a different crate from the handle.
+///
+/// So this closes it by reading the source: no file that implements a
+/// nerve, a part policy or a substrate may name the state graph or
+/// issue a handle. The part and BPU crates must not depend on
+/// `brainos-memory` at all outside their tests.
+#[test]
+fn no_nerve_part_or_substrate_can_reach_the_state_graph() {
+    let root = workspace_root();
+    let mut files = Vec::new();
+    for dir in ["part/src", "bpu/src", "host/src/nerves"] {
+        let d = root.join(dir);
+        if d.exists() {
+            files.extend(rust_files(&d));
+        }
+    }
+    assert!(files.len() >= 10, "the nerve sources were not found: {}", files.len());
+    for f in files {
+        let code = code_only(&fs::read_to_string(&f).unwrap());
+        for forbidden in ["MemoryHandle", "StateGraph", "brainos_memory"] {
+            assert!(
+                !code.contains(forbidden),
+                "{} names `{forbidden}`: a nerve must not hold or write memory",
+                f.display()
+            );
+        }
+    }
+    for krate in ["part", "bpu"] {
+        let manifest = root.join(krate).join("Cargo.toml");
+        if !manifest.exists() {
+            continue;
+        }
+        let text = fs::read_to_string(manifest).unwrap();
+        let deps = text
+            .split("[dependencies]")
+            .nth(1)
+            .unwrap_or("")
+            .split("\n[")
+            .next()
+            .unwrap_or("");
+        assert!(
+            !deps.contains("brainos-memory"),
+            "{krate} depends on brainos-memory outside its tests"
+        );
+    }
+}
+
 /// Every Rust file opens with a BFS card (level, purpose, defines,
 /// uses, used by) and `docs/CODE_MAP.md` is generated from them. The
 /// computed lines are only worth having if they are true, so this runs

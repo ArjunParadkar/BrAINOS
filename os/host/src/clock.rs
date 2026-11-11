@@ -1,8 +1,8 @@
 //! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
 //! BFS  PURPOSE  Provides the host clocks: a real monotonic one zeroed at start, and a manual step clock that makes runs reproducible
-//! BFS  DEFINES  SystemClock, StepClock
+//! BFS  DEFINES  SystemClock, StepClock, now_micros
 //! BFS  USES     brainos: abi | external: std
-//! BFS  USED BY  host/lib, host/tests/host_suite
+//! BFS  USED BY  host/lib, host/nerves/mod, host/tests/host_suite
 //!
 //! A monotonic clock from the host.
 
@@ -62,4 +62,14 @@ impl Clock for StepClock {
     fn now(&self) -> Instant {
         Instant(self.micros.get())
     }
+}
+
+/// Microseconds since the Unix epoch, for stamping live readings. Wall
+/// time, so readings taken by different nerves in one run are
+/// comparable; never used for anything that must be monotonic.
+pub fn now_micros() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_micros().min(u64::MAX as u128) as u64)
+        .unwrap_or(0)
 }

@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  The five-step protocol by which a device becomes a body: discover, handshake, schema, incorporate, calibrate; fixes the BodyId
 //! BFS  DEFINES  Step, StepError, Acquisition, part_digest, default_envelope, acquire_native, AcquireResult
 //! BFS  USES     this crate: calibration, region, schema | brainos: abi, crypto, rt
-//! BFS  USED BY  blur/acquire, blur/tests/blur_suite, body/lib, body/tests/body_suite, entity/entity, host/blur_run, kira/tests/gate_suite
+//! BFS  USED BY  blur/acquire, blur/tests/blur_suite, body/lib, body/tests/body_suite, entity/entity, entity/entity/parts, entity/tests/parts_suite, host/blur_run, +1 more
 //!
 //! The §8 acquisition protocol, as a state machine.
 //!

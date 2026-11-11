@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Where each tier of thinking runs (Site), what tissue it runs on (Substrate), and the Plan that assigns both
 //! BFS  DEFINES  Site, Substrate, Placement, Plan
 //! BFS  USES     this crate: resource | brainos: abi
-//! BFS  USED BY  cognition/lib, cognition/resource, cognition/tests/cognition_suite, entity/entity, host/degrade, host/life, nostd/lib, part/policy, +1 more
+//! BFS  USED BY  cognition/lib, cognition/resource, cognition/tests/cognition_suite, entity/entity, entity/entity/parts, entity/tests/parts_suite, host/degrade, host/life, +8 more
 //!
 //! Brain placement — Stage 5.
 //!

@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  The record of one attempt or observation with how it ended (succeeded, failed, denied, stopped, ...); the raw material skills are learned from
 //! BFS  DEFINES  Outcome, Episode
 //! BFS  USES     this crate: graph, law, provenance | brainos: abi
-//! BFS  USED BY  entity/entity, entity/tests/entity_suite, export/tests/export_suite, host/bench, host/compound, host/day, host/degrade, host/demo, +9 more
+//! BFS  USED BY  entity/entity, entity/entity/parts, entity/tests/entity_suite, export/tests/export_suite, host/bench, host/compound, host/day, host/degrade, +10 more
 //!
 //! Episodic memory — what happened.
 //!

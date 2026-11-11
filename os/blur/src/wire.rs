@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Byte-exact encoding of BLUR's CAN frames and IMU reads, plus the NerveUp/NerveDown structs carrying one millisecond of pin I/O for robot or simulator
 //! BFS  DEFINES  FC_ESTOP, FC_CENSUS, FC_SETPOINT, FC_FEEDBACK, FC_CONFIG, FC_CONFIG_ACK, FC_IDENTITY, FC_RAW, ESTOP_MAGIC, CanFrame, Scales, AMPS_PER_COUNT, +29 more
 //! BFS  USES     this crate: CanFrame, descriptor
-//! BFS  USED BY  blur/acquire, blur/attitude, blur/autonomic, blur/bus, blur/calibrate, blur/census, blur/supervisor, blur/tests/blur_suite, +3 more
+//! BFS  USED BY  blur/acquire, blur/attitude, blur/autonomic, blur/bus, blur/calibrate, blur/census, blur/supervisor, blur/tests/blur_suite, +5 more
 //!
 //! The wire: what BLUR's nerves carry, byte for byte.
 //!

@@ -12,12 +12,21 @@ doctest = false
 name = "brainos"
 path = "src/main.rs"
 
+# The nerves that need something this machine may not have are
+# features, on by default and safe to leave on: each also checks at
+# run time and skips cleanly.
+[features]
+default = ["nvml", "socketcan"]
+nvml = []
+socketcan = []
+
 [dependencies]
 brainos-abi = { workspace = true }
 brainos-crypto = { workspace = true }
 brainos-rt = { workspace = true }
 brainos-memory = { workspace = true }
 brainos-body = { workspace = true }
+brainos-part = { workspace = true }
 brainos-bodyd = { workspace = true }
 brainos-blur = { workspace = true }
 miniblur-core = { path = "../../miniblur/core" }

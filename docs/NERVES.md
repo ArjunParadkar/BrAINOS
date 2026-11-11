@@ -1,0 +1,332 @@
+# Nerves — every piece of hardware is a body part
+
+**Written 2026-11-10.** Status vocabulary, used strictly: **Verified** (a
+test ran and passed; the command is named), **Built** (compiles, not proven
+on the target), **Manual** (needs hands; the runbook is here), **Not
+built**, **Failing**.
+
+A nerve is a protocol that connects the entity to a part. A part is any
+piece of hardware: a motor, a fan, a GPU, a disk, a battery, a radio. The
+entity acquires, feels and — through KIRA — uses all of them through one
+model. This document is that model, where each piece of it lives, what has
+been shown to work and on what, and the exact steps for everything that
+still needs a human.
+
+Nothing here is a parallel system. A part is acquired by the same five §8
+steps as any body, gets its id the same way, sits in the same body map and
+is gated by the same `Kira`. What was added is listed in "What changed in
+existing crates" at the end.
+
+---
+
+## 1. The part model
+
+Code: `os/part` (`no_std`, `forbid(unsafe)`, no new external dependency).
+
+On acquisition a part declares a `PartSchema` (`os/part/src/schema.rs`):
+
+| facet | type | example |
+|---|---|---|
+| identity | `BodyId = H(attestation key ‖ H(verbs ‖ facets))` | changes if anything below changes |
+| class | `PartClass` | `Thermal` |
+| substrate | `Option<Substrate>` | `Gpu` — Compute parts only |
+| verbs | `CapabilitySchema` (unchanged type) | `fan.set(duty_pct 0..100)` |
+| senses | `SenseSpec` — name, quantity, plausible range | `fan.rpm`, rpm, 0..9000 |
+| vitals | `VitalSpec` — a sense with a warning and a critical threshold | `temp.c`: degraded at 85, critical at 95 |
+
+Three rules follow from it, each enforced in code:
+
+1. **A changed part is a new part.** Senses, vitals and class are hashed
+   into the id (`Acquisition::describe_part`). A part that reconnects
+   claiming a higher temperature limit does not match its old id;
+   `Entity::still_the_same_part` releases it and it must be acquired again.
+2. **No limits, no verbs.** `PartSchema::lowered` drops every verb with an
+   unbounded parameter (the existing §8 rule) and every verb on a part that
+   declared no vital. Such a part is still acquired and still felt; it is
+   never in the body map, so nothing can be authorized through it.
+3. **An implausible reading is a broken sensor.** A value outside a sense's
+   plausible range is passed on marked stale, and a stale vital is `Failed`.
+
+### The eight classes and the five domains
+
+`os/part/src/class.rs`. Every part passes through Domain 1 (it has a key),
+Domain 3 (every verb is gated) and Domain 5 (what it reports can become
+memory). What differs is which domain looks after it day to day:
+
+| class | examples | served by | encoded as |
+|---|---|---|---|
+| `Actuator` | motor, servo, valve | Domain 2 Autonomic | `served_by()`; verbs on consequential regions |
+| `Sensor` | camera, IMU, encoder | Domain 2 Autonomic | `may_act() == false`: a verb is a schema error |
+| `Thermal` | fan, pump, heater | Domain 2 Autonomic | `is_homeostatic()`: regulated by a `Homeostat` |
+| `Power` | battery, rail, charger | Domain 2 Autonomic | `is_homeostatic()` |
+| `Compute` | CPU, GPU, NPU, BPU, MCU | Domain 4 Cognition | `is_placement_target()`: becomes a `Resource` on a `Substrate` |
+| `Comms` | NIC, radio, bus adapter | Domain 4 Cognition | regions `Network`, `Link` |
+| `Storage` | RAM, flash, disk | Domain 5 State | `hosts_state()`: may hold the graph's sealed bytes, never owns it |
+| `Composite` | several behind one key | its members | `served_by() == None` |
+
+How each domain's rule is enforced:
+
+* **Domain 1 — Silicon.** Enumeration is `Nerve::enumerate`; attestation is
+  the §8 challenge (`Nerve::answer`). *Limit, stated plainly:* parts behind
+  the operating system (sysfs, NVML, CAN nodes) hold no key. Their key is
+  derived from a stable identifier the kernel provides
+  (`nerves::stable_key`), which gives a stable **identity** and is **not
+  attestation**. Hardware attestation of on-board parts (for example SPDM
+  over PCIe) is **Not built**. ACPI/devicetree/PCIe enumeration in the UEFI
+  core is **Not built**; the live nerves run on Linux.
+* **Domain 2 — Autonomic.** `os/part/src/homeostat.rs`. A `Homeostat` is
+  installed with one `Mandate` (KIRA granted a regulate verb with a `min`
+  and `max`) and from then on commands only values inside that range, with
+  no model call. It imports nothing from the entity, the state graph or
+  cognition. With no trustworthy reading it commands its failsafe.
+* **Domain 3 — KIRA.** `Nerve::apply` takes a `Mandate`, whose only
+  constructor consumes and verifies a `Granted`. There is no other way to
+  reach a part's verb. `Granted` still has exactly one constructor.
+* **Domain 4 — Cognition.** `Substrate` (`Mcu | Cpu | Gpu | Npu | Bpu`) is in
+  `os/cognition/src/placement.rs`. Acquiring a Compute part with a
+  `ComputeOffer` adds a `Resource` on that substrate; `Plan::prefer` states
+  which tissue a tier would rather use; `ResourcePool::pick` honours it and
+  falls through when that tissue is unavailable.
+* **Domain 5 — State.** Vitals reach the state graph through
+  `Entity::feel`, written by the entity with its own `MemoryHandle`, the
+  part as provenance. No nerve can write memory (section 4).
+
+### The vitals invariant
+
+`os/part/src/policy.rs`. **KIRA refuses any verb whose predicted effect
+breaks another part's vital.**
+
+Every bound policy hears every part's readings (`BodyPolicy::feel`, a new
+defaulted method). `PartPolicy` keeps the latest value of exactly the
+senses it guards. Whoever wires the machine states the cross-part rule as a
+`Guard`, because a fan does not know which processor it cools:
+
+```rust
+Guard::sustain(fan_set, "duty_pct", gpu, "temp.c", 85.0, 60.0)
+// while the GPU reads >= 85 C, fan.set's duty_pct must be >= 60
+```
+
+| request | GPU reading | result |
+|---|---|---|
+| fan to 0 % | 45 °C | granted |
+| fan to 0 % | 91 °C | refused at **simulate**, `PredictedInvariantBreak` |
+| fan to 100 % | 91 °C | granted |
+| fan to 0 % | never heard, stale, too old, or not a number | refused at **simulate**, `Unpredictable` |
+
+"Unknown" is never read as "cool". A `Meter` does the same for a finite
+budget (write cycles): a request that would spend below the reserve is
+refused at simulate as `IrreversibleBeyondBudget`.
+
+### Interoception
+
+`os/part/src/intero.rs`. Readings do not flood memory. Threshold crossings
+and faults are remembered with their value; a window of routine becomes one
+summary line per sense; a value hovering at a threshold is called unstable
+once and then muted, except that a crossing into critical or failed is
+never muted. In the entity suite, 5,000 rounds of steady readings from two
+parts write **zero** memories, and closing the window writes five.
+
+---
+
+## 2. The Nerve trait
+
+`os/part/src/nerve.rs`, `no_std`.
+
+```text
+enumerate   what parts are on this nerve?                  §8 step 1
+answer      the part proves it holds its key               §8 step 2
+describe    what the part says it is        -> PartSchema  §8 step 3
+read        what it feels now               -> Sensed
+apply       do this                         <- Mandate     (a verified Granted)
+reflex      one step of a regulator         <- ReflexAct   (from a Homeostat)
+safe        stop, now
+```
+
+---
+
+## 3. Nerve families
+
+| family | nerve | status | evidence or gap |
+|---|---|---|---|
+| **Platform interfaces** | | | |
+| Linux hwmon / thermal zones, read | `host/src/nerves/hwmon.rs` | **Verified** live | `nerves_live`: 10 chips, 10 temperatures read and acquired on this machine |
+| Linux fan write (`pwm1_enable`) | same | **Verified** on a fixture file; **Manual** on a real fan | needs root; runbook 5.1 |
+| CPU, disk, battery (`/proc`, `/sys`) | `host/src/nerves/machine.rs` | **Verified** live | `nerves_live`: Ryzen AI 9 365, `nvme0n1`, `BAT0` |
+| NVML (NVIDIA) | `host/src/nerves/nvml.rs` | **Verified** live | `nerves_live`: RTX 5070 Laptop GPU; agrees with `nvidia-smi` |
+| NVMe / SMART wear | — | **Not built** | needs an admin ioctl (root); runbook 5.5 states the gap |
+| ROCm-SMI (AMD) | — | **Not built** | the AMD iGPU's temperature is read through hwmon only |
+| ACPI (direct), IPMI / Redfish | — | **Not built** | |
+| **Field buses and robot middleware** | | | |
+| CAN, BLUR codec over an in-memory bus | `host/src/nerves/socketcan.rs` | **Verified** | `nerves_can`: census, feedback, e-stop, golden vector |
+| CAN over a real SocketCAN socket | same + `can_ffi.rs` | **Built**, **Manual** | no `vcan0` here and creating one needs root; runbook 5.2, 5.3 |
+| ROS 2, live graph via the `ros2` tool | `host/src/nerves/ros2.rs` | **Built**, **Manual** | ROS 2 is not installed here; parsing is tested; runbook 5.4 |
+| ROS 2, publishing a granted command | — | **Not built** | the reader produces the graph and stops |
+| ROS 2, a described graph | `os/adapters/src/ros2.rs` | **Verified** (pre-existing) | `brainos stack`, adapters suite |
+| Zenoh, micro-ROS, CANopen, EtherCAT, Dynamixel, Modbus, MAVLink | — | **Not built** | |
+| **Anthropic MHS** | `os/adapters/src/mhs.rs` | **Verified** against described devices (pre-existing) | the file is the spec of record here. It was not compared with any public MHS document in this work, so any difference is unknown, not absent |
+| **On-board buses** | | | |
+| PCIe/CXL, USB, I²C/SMBus, SPI, UART, GPIO/PWM, MIPI | — | **Not built** as nerves | the kernel's drivers stand in front of them; hwmon and NVML read through those drivers |
+| **Simulated** | `os/part/src/sim.rs` | **Verified** (it is a simulation) | a fan and a GPU with a thermal model; the bench for every test that must be able to stop a fan |
+| **BPU** | `os/bpu` | see section 6 | mock only; the silicon does not exist |
+
+"Live" means read from this machine's real hardware during the test run.
+Three of the five reference nerves the brief names are Verified live
+(hwmon read, CPU and storage, NVML). CAN is verified on an in-memory bus
+and Built on the real socket. ROS 2 is Built.
+
+Reproduce:
+
+```sh
+cd os
+cargo run --release --bin brainos -- parts                       # the live survey
+cargo test --release -p brainos-host --test nerves_live -- --nocapture
+cargo test --release -p brainos-host --test nerves_can  -- --nocapture
+cargo test --release -p brainos-host --test nerves_ros2 -- --nocapture
+cargo test --release -p brainos-host --test autonomic_survives -- --nocapture
+cargo test --release -p brainos-entity --test parts_suite
+cargo test --release -p brainos-proof --test vitals_domain
+```
+
+A live test that finds no hardware prints `SKIPPED (...)` and returns. Run
+with `--nocapture` to see which ones actually ran; a skipped test is not
+evidence.
+
+### What the live survey found on this machine (2026-11-10)
+
+14 parts, all acquired through §8: eight hwmon temperature chips (NVMe,
+both DDR5 SPD sensors, the Wi-Fi radio, the AMD iGPU, `k10temp`, `acpitz`),
+two fan chips (`acpi_fan`, `hp`), one thermal zone, the CPU, the NVMe disk,
+the battery and the NVIDIA GPU.
+
+Two things it showed that are worth knowing:
+
+* **Most chips state no limit.** Only the NVMe drive, the two memory
+  sensors and the GPU (through NVML: slowdown 102 °C, shutdown 105 °C) say
+  what temperature is too hot. `k10temp`, `acpitz` and the others report a
+  number and no threshold. The nerves do not invent one, so those are
+  senses and not vitals.
+* **The fans state no limit either, so they have no verb.** Rule 2 applied
+  to real hardware: sysfs gives fan speed and a mode switch and no fault or
+  maximum, so the entity is given nothing to command. The verb exists only
+  when a human supplies the fan's limits (`HwmonNerve::with_fan_limits`).
+
+---
+
+## 4. Guarantees, and how each is checked
+
+| guarantee | check | status |
+|---|---|---|
+| nothing reaches a part's verb without a `Granted` | compile-fail doctests in `part/src/nerve.rs`: a `Mandate` cannot be written, a `Granted` cannot be written, a token cannot be used twice | **Verified** `cargo test -p brainos-part --doc` (each confirmed to fail for the intended reason: E0451, private fields, E0382) |
+| a forged command is refused at authenticate; a grant cannot be reused for another command, under another key, or late | `parts_suite` | **Verified** |
+| a nerve cannot write memory | compile-fail doctests (a graph write needs the handle; the handle cannot be copied) + `nostd/tests/discipline.rs` (no nerve file names the state graph; `part` does not depend on `brainos-memory` outside tests) | **Verified**. The types alone do not stop code calling `MemoryHandle::issue`, which is public because the entity is in another crate. The source-level check is what closes that. |
+| fan-to-0 over the limit is refused; the autonomic loop keeps cooling | `parts_suite`, `vitals_domain`, `autonomic_survives` | **Verified** on the simulated bench |
+| the loop survives cognition being killed | `autonomic_survives`: a separate cognition process is killed with SIGKILL; 600 further loop steps at full load | **Verified** on the simulated bench. The killed process is the *model*; the gate is on the body side. `parts_suite` separately drops the entire entity. |
+| a part that declares no limits gets no verbs | `parts_suite`, `nerves_live` (fixture and the real fans) | **Verified** |
+| a part that changes its schema mid-session is re-acquired as a new part | `parts_suite` | **Verified** |
+| the policy agrees with an independent oracle on all 504 combinations, and a policy with no guard is caught | `vitals_domain`; `brainos verify` (seventh domain) | **Verified**. Bounded checking, not a proof. |
+
+None of the simulated-bench results is a hardware result. No real fan has
+been commanded by this code.
+
+---
+
+## 5. Runbooks for every Manual item
+
+### 5.1 Fan write on real hardware — **Manual** (root)
+
+Reading needs nothing. Writing `pwm1_enable` needs root, and the meaning
+of its values is per driver. For `hp-wmi` (this laptop): `0` = full speed,
+`2` = automatic. **Check your driver's documentation before using this on
+another machine**; on `thinkpad_acpi` fan control must first be enabled
+with the module option `fan_control=1` and the interface is
+`/proc/acpi/ibm/fan`, which this nerve does not drive.
+
+```sh
+# 1. confirm the file and its current value (2 = automatic on hp-wmi)
+cat /sys/class/hwmon/hwmon*/pwm1_enable
+# 2. confirm you can hear the difference by hand, and put it back
+echo 0 | sudo tee /sys/class/hwmon/hwmonN/pwm1_enable    # fans to full
+echo 2 | sudo tee /sys/class/hwmon/hwmonN/pwm1_enable    # back to automatic
+# 3. state the fan's limits (sysfs states none) and run the gated path as root.
+#    There is no CLI for this yet: write a small harness that builds
+#    HwmonNerve::live().with_fan_limits(warn_rpm, critical_rpm), acquires
+#    the fan with a Guard against the part it cools, and applies a Mandate.
+#    host/tests/nerves_live.rs::fixture_the_fan_write_goes_through_kira_...
+#    is that harness against a temporary directory; point it at /sys.
+```
+
+Leaving the fans in automatic mode is always safe: the firmware's own
+control stays in charge.
+
+### 5.2 CAN on a virtual interface — **Manual** (root)
+
+```sh
+sudo modprobe vcan
+sudo ip link add dev vcan0 type vcan
+sudo ip link set up vcan0
+cd os && cargo test --release -p brainos-host --test nerves_can -- --nocapture
+# expect: "LIVE socketcan: node N found on vcan0, feedback [...]"
+sudo ip link delete vcan0        # when done
+```
+
+### 5.3 CAN on the real robot — **Manual** (hardware)
+
+Needs a CAN adapter and BLUR nodes with flashed firmware (none exist yet:
+see `BRINGUP_LOG.md`). Bring the interface up at the bus rate in
+`firmware/protocol.md`, 1 Mbit/s:
+
+```sh
+sudo ip link set can0 up type can bitrate 1000000
+```
+
+Then `SocketCanBus::open("can0", Bus::A)`. The nerve only *feels* nodes and
+can e-stop them. It does not move joints: that goes through the session
+envelope in `os/blur`. **`safe()` sends ESTOP, which latches every node
+until power-cycle** — do not call it on a robot you want to keep running.
+
+### 5.4 ROS 2, a real running graph — **Manual** (install)
+
+```sh
+# install ROS 2 (any current distribution) and turtlesim, then:
+source /opt/ros/<distro>/setup.bash
+ros2 run turtlesim turtlesim_node &
+cd os && BRAINOS_NET=on cargo test --release -p brainos-host --test nerves_ros2 -- --nocapture
+# expect: "LIVE ros2: N topics, M services"
+```
+
+Without limits the graph is read and §8 refuses to incorporate it. Supply
+them as a file of `topic field min max` lines, parsed by
+`nerves::ros2::parse_limits`:
+
+```
+/turtle1/cmd_vel linear_x  -1.0 2.0
+/turtle1/cmd_vel angular_z -2.0 2.0
+```
+
+`BRAINOS_NET=on` is required because ROS 2 discovery opens network
+sockets. Zenoh is **Not built**.
+
+### 5.5 Disk wear — **Not built**
+
+NVMe "percentage used" and SATA SMART attributes need an admin ioctl and
+root. What is read without privilege: capacity, bytes written since boot,
+the drive's temperature and its own temperature limits. To see wear by
+hand: `sudo nvme smart-log /dev/nvme0n1` or `sudo smartctl -a /dev/nvme0n1`.
+
+---
+
+## 6. What changed in existing crates
+
+| crate | change | effect on existing behaviour |
+|---|---|---|
+| `body` | `vital.rs` (`Felt`, `Health`, `Band`); `BodyPolicy::feel` with a default that ignores it; `Acquisition::describe_part` | none: `describe` produces the same ids as before; existing policies are unchanged |
+| `cognition` | `Substrate`; `Resource::substrate` (defaults from the site), `on`, `costing`; `Plan::prefer`; `ResourcePool::pick`, `set_available` | none: a plan with no preference picks exactly as `cheapest_for` did |
+| `entity` | `parts`, `intero` fields; `acquire_part`, `feel`, `summarise_parts`, `still_the_same_part`, `release_part` | none for entities with no parts |
+| `proof` | seventh domain `vitals`; `Report::full` includes it | `brainos verify` prints one more section |
+| `host` | `nerves/`, `brainos parts`, features `nvml` and `socketcan` | none |
+| `nostd` | canary touches `part`; three new discipline tests | — |
+
+`unsafe` was added in exactly two files, both in `host`, both named for it:
+`nerves/nvml_ffi.rs` (dlopen of the vendor library) and
+`nerves/can_ffi.rs` (the `AF_CAN` socket). Everything below `host` still
+forbids it.
