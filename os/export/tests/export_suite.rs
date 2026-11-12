@@ -9,7 +9,7 @@
 //! "Export of an entity's state graph is a first-class, documented,
 //! tested feature from v1.0." This file is the tested part.
 
-use brainos_abi::ids::{BodyId, EntityId};
+use brainos_abi::ids::BodyId;
 use brainos_abi::time::Tick;
 use brainos_abi::verb::Verb;
 use brainos_crypto::key::BrainKey;

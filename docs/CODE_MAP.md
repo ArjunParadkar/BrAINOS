@@ -127,7 +127,7 @@ Authority flows down only through Domain 3. Information flows up freely.
 
 | file | purpose | defines | uses | used by |
 |---|---|---|---|---|
-| `os/bpu/src/contract.rs` | The BPU integer contract: every fixed-point format and operation of a tile read and a write-verify, bit-exact with bpusim/fixed.py | ACT_BITS, W_LEVELS, GMIN_Q, GSTEP, GMAX_Q, ETA_FRAC, ETA_ONE, ETA_MAX, ACC_BITS, ADC_MAX, ADC_MIN, VERIFY_CODE, +26 more | this crate: tables_gen | bpu/mock, bpu/prng, bpu/tests/golden, bpu/tests/seam, nostd/lib |
+| `os/bpu/src/contract.rs` | The BPU integer contract: every fixed-point format and operation of a tile read and a write-verify, bit-exact with bpusim/fixed.py | ACT_BITS, W_LEVELS, GMIN_Q, GSTEP, GMAX_Q, ETA_FRAC, ETA_ONE, ETA_MAX, ACC_BITS, ADC_MAX, ADC_MIN, VERIFY_CODE, +27 more | this crate: tables_gen | bpu/mock, bpu/prng, bpu/tests/golden, bpu/tests/seam, nostd/lib |
 | `os/bpu/src/device.rs` | BpuDevice: the trait a real BPU driver will implement; every call that writes weights or changes the dial requires a Mandate | TileImage, ModelImage, BpuVitals, BpuFault, WriteReport, BpuDevice | brainos: cognition, crypto, part | bpu/mock, bpu/nerve, bpu/tests/seam |
 | `os/bpu/src/lib.rs` | Crate root: lists the BPU seam's modules and states what is real (the contract) and what is a stand-in (the device) | contract, device, mock, nerve, planner, prng, tables_gen | nothing outside core/alloc | crate nostd |
 | `os/bpu/src/mock.rs` | MockBpu: a stand-in BPU whose reads and writes are the integer contract exactly, with knobs for wear, dead devices, drift and heat | MockBpu, BAND | this crate: contract, device, prng \| brainos: cognition, part | bpu/tests/seam |

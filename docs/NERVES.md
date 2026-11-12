@@ -427,24 +427,44 @@ verifies (`tests/seam.rs::placement_prefers_a_healthy_bpu_...`).
 
 ### Three things this work found, none of them in the brief
 
-1. **Write-verify does not settle at tile scale under read noise.** The
-   contract stops when a round finds *no* device outside the band. Every
-   round re-measures with fresh noise, so in an array of 2,048 devices a
-   few measurements fall outside each round and the run goes to the
-   100-round limit. The devices are well written either way (worst true
-   error 0.024 in both cases); the noisy run spends pulses on false
-   alarms. Measured on a 32 × 32 tile: 69,177 pulses and settled at dial
-   0.005; 73,269 pulses and not settled at the contract's 0.02 — about 6 %
-   more wear. `WriteReport::settled` reports this honestly rather than
-   calling it convergence. *A per-device stopping rule would remove it.*
+1. **Write-verify does not settle at tile scale under read noise, and
+   the cost grows quickly with the noise.** The contract stops when a
+   round finds *no* device outside the band. Every round re-measures every
+   device with fresh noise, so in an array of 2,048 devices a few
+   measurements fall outside each round and the run goes to the 100-round
+   limit, pulsing false alarms. Measured on 2,048 devices written from
+   empty, against a per-device rule (a device that lands in the band is
+   done and is not measured again) with the same tables and noise:
+
+   | dial σ | rule | rounds | write pulses | settled | worst true error |
+   |---|---|---|---|---|---|
+   | 0.005 | contract | 29 | 69,002 | yes | 0.025 |
+   | 0.005 | per-device | 4 | 68,335 | yes | 0.029 |
+   | 0.02 | contract | 100 | 73,273 | **no** | 0.042 |
+   | 0.02 | per-device | 6 | 68,455 | yes | 0.034 |
+   | 0.05 | contract | 100 | 148,816 | **no** | 0.049 |
+   | 0.05 | per-device | 10 | 69,639 | yes | 0.057 |
+   | 0.10 | contract | 100 | 297,480 | **no** | 0.074 |
+   | 0.10 | per-device | 16 | 73,106 | yes | 0.083 |
+
+   At the contract's σ = 0.02 the extra wear is 7 %. At σ = 0.05, the
+   noise the convergence rule is said to allow, it is **2.1×**, and at
+   0.1 it is **4.1×** — plus 100 rounds of verify reads where 6 to 16
+   would do. The devices are written about equally well either way; the
+   per-device rule's worst error is up to 0.01 higher because it accepts a
+   device on one in-band measurement. `WriteReport::settled` reports the
+   contract's rule honestly rather than calling it convergence, and
+   `contract::program_target_per_device` is the proposal, labelled as
+   not part of the contract (`tests/golden.rs`).
 2. **The 40-bit column sum is exact for 32 rows and tight for 256.** With
    no read noise a 256-row tile still fits, by about 1 %. With noise near
    the top of the dial (σ = 0.2) the worst case does not. The mock
    accumulates in 64 bits and counts columns that left the 40-bit range
    (`ReadResult::beyond_40_bits`); it does not saturate them, because the
    contract — written for 32 rows — does not say what a 256-row
-   accumulator does. *Needs one more bit, or a stated saturation, before
-   256-row silicon.*
+   accumulator does. **One more bit is enough**: a 41-bit signed
+   accumulator is exact for 256 rows at any noise sample the contract can
+   represent, by 0.2 % (checked in `tests/golden.rs`).
 3. **No re-verify threshold or temperature limit is published.** The
    paper gives the write band (0.02) and says retention drifts toward
    G_min. The nerve's drift thresholds (degraded at 0.05, critical at

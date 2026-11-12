@@ -271,3 +271,87 @@ fn a_256_row_tile_fits_40_bits_without_noise_and_can_leave_them_with_it() {
                       &vec![true; rows * cols], &vec![32767; rows], &eta, 31, 2);
     assert_eq!(r.beyond_40_bits, 0);
 }
+
+/// The fix for the 256-row case, checked: one more bit is enough, for
+/// every noise sample the contract can represent.
+///
+/// The largest noisy conductance is with the sample at its clamp
+/// (+16383, a gain of just under 2): 130,846. The worst column is then
+/// 130,846 * 32,767 * 256 = 1.0976e12, and 2^40 = 1.0995e12. So a
+/// 41-bit signed accumulator is exact for a 256-row tile at any dial
+/// setting — by 0.2 %, which is a margin to know about.
+#[test]
+fn a_41_bit_signed_accumulator_is_exact_for_256_rows_at_the_contracts_noise_clamp() {
+    let (rows, cols) = (256, 2);
+    let mut eta = vec![0i16; rows * cols * 2];
+    for pair in eta.chunks_mut(2) {
+        pair[0] = ETA_MAX as i16;
+        pair[1] = -(ETA_MAX as i16);
+    }
+    let r = tile_read(rows, cols, &vec![255; rows * cols], &vec![0; rows * cols],
+                      &vec![true; rows * cols], &vec![32767; rows], &eta, 31, 2);
+    let worst = r.acc[0];
+    assert_eq!(r.beyond_40_bits, cols as u32, "it does leave 40 bits");
+    assert!(worst < 1i64 << 40, "{worst} does not fit 41 signed bits");
+    assert!(worst > (1i64 << 40) * 99 / 100, "the margin is wider than documented: {worst}");
+    // and the mirror image, the most negative column
+    let r = tile_read(rows, cols, &vec![0; rows * cols], &vec![255; rows * cols],
+                      &vec![true; rows * cols], &vec![32767; rows], &{
+                          let mut e = vec![0i16; rows * cols * 2];
+                          for pair in e.chunks_mut(2) { pair[0] = -(ETA_MAX as i16); pair[1] = ETA_MAX as i16; }
+                          e
+                      }, 31, 2);
+    assert!(r.acc[0] >= -(1i64 << 40));
+}
+
+/// The stopping rule, measured both ways on the same array.
+///
+/// 2,048 devices (one 32 x 32 tile's worth of pairs), targets spread
+/// over the range, written from empty, at four dial settings. Same
+/// tables, same noise generator, same seed. The only difference is
+/// whether a device that has landed in the band is measured again.
+#[test]
+fn the_per_device_stopping_rule_settles_where_the_contracts_does_not_and_writes_as_well() {
+    let n = 2048;
+    let tgt: Vec<i64> = (0..n).map(|i| (i as i64 * 16 + 5) % (WS_ONE + 1)).collect();
+    let (w0, gain, dead) = (vec![0i64; n], vec![GAIN_ONE; n], vec![false; n]);
+    let worst = |w: &[i64]| -> f64 {
+        w.iter().zip(&tgt).map(|(a, b)| (a - b).abs()).max().unwrap() as f64 / WS_ONE as f64
+    };
+    println!("dial    rule         rounds  pulses  settled  worst true error");
+    for milli in [5u32, 20, 50, 100] {
+        let sigma_q = sigma_code_from_milli(milli);
+        let reader = |seed: u64| {
+            let mut g = Xoshiro128ss::seeded(seed, 0);
+            move |w: &[i64]| {
+                let mut s = vec![0i64; w.len()];
+                for _ in 0..VERIFY_READS {
+                    for (i, wi) in w.iter().enumerate() {
+                        s[i] += verify_current(ws_to_wq(*wi), eta_from_word(g.next(), sigma_q));
+                    }
+                }
+                s
+            }
+        };
+        let all = program_target(&w0, &tgt, &gain, reader(77), |k| vec![0; k], &dead);
+        let per = program_target_per_device(&w0, &tgt, &gain, reader(77), |k| vec![0; k], &dead);
+        for (name, r) in [("contract  ", &all), ("per-device", &per)] {
+            println!(
+                "{:.3}   {name}   {:>5}  {:>6}  {:<7}  {:.4}",
+                milli as f64 / 1000.0,
+                r.iterations,
+                r.pulses,
+                r.settled,
+                worst(&r.w_s)
+            );
+        }
+        // the proposal always settles, and never spends more
+        assert!(per.settled, "per-device did not settle at dial {milli}");
+        assert!(per.pulses <= all.pulses, "per-device spent more at dial {milli}");
+        if milli >= 20 {
+            assert!(!all.settled, "the contract rule settled at dial {milli}; the note is out of date");
+        }
+        // and writes about as well: within one pulse of the contract's result
+        assert!(worst(&per.w_s) <= worst(&all.w_s) + 0.03, "dial {milli}");
+    }
+}

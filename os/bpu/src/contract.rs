@@ -1,6 +1,6 @@
 //! BFS  LEVEL    Domain 4 substrate - the BPU seam (descriptor, mock, nerve, planner)  [crate brainos-bpu]
 //! BFS  PURPOSE  The BPU integer contract: every fixed-point format and operation of a tile read and a write-verify, bit-exact with bpusim/fixed.py
-//! BFS  DEFINES  ACT_BITS, W_LEVELS, GMIN_Q, GSTEP, GMAX_Q, ETA_FRAC, ETA_ONE, ETA_MAX, ACC_BITS, ADC_MAX, ADC_MIN, VERIFY_CODE, +26 more
+//! BFS  DEFINES  ACT_BITS, W_LEVELS, GMIN_Q, GSTEP, GMAX_Q, ETA_FRAC, ETA_ONE, ETA_MAX, ACC_BITS, ADC_MAX, ADC_MIN, VERIFY_CODE, +27 more
 //! BFS  USES     this crate: tables_gen
 //! BFS  USED BY  bpu/mock, bpu/prng, bpu/tests/golden, bpu/tests/seam, nostd/lib
 //!
@@ -349,6 +349,65 @@ pub fn program_target(
                     k = err.signum();
                 }
                 n[i] = k;
+            }
+        }
+        if !any {
+            return Programmed { w_s: w, iterations: it - 1, pulses: total, settled: true };
+        }
+        total += n.iter().map(|k| k.unsigned_abs()).sum::<u64>();
+        w = pulse(&w, &n, gain_q, &mut c2c, dead);
+    }
+    Programmed { w_s: w, iterations: MAX_ITER, pulses: total, settled: false }
+}
+
+/// **A proposal, not the contract.** Write-verify with a per-device
+/// stopping rule.
+///
+/// Identical to `program_target` except for one thing: a device whose
+/// measurement lands inside the band is *done*, and is not measured
+/// again. `program_target` re-measures every device every round and
+/// stops only when a whole round finds nothing to correct, which under
+/// read noise does not happen at tile scale (`tests/golden.rs` and
+/// `tests/seam.rs` measure it).
+///
+/// This is here so the fix can be measured against the thing it fixes
+/// with the same tables and the same arithmetic. Nothing in the mock
+/// uses it, the reference does not define it, and no golden vector
+/// covers it. If the contract adopts a per-device rule, this is
+/// replaced by a port of whatever the contract says.
+pub fn program_target_per_device(
+    w_s: &[i64],
+    w_target_s: &[i64],
+    gain_q: &[i64],
+    mut read: impl FnMut(&[i64]) -> Vec<i64>,
+    mut c2c: impl FnMut(usize) -> Vec<i64>,
+    dead: &[bool],
+) -> Programmed {
+    let mut w = w_s.to_vec();
+    let tgt: Vec<i64> = w_target_s.iter().map(|t| (*t).clamp(0, WS_ONE)).collect();
+    let mut done: Vec<bool> = dead.to_vec();
+    let mut total: u64 = 0;
+    for it in 1..=MAX_ITER {
+        let sums = read(&w);
+        let mut n = vec![0i64; w.len()];
+        let mut any = false;
+        for i in 0..w.len() {
+            if done[i] {
+                continue;
+            }
+            let err = tgt[i] - w_meas_from_sum(sums[i]);
+            let idx = lut_index(w[i]);
+            let res = (STEP_UP[idx].max(STEP_DN[idx]) as i64 * gain_q[i]) >> (GAIN_FRAC + 1);
+            if err.abs() > TOL_Q.max(res) {
+                any = true;
+                let aim = (w[i] + ((DAMP_Q * err) >> GAIN_FRAC)).clamp(0, WS_ONE);
+                let mut k = pulses_for(w[i], aim);
+                if k == 0 {
+                    k = err.signum();
+                }
+                n[i] = k;
+            } else {
+                done[i] = true;
             }
         }
         if !any {
