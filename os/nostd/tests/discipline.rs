@@ -342,17 +342,17 @@ fn the_x86_uefi_target_pins_the_serial_curve_backend() {
 
 /// The Memory-Integrity Law, for nerves, at the source level.
 ///
-/// The types already stop a nerve writing memory: every mutating
-/// method on the state graph needs a `MemoryHandle`, and nothing in
-/// the `Nerve` trait hands one over (`part/src/nerve.rs` has the
-/// compile-fail examples). What the types cannot stop is code that
-/// *issues itself* a handle, because `MemoryHandle::issue` is public —
-/// the entity lives in a different crate from the handle.
+/// This is the second line of defence, not the first. The first is the
+/// types: every mutating method on the state graph needs a
+/// `MemoryHandle`; a handle is issued only to the holder of the
+/// entity's `BrainKey`; and the graph refuses a handle for any entity
+/// but its owner. (Until 2026-11-12 a handle could be issued from a
+/// public entity id, and this test was all that stood in the way.)
 ///
-/// So this closes it by reading the source: no file that implements a
-/// nerve, a part policy or a substrate may name the state graph or
-/// issue a handle. The part and BPU crates must not depend on
-/// `brainos-memory` at all outside their tests.
+/// It is kept because it is cheap and says something the types do not:
+/// no file that implements a nerve, a part policy or a substrate even
+/// *names* the state graph, and the part and BPU crates do not depend
+/// on `brainos-memory` at all outside their tests.
 #[test]
 fn no_nerve_part_or_substrate_can_reach_the_state_graph() {
     let root = workspace_root();

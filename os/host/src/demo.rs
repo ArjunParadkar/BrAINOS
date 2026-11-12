@@ -395,7 +395,7 @@ pub fn run() -> DemoResult {
 
     // --- and so does the exported copy, read cold ---
     let read_back = Archive::from_bytes(&file).expect("the archive reads back");
-    let handle = MemoryHandle::issue(reborn.id());
+    let handle = MemoryHandle::issue(reborn.key());
     let mut cold = StateGraph::new();
     let imported_life: Life = import(&read_back, &reborn.key().public(), &handle, &mut cold)
         .expect("the archive verifies and imports");

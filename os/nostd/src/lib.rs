@@ -94,7 +94,7 @@ pub fn touch_everything() -> u64 {
         .is_ok() as u64;
 
     // memory
-    let handle = brainos_memory::law::MemoryHandle::issue(key.entity_id());
+    let handle = brainos_memory::law::MemoryHandle::issue(&key);
     let mut graph = brainos_memory::graph::StateGraph::with_bounds(
         brainos_memory::graph::Bounds::EMBEDDED,
     );

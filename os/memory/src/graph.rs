@@ -351,6 +351,11 @@ pub struct StateGraph {
     /// nodes pruned over this graph's life, for honest telemetry about
     /// what the entity has forgotten
     pub pruned: u64,
+    /// whose memory this is. Bound by the first handle that writes, and
+    /// from then on every write is checked against it.
+    owner: Option<brainos_abi::ids::EntityId>,
+    /// writes refused because the handle was for a different entity
+    refused: u64,
 }
 
 impl Default for StateGraph {
@@ -372,6 +377,49 @@ impl StateGraph {
             inherited: 0,
             session_mark: 0,
             pruned: 0,
+            owner: None,
+            refused: 0,
+        }
+    }
+
+    /// The entity this graph belongs to, once something has been
+    /// written to it.
+    pub fn owner(&self) -> Option<brainos_abi::ids::EntityId> {
+        self.owner
+    }
+
+    /// How many writes were refused because the handle presented was
+    /// for a different entity. Zero in a correct system; anything else
+    /// is something trying to write memory that is not its own.
+    pub fn refused_writes(&self) -> u64 {
+        self.refused
+    }
+
+    /// May this handle write here?
+    ///
+    /// The first handle to write binds the graph to its entity. After
+    /// that a handle for anyone else is refused, on every write.
+    ///
+    /// This used to be checked only where a graph and a handle first
+    /// met (load, export, merge), on the reasoning that a per-write
+    /// check defended against a mistake the type system already
+    /// prevented. It did not: a handle could be issued from a public
+    /// entity id. `MemoryHandle::issue` now needs the Key, and this is
+    /// the other half — a handle minted from *some other* key is a
+    /// perfectly good handle for some other entity, and must not open
+    /// this one's memory. One 32-byte comparison per write, next to a
+    /// signature per gated action, is not a cost.
+    fn admits(&mut self, h: &MemoryHandle) -> bool {
+        match self.owner {
+            None => {
+                self.owner = Some(h.entity());
+                true
+            }
+            Some(o) if o.ct_eq(&h.entity()) => true,
+            Some(_) => {
+                self.refused = self.refused.saturating_add(1);
+                false
+            }
         }
     }
 
@@ -522,6 +570,9 @@ impl StateGraph {
         confidence: u8,
         provenance: Provenance,
     ) -> NodeId {
+        if !self.admits(_h) {
+            return NodeId::NONE;
+        }
         let id = NodeId(self.next_id);
         self.next_id += 1;
 
@@ -553,6 +604,9 @@ impl StateGraph {
     }
 
     pub fn link(&mut self, _h: &MemoryHandle, from: NodeId, to: NodeId, kind: EdgeKind) -> bool {
+        if !self.admits(_h) {
+            return false;
+        }
         // never create a dangling edge: an edge to a pruned node would
         // make `explain` report a hole as an explanation
         if self.get(to).is_none() {
@@ -573,6 +627,9 @@ impl StateGraph {
     /// Record that a node was useful. Retrieval is the signal that keeps
     /// a memory alive through decay.
     pub fn touch(&mut self, _h: &MemoryHandle, id: NodeId) {
+        if !self.admits(_h) {
+            return;
+        }
         if let Ok(i) = self.nodes.binary_search_by_key(&id.0, |n| n.id.0) {
             let n = &mut self.nodes[i];
             n.retrievals = n.retrievals.saturating_add(1);
@@ -593,6 +650,9 @@ impl StateGraph {
     /// judgement reaches memory, so attention and pruning are one
     /// judgement rather than two that can disagree.
     pub fn set_salience(&mut self, _h: &MemoryHandle, id: NodeId, salience: u8) -> bool {
+        if !self.admits(_h) {
+            return false;
+        }
         let Ok(i) = self.nodes.binary_search_by_key(&id.0, |n| n.id.0) else {
             return false;
         };
@@ -601,6 +661,9 @@ impl StateGraph {
     }
 
     pub fn revise(&mut self, _h: &MemoryHandle, id: NodeId, confidence: u8) -> bool {
+        if !self.admits(_h) {
+            return false;
+        }
         match self.nodes.binary_search_by_key(&id.0, |n| n.id.0) {
             Err(_) => false,
             Ok(i) => {
@@ -612,6 +675,9 @@ impl StateGraph {
     }
 
     pub fn reinforce(&mut self, _h: &MemoryHandle, id: NodeId) {
+        if !self.admits(_h) {
+            return;
+        }
         if let Ok(i) = self.nodes.binary_search_by_key(&id.0, |n| n.id.0) {
             self.nodes[i].provenance.reinforce();
             let n = &mut self.nodes[i];
@@ -623,6 +689,9 @@ impl StateGraph {
     /// retrievals or reinforcement lose less. This is what makes pruning
     /// mean "forget what did not matter" rather than "forget what is old".
     pub fn decay(&mut self, _h: &MemoryHandle, amount: u8) {
+        if !self.admits(_h) {
+            return;
+        }
         for n in self.nodes.iter_mut() {
             if !n.kind.prunable() {
                 continue;
@@ -635,6 +704,9 @@ impl StateGraph {
     /// Drop a node and every edge pointing at it. Returns false for a
     /// node that is not prunable by kind.
     pub fn forget(&mut self, _h: &MemoryHandle, id: NodeId) -> bool {
+        if !self.admits(_h) {
+            return false;
+        }
         let Ok(i) = self.nodes.binary_search_by_key(&id.0, |n| n.id.0) else {
             return false;
         };
@@ -703,6 +775,9 @@ impl StateGraph {
     /// half a serialization is a corrupt memory, not a smaller one, and
     /// the caller is told so it can shed something instead.
     pub fn set_skill_state(&mut self, _h: &MemoryHandle, id: NodeId, state: &[u8]) -> bool {
+        if !self.admits(_h) {
+            return false;
+        }
         if state.len() > self.bounds.max_state {
             return false;
         }
@@ -718,6 +793,9 @@ impl StateGraph {
     }
 
     pub fn rewrite_skill_node(&mut self, _h: &MemoryHandle, id: NodeId, text: &str) -> bool {
+        if !self.admits(_h) {
+            return false;
+        }
         let Ok(i) = self.nodes.binary_search_by_key(&id.0, |n| n.id.0) else {
             return false;
         };
@@ -760,6 +838,11 @@ impl StateGraph {
     /// preserved so that edges keep meaning across the move; the counter
     /// resumes above the highest id seen.
     pub fn load_durable(&mut self, _h: &MemoryHandle, data: &[u8]) -> Result<usize> {
+        if !self.admits(_h) {
+            return Err(brainos_abi::error::Error::Malformed(
+                "this memory belongs to a different entity",
+            ));
+        }
         let mut d = Decoder::new(data);
         let next_id = d.u64()?;
         let n = d.seq()?;

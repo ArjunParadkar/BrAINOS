@@ -1,7 +1,7 @@
 //! BFS  LEVEL    Domain 5 State - the state graph; the only memory  [crate brainos-memory]
 //! BFS  PURPOSE  MemoryHandle: the one non-copyable token, issued to the entity, required for every memory write, so bodies and models cannot own memory
 //! BFS  DEFINES  MemoryHandle, Violation, DurableStore
-//! BFS  USES     brainos: abi
+//! BFS  USES     brainos: abi, crypto
 //! BFS  USED BY  entity/entity, export/archive, export/tests/export_suite, host/demo, host/limits, host/worlds_run, memory/belief, memory/consolidate, +7 more
 //!
 //! The Memory-Integrity Law, as a type.
@@ -12,8 +12,9 @@
 //!
 //! Every mutating method on `StateGraph` takes `&MemoryHandle`. The
 //! handle is created once, inside the entity, from the entity's own id.
-//! It is not `Clone`, not `Copy`, not `Default`, and has no public
-//! constructor that does not require proof of which entity is asking.
+//! It is not `Clone`, not `Copy`, not `Default`, and its one
+//! constructor takes the entity's `BrainKey` — so only the holder of
+//! the Key can have one.
 //! A body cannot obtain one. A cognitive resource cannot obtain one. A
 //! peer cannot be sent one, because it does not encode.
 //!
@@ -25,6 +26,7 @@
 //! did too.
 
 use brainos_abi::ids::EntityId;
+use brainos_crypto::key::BrainKey;
 use core::fmt;
 
 /// Proof that the holder is the entity, for the purpose of mutating its
@@ -38,12 +40,31 @@ pub struct MemoryHandle {
 }
 
 impl MemoryHandle {
-    /// Issue the handle for an entity. Called once, by the entity, at
-    /// construction. It is `pub` because the entity crate is a separate
-    /// compilation unit — but there is nothing useful to do with a handle
-    /// for an entity whose graph you do not have, and a graph checks.
-    pub fn issue(entity: EntityId) -> MemoryHandle {
-        MemoryHandle { entity }
+    /// Issue the handle for an entity — to whoever holds its Key.
+    ///
+    /// The argument is the `BrainKey` itself, not an entity id. An id is
+    /// public: it is the hash of the public key and appears in every
+    /// audit record and every export. A handle that could be issued
+    /// from an id could be issued by anything that had ever seen the
+    /// entity's name — a nerve, a driver, a model wrapper — and the law
+    /// would rest on nobody choosing to. (It did, until 2026-11-12:
+    /// this took an `EntityId`, and a source-level test was what stood
+    /// between a nerve and a handle.)
+    ///
+    /// A `BrainKey` cannot be had that way. It has no public
+    /// constructor from an id, it is not `Clone`, and the seed never
+    /// leaves it. So the type system now says what the architecture
+    /// says: **memory belongs to whoever is the entity**, and being the
+    /// entity means holding the Key.
+    ///
+    /// It is still `pub`, because the entity crate is a separate
+    /// compilation unit. That is no longer a gap: everything else that
+    /// can call it is something that already holds the Key, and
+    /// something that holds the Key *is* the entity.
+    pub fn issue(key: &BrainKey) -> MemoryHandle {
+        MemoryHandle {
+            entity: key.entity_id(),
+        }
     }
 
     pub fn entity(&self) -> EntityId {

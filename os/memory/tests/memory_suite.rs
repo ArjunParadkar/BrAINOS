@@ -26,8 +26,7 @@ use brainos_memory::provenance::{Origin, Provenance};
 use brainos_memory::skill::SkillGraph;
 
 fn setup() -> (MemoryHandle, StateGraph, SkillGraph) {
-    let e = EntityId::from_bytes([1; 32]);
-    (MemoryHandle::issue(e), StateGraph::new(), SkillGraph::new())
+        (MemoryHandle::issue(&BrainKey::from_seed(&[1; 32])), StateGraph::new(), SkillGraph::new())
 }
 
 fn v(s: &str) -> Verb {
@@ -38,9 +37,10 @@ fn v(s: &str) -> Verb {
 
 #[test]
 fn a_handle_for_one_entity_does_not_authorize_anothers_graph() {
-    let a = EntityId::from_bytes([1; 32]);
-    let b = EntityId::from_bytes([2; 32]);
-    let h = MemoryHandle::issue(a);
+    let key_a = BrainKey::from_seed(&[1; 32]);
+    let a = key_a.entity_id();
+    let b = BrainKey::from_seed(&[2; 32]).entity_id();
+    let h = MemoryHandle::issue(&key_a);
     assert!(h.authorizes(a).is_ok());
     assert_eq!(
         h.authorizes(b),
@@ -157,10 +157,59 @@ fn audit_records_are_never_pruned_by_the_entity() {
     assert!(!NodeKind::Audit.durable(), "audit stays with the machine of record");
 }
 
+/// The law at both ends. Issuing a handle needs the Key; and a handle
+/// from some *other* key — which anyone can make — is a handle for some
+/// other entity and does not open this one's memory.
+#[test]
+fn a_handle_minted_from_another_key_cannot_write_or_erase_this_entitys_memory() {
+    let (h, mut g, _) = setup();
+    let prov = Provenance::own(Tick(1));
+    let mine = g.add(&h, NodeKind::Episode, "the floor is carpet", 80, prov);
+    let other = g.add(&h, NodeKind::Semantic, "walking needs carpet", 80, prov);
+    assert_eq!(g.owner(), Some(h.entity()));
+    let before: Vec<(u8, u8, usize)> =
+        g.nodes().iter().map(|n| (n.confidence, n.salience, n.edges.len())).collect();
+
+    // what a nerve, a driver or a model wrapper could do: make a key
+    let forged = MemoryHandle::issue(&BrainKey::from_seed(&[0xEE; 32]));
+    assert_ne!(forged.entity(), h.entity());
+
+    assert!(g.add(&forged, NodeKind::Episode, "planted", 80, prov).is_none());
+    assert!(!g.link(&forged, mine, other, EdgeKind::DerivedFrom));
+    assert!(!g.revise(&forged, mine, 1));
+    assert!(!g.set_salience(&forged, mine, 0));
+    assert!(!g.forget(&forged, mine));
+    g.touch(&forged, mine);
+    g.reinforce(&forged, mine);
+    g.decay(&forged, 100);
+    assert!(g.load_durable(&forged, &[]).is_err());
+
+    let after: Vec<(u8, u8, usize)> =
+        g.nodes().iter().map(|n| (n.confidence, n.salience, n.edges.len())).collect();
+    assert_eq!(before, after, "a foreign handle changed something");
+    assert_eq!(g.len(), 2);
+    assert_eq!(g.refused_writes(), 9, "every refused write is counted");
+
+    // and the real handle still works
+    assert!(!g.add(&h, NodeKind::Episode, "still mine", 80, prov).is_none());
+    assert!(g.link(&h, mine, other, EdgeKind::DerivedFrom));
+}
+
+#[test]
+fn a_graph_is_bound_to_whoever_first_writes_to_it_and_reading_binds_nothing() {
+    let mut g = StateGraph::new();
+    assert_eq!(g.owner(), None);
+    let _ = g.nodes();
+    let _ = g.count(NodeKind::Episode);
+    assert_eq!(g.owner(), None, "reading bound the graph");
+    let h = MemoryHandle::issue(&BrainKey::from_seed(&[3; 32]));
+    g.add(&h, NodeKind::Episode, "first", 80, Provenance::own(Tick(1)));
+    assert_eq!(g.owner(), Some(h.entity()));
+}
+
 #[test]
 fn the_graph_stays_inside_its_bounds_and_drops_the_least_useful_first() {
-    let e = EntityId::from_bytes([1; 32]);
-    let h = MemoryHandle::issue(e);
+        let h = MemoryHandle::issue(&BrainKey::from_seed(&[1; 32]));
     let mut g = StateGraph::with_bounds(Bounds {
         max_episodes: 10,
         ..Bounds::EMBEDDED
@@ -208,8 +257,7 @@ fn explanation_walks_back_to_the_observations_underneath() {
 
 #[test]
 fn content_longer_than_the_bound_is_truncated_on_a_character_boundary() {
-    let e = EntityId::from_bytes([1; 32]);
-    let h = MemoryHandle::issue(e);
+        let h = MemoryHandle::issue(&BrainKey::from_seed(&[1; 32]));
     let mut g = StateGraph::with_bounds(Bounds {
         max_content: 10,
         ..Bounds::default()
@@ -1056,7 +1104,7 @@ fn memory_survives_the_move_to_a_new_body_with_its_edges_intact() {
     let bytes = g.encode_durable().unwrap();
 
     // a brand-new body, the same key
-    let h2 = MemoryHandle::issue(EntityId::from_bytes([1; 32]));
+    let h2 = MemoryHandle::issue(&BrainKey::from_seed(&[1; 32]));
     let mut g2 = StateGraph::new();
     let loaded = g2.load_durable(&h2, &bytes).unwrap();
     assert!(loaded > 0);
@@ -1081,7 +1129,7 @@ fn an_export_does_not_carry_the_audit_log() {
     g.add(&h, NodeKind::Audit, "GRANT legs.walk", 100, Provenance::own(Tick(1)));
 
     let bytes = g.encode_durable().unwrap();
-    let h2 = MemoryHandle::issue(EntityId::from_bytes([1; 32]));
+    let h2 = MemoryHandle::issue(&BrainKey::from_seed(&[1; 32]));
     let mut g2 = StateGraph::new();
     g2.load_durable(&h2, &bytes).unwrap();
 
@@ -1103,7 +1151,7 @@ fn a_corrupt_export_is_refused_rather_than_partially_loaded() {
     let n = bytes.len();
     bytes.truncate(n / 2);
 
-    let h2 = MemoryHandle::issue(EntityId::from_bytes([1; 32]));
+    let h2 = MemoryHandle::issue(&BrainKey::from_seed(&[1; 32]));
     let mut g2 = StateGraph::new();
     assert!(g2.load_durable(&h2, &bytes).is_err());
 }
@@ -1116,7 +1164,7 @@ fn the_entity_knows_which_memories_predate_this_body() {
     }
     let bytes = g.encode_durable().unwrap();
 
-    let h2 = MemoryHandle::issue(EntityId::from_bytes([1; 32]));
+    let h2 = MemoryHandle::issue(&BrainKey::from_seed(&[1; 32]));
     let mut g2 = StateGraph::new();
     g2.load_durable(&h2, &bytes).unwrap();
     assert_eq!(g2.inherited, 5);
@@ -1151,7 +1199,7 @@ fn durations_and_bodies_ride_along_on_an_episode() {
 fn taught_that_walking_needs_carpet() -> (MemoryHandle, StateGraph, SkillGraph, Verb) {
     let walk = Verb::parse("legs.walk").unwrap();
     let body = BodyId::from_bytes([0xB2; 32]);
-    let h = MemoryHandle::issue(EntityId::from_bytes([0x5A; 32]));
+    let h = MemoryHandle::issue(&BrainKey::from_seed(&[0x5A; 32]));
     let mut g = StateGraph::new();
     let mut s = SkillGraph::new();
     s.learn(&h, &mut g, walk, "walk", Provenance::own(Tick(1)));
@@ -1257,7 +1305,7 @@ fn a_stateless_skill_node_still_loads_and_says_less() {
 fn a_skill_does_not_grow_without_limit() {
     use brainos_memory::skill::MAX_PRECONDITIONS;
     let walk = Verb::parse("legs.walk").unwrap();
-    let h = MemoryHandle::issue(EntityId::from_bytes([0x5B; 32]));
+    let h = MemoryHandle::issue(&BrainKey::from_seed(&[0x5B; 32]));
     let mut g = StateGraph::new();
     let mut s = SkillGraph::new();
     s.learn(&h, &mut g, walk, "walk", Provenance::own(Tick(1)));

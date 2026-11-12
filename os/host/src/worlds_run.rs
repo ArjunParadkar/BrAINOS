@@ -180,7 +180,7 @@ pub fn run() -> WorldsRun {
         use brainos_memory::law::MemoryHandle;
         use brainos_memory::provenance::Provenance;
         use brainos_memory::skill::SkillGraph;
-        let h = MemoryHandle::issue(e.id());
+        let h = MemoryHandle::issue(e.key());
         let mut g = StateGraph::new();
         let mut s = SkillGraph::new();
         for i in 0..12u64 {

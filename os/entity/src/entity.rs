@@ -121,7 +121,7 @@ impl Entity {
         let id = key.entity_id();
         let seed = key.derive_subkey(&BodyId::ZERO, 32);
         Entity {
-            handle: MemoryHandle::issue(id),
+            handle: MemoryHandle::issue(&key),
             graph: StateGraph::new(),
             skills: SkillGraph::new(),
             index: Index::new(),

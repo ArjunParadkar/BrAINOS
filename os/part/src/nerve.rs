@@ -81,10 +81,22 @@
 //! }
 //! ```
 //!
-//! What the types do **not** stop: `MemoryHandle::issue` is public
-//! (the entity lives in another crate), so code that deliberately
-//! issues its own handle would compile. `nostd/tests/discipline.rs`
-//! closes that at the source level: no nerve file may name it.
+//! ```compile_fail
+//! // issuing a handle from an entity id, which is public knowledge
+//! fn mint(id: brainos_abi::ids::EntityId) -> brainos_memory::law::MemoryHandle {
+//!     brainos_memory::law::MemoryHandle::issue(id)
+//! }
+//! ```
+//!
+//! A handle is issued only to the holder of the entity's `BrainKey`
+//! (`MemoryHandle::issue(&key)`), and the state graph refuses, on every
+//! write, a handle for any entity but its owner. So a nerve that made
+//! itself a key would get a handle for a different entity, and that
+//! handle opens nothing here (`memory_suite`:
+//! `a_handle_minted_from_another_key_cannot_write_...`). Until
+//! 2026-11-12 `issue` took a public entity id and this rested on a
+//! source-level check; that check (`nostd/tests/discipline.rs`) is kept
+//! as a second line, not the first.
 
 use crate::homeostat::ReflexAct;
 use crate::schema::PartSchema;

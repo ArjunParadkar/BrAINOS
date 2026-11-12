@@ -307,7 +307,7 @@ fn an_exported_entity_imports_into_a_fresh_process_as_itself() {
     // ---- everything above this line is thrown away ----
 
     let read_back = Archive::from_bytes(&file).unwrap();
-    let handle = MemoryHandle::issue(key.entity_id());
+    let handle = MemoryHandle::issue(&key);
     let mut graph = StateGraph::new();
     let life = import(&read_back, &key.public(), &handle, &mut graph).unwrap();
 
@@ -332,7 +332,7 @@ fn an_imported_entity_still_remembers_what_it_learned() {
     let key = BrainKey::from_seed(&[1; 32]);
     let archive = export(original.key(), &original.graph, &original.life, 1, 1, Tick(500)).unwrap();
 
-    let handle = MemoryHandle::issue(key.entity_id());
+    let handle = MemoryHandle::issue(&key);
     let mut graph = StateGraph::new();
     import(&archive, &key.public(), &handle, &mut graph).unwrap();
 
@@ -350,7 +350,7 @@ fn importing_with_the_wrong_handle_is_refused() {
     let key = BrainKey::from_seed(&[1; 32]);
     let archive = export(original.key(), &original.graph, &original.life, 1, 1, Tick(500)).unwrap();
 
-    let wrong = MemoryHandle::issue(EntityId::from_bytes([77; 32]));
+    let wrong = MemoryHandle::issue(&BrainKey::from_seed(&[77; 32]));
     let mut graph = StateGraph::new();
     assert_eq!(
         import(&archive, &key.public(), &wrong, &mut graph),
@@ -367,7 +367,7 @@ fn a_tampered_archive_imports_nothing_at_all() {
         export(original.key(), &original.graph, &original.life, 1, 1, Tick(500)).unwrap();
     archive.sections[0].bytes[10] ^= 0xFF;
 
-    let handle = MemoryHandle::issue(key.entity_id());
+    let handle = MemoryHandle::issue(&key);
     let mut graph = StateGraph::new();
     assert!(import(&archive, &key.public(), &handle, &mut graph).is_err());
     assert!(
@@ -397,7 +397,7 @@ fn an_entity_with_no_life_yet_still_exports_cleanly() {
     let a = export(&key, &graph, &life, 0, 0, Tick(1)).unwrap();
     assert!(a.verify(&key.public()).is_ok());
 
-    let handle = MemoryHandle::issue(key.entity_id());
+    let handle = MemoryHandle::issue(&key);
     let mut fresh = StateGraph::new();
     let back = import(&a, &key.public(), &handle, &mut fresh).unwrap();
     assert_eq!(back.wakes, 0);

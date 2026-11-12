@@ -128,7 +128,7 @@ fn micros(f: impl FnOnce()) -> u64 {
 /// unrelated text would make BM25 look better than it is. The needle is
 /// the only memory that mentions the thing being asked about.
 fn retrieval_at(n: usize) -> RetrievalPoint {
-    let h = MemoryHandle::issue(EntityId::from_bytes([0x7A; 32]));
+    let h = MemoryHandle::issue(&brainos_crypto::key::BrainKey::from_seed(&[0x7A; 32]));
     let mut g = StateGraph::with_bounds(Bounds {
         max_episodes: 200_000,
         max_semantic: 200_000,
