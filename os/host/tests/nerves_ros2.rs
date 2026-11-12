@@ -1,7 +1,7 @@
 //! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
 //! BFS  PURPOSE  Tests the ROS 2 graph reader's parsing, its network switch, and that a live graph with no limits is refused by section 8
 //! BFS  DEFINES  -
-//! BFS  USES     brainos: adapters, host
+//! BFS  USES     brainos: abi, adapters, body, crypto, entity, host
 //! BFS  USED BY  (entry point or test)
 //!
 //! The ROS 2 live-graph reader: parsing, and the switches around it.
@@ -83,13 +83,82 @@ fn the_reader_refuses_to_touch_the_network_unless_it_is_switched_on() {
     assert_eq!(live_graph("x", &[]).unwrap_err(), Ros2Unavailable::NetworkOff);
 }
 
+/// The whole path against a real, running ROS 2 system: read the live
+/// graph, hand it to the existing §8 adapter, and put it to the gate.
+///
+/// Runs only where a `ros2` tool is on the path and `BRAINOS_NET=on`
+/// (`os/tools/ros2-live.sh` arranges both with turtlesim in a
+/// container). It reads the graph and asks the gate; it publishes
+/// nothing into ROS — that half is not built.
 #[test]
-fn live_a_running_ros2_graph_is_read() {
-    match live_graph("live", &[]) {
-        Ok(g) => {
-            println!("LIVE ros2: {} topics, {} services", g.topics.len(), g.services.len());
-            assert!(!g.topics.is_empty());
+fn live_a_running_ros2_graph_is_read_and_goes_through_section_8() {
+    use brainos_abi::ids::BodyId;
+    use brainos_abi::time::Tick;
+    use brainos_body::calibration::Calibration;
+    use brainos_body::hal::Telemetry;
+    use brainos_crypto::key::BrainKey;
+    use brainos_entity::entity::Entity;
+
+    let shipped = match live_graph("live ros2 robot", &[]) {
+        Ok(g) => g,
+        Err(e) => {
+            println!("SKIPPED ({e:?}); run os/tools/ros2-live.sh");
+            return;
         }
-        Err(e) => println!("SKIPPED ({e:?}); runbook in docs/NERVES.md"),
-    }
+    };
+    assert!(!shipped.topics.is_empty());
+    let commands: Vec<&str> = shipped
+        .topics
+        .iter()
+        .filter(|t| t.subscribed && !t.published)
+        .map(|t| t.name.as_str())
+        .collect();
+    println!(
+        "LIVE ros2: {} topics ({} commands: {commands:?}), {} services",
+        shipped.topics.len(),
+        commands.len(),
+        shipped.services.len()
+    );
+    assert!(!commands.is_empty(), "a running robot with nothing to command");
+
+    let acquire = |graph: &brainos_adapters::ros2::NodeGraph, seed: u8| {
+        let schema = from_node_graph(graph).expect("the live graph is usable");
+        let device = BrainKey::from_seed(&[seed; 32]);
+        let mut e = Entity::new(BrainKey::from_seed(&[seed.wrapping_add(1); 32]), Tick(0));
+        e.wake(None, None, Tick(1)).unwrap();
+        let r = e.acquire(&device, schema.clone(), Calibration::new(BodyId::ZERO, Tick(1)), 0);
+        (e, schema, r)
+    };
+
+    // as it is running: no limits declared anywhere, so §8 will not
+    // take it on
+    let (_, schema, r) = acquire(&shipped, 0x41);
+    assert_eq!(actionable_fraction_pct(&schema), 0);
+    assert!(r.is_err(), "a robot that states no limits was incorporated");
+    println!("LIVE ros2: as running, section 8 refuses it ({:?})", r.unwrap_err());
+
+    // with limits a human states for the first command topic
+    let topic = commands[0];
+    let limits = parse_limits(&format!("{topic} linear_x -1.0 2.0\n{topic} angular_z -2.0 2.0\n")).unwrap();
+    let declared = live_graph("live ros2 robot", &limits).unwrap();
+    let (mut e, schema, r) = acquire(&declared, 0x43);
+    let body = r.expect("with declared limits it is incorporated");
+    e.observe_body(
+        &body,
+        &Telemetry { link_alive: true, ..Default::default() },
+    );
+    let spec = schema.verbs().iter().find(|v| v.is_actionable()).expect("an actionable verb");
+    let verb = spec.verb;
+    let modest: Vec<(&str, f64)> = spec.params.iter().map(|p| (p.name.as_str(), (p.min + p.max) / 4.0)).collect();
+    let reckless: Vec<(&str, f64)> = spec.params.iter().map(|p| (p.name.as_str(), p.max * 10.0)).collect();
+    let ok = e.attempt(verb, body, &modest);
+    let no = e.attempt(verb, body, &reckless);
+    println!(
+        "LIVE ros2: with limits, `{}` {modest:?} -> {}; {reckless:?} -> {:?}",
+        verb.as_str(),
+        if ok.verdict.is_granted() { "granted" } else { "refused" },
+        no.verdict.denial().map(|d| (d.stage, d.code))
+    );
+    assert!(ok.verdict.is_granted(), "{:?}", ok.verdict.denial());
+    assert_eq!(no.verdict.denial().map(|d| d.stage), Some(brainos_abi::error::Stage::Validate));
 }

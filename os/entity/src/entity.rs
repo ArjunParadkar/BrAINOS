@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  The Entity struct: owns the Key, the state graph, the body map, the gate and cognition, and is the only thing that may write memory
 //! BFS  DEFINES  Wake, Entity, instant_from_tick
 //! BFS  USES     this crate: goals, life, parts, simultaneity | brainos: abi, body, cognition, crypto, fleet, kira, memory, part, worlds
-//! BFS  USED BY  bpu/tests/seam, entity/lib, entity/tests/entity_suite, entity/tests/parts_suite, export/archive, export/tests/export_suite, host/bench, host/compound, +19 more
+//! BFS  USED BY  bpu/tests/seam, entity/lib, entity/tests/entity_suite, entity/tests/parts_suite, export/archive, export/tests/export_suite, host/bench, host/compound, +20 more
 //!
 //! The entity.
 //!

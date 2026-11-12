@@ -47,6 +47,7 @@ use brainos_memory::index::Index;
 use brainos_memory::provenance::Provenance;
 use brainos_part::intero::Noted;
 use brainos_part::nerve::Sensed;
+use brainos_part::pack::{EnvelopePack, PackError};
 use brainos_part::policy::{Guard, Meter, PartPolicy};
 use brainos_part::schema::{PartSchema, SchemaFault};
 
@@ -75,6 +76,9 @@ pub struct Wiring {
     pub relief: Vec<Verb>,
     /// for a Compute part: how it is offered for placement
     pub compute: Option<ComputeOffer>,
+    /// limits the part does not state for itself, vouched for by a
+    /// human or a vendor and accepted by this entity's Key
+    pub pack: Option<EnvelopePack>,
 }
 
 /// Why a part was not acquired.
@@ -84,6 +88,10 @@ pub enum PartError {
     Schema(SchemaFault),
     /// §8 refused it
     Step(StepError),
+    /// an envelope pack was offered and not accepted. The part is not
+    /// acquired at all: falling back to "no limits" would silently give
+    /// a different part from the one that was asked for.
+    Pack(PackError),
 }
 
 /// One part the entity currently has.
@@ -142,6 +150,18 @@ impl Entity {
         schema: PartSchema,
         wiring: Wiring,
     ) -> Result<BodyId, PartError> {
+        schema.check().map_err(PartError::Schema)?;
+        // limits vouched for from outside are added before anything is
+        // decided, so they are part of what the part *is*: they go into
+        // its identity, its policy and its join record
+        let (schema, vouched) = match &wiring.pack {
+            Some(pack) => (
+                pack.apply(&self.key.public(), &key, schema)
+                    .map_err(PartError::Pack)?,
+                Some(pack.describe()),
+            ),
+            None => (schema, None),
+        };
         schema.check().map_err(PartError::Schema)?;
 
         let session = SessionId::from_bytes(self.rng.nonce32());
@@ -210,6 +230,10 @@ impl Entity {
         join.push_str(&schema.describe());
         if !commandable {
             join.push_str(" (felt only)");
+        }
+        if let Some(v) = &vouched {
+            join.push_str("; ");
+            join.push_str(v);
         }
         self.graph.add(
             &self.handle,

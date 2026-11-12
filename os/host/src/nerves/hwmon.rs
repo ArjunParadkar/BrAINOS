@@ -30,9 +30,12 @@
 //! **Reading needs nothing. Writing needs root.** The one verb is
 //! `fan.full(on)`: `pwm1_enable` 0 is "full speed" and 2 is "automatic"
 //! on the chips that have it (documented for hp-wmi; other drivers
-//! differ, see `docs/NERVES.md`). It exists only when the wirer has
-//! supplied fan limits (`with_fan_limits`), because sysfs states none
-//! for a fan and a part with no limits gets no verbs. The write is
+//! differ, see `docs/NERVES.md`). The nerve always *declares* it, and
+//! on its own that gets the entity nothing: sysfs states no limit for
+//! a fan, and a part with no limits gets no verbs. The verb becomes
+//! usable when the part is acquired with an envelope pack
+//! (`brainos_part::pack`) that states the fan's limits and is signed
+//! by the entity's Key. The write is
 //! attempted only under a `Mandate`, and a permission error comes back
 //! as `NerveFault::Refused`.
 
@@ -76,8 +79,6 @@ struct Chip {
 pub struct HwmonNerve {
     root: PathBuf,
     chips: Vec<(Chip, BrainKey)>,
-    /// (warn rpm, critical rpm) supplied by whoever wired the machine
-    fan_limits: Option<(f64, f64)>,
 }
 
 impl HwmonNerve {
@@ -91,16 +92,7 @@ impl HwmonNerve {
         HwmonNerve {
             root: root.to_path_buf(),
             chips: Vec::new(),
-            fan_limits: None,
         }
-    }
-
-    /// State the fan's limits, which sysfs does not. Above `warn` rpm
-    /// the fan is degraded, above `critical` it is critical. Supplying
-    /// these is what makes `fan.full` exist.
-    pub fn with_fan_limits(mut self, warn_rpm: f64, critical_rpm: f64) -> HwmonNerve {
-        self.fan_limits = Some((warn_rpm, critical_rpm));
-        self
     }
 
     fn scan(&self) -> Vec<Chip> {
@@ -261,10 +253,6 @@ impl Nerve for HwmonNerve {
             s = s.sense(SenseSpec::new(&i.sense, i.quantity, lo, hi));
             if let Some((warn, crit)) = i.limit {
                 s = s.vital(VitalSpec::new(&i.sense, VitalKind::Thermal, Band::rising(warn, crit)));
-            } else if i.quantity == Quantity::Rpm {
-                if let Some((warn, crit)) = self.fan_limits {
-                    s = s.vital(VitalSpec::new(&i.sense, VitalKind::Faults, Band::rising(warn, crit)));
-                }
             }
         }
         if chip.fan_mode.is_some() {

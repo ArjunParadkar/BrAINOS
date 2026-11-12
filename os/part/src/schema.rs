@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  PartSchema: what a part declares on acquisition (class, verbs, senses, vitals) and the digest that is its identity
 //! BFS  DEFINES  Quantity, SenseSpec, VitalKind, VitalSpec, SchemaFault, PartSchema
 //! BFS  USES     this crate: class | brainos: abi, body, cognition, crypto
-//! BFS  USED BY  bpu/nerve, entity/entity/parts, host/nerves/hwmon, host/nerves/machine, host/nerves/mod, host/nerves/nvml, host/nerves/socketcan, nostd/lib, +5 more
+//! BFS  USED BY  bpu/nerve, entity/entity/parts, host/nerves/hwmon, host/nerves/machine, host/nerves/mod, host/nerves/nvml, host/nerves/packfile, host/nerves/socketcan, +8 more
 //!
 //! What a part declares about itself.
 //!

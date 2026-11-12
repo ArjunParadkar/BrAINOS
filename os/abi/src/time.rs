@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Two kinds of time: Tick, the entity's never-resetting step counter that orders memory, and Micros, the body's clock for deadlines
 //! BFS  DEFINES  Tick, Micros, Instant, Duration, Clock
 //! BFS  USES     this crate: codec, error
-//! BFS  USED BY  abi/lib, abi/tests/abi_suite, adapters/boundary, adapters/tests/adapters_suite, blur/acquire, blur/calibrate, blur/session, body/acquire, +96 more
+//! BFS  USED BY  abi/lib, abi/tests/abi_suite, adapters/boundary, adapters/tests/adapters_suite, blur/acquire, blur/calibrate, blur/session, body/acquire, +97 more
 //!
 //! Time, as three different things that are never the same thing.
 //!

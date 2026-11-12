@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  SHA-256 written out from FIPS 180-4: the one hash used for body ids, the audit log, key derivation and export signatures
 //! BFS  DEFINES  HASH_LEN, Hash, Sha256, sha256
 //! BFS  USES     this crate: domain | brainos: abi
-//! BFS  USED BY  blur/census, blur/firmware, body/acquire, body/schema, bpu/device, crypto/hkdf, crypto/hmac, crypto/key, +19 more
+//! BFS  USED BY  blur/census, blur/firmware, body/acquire, body/schema, bpu/device, crypto/hkdf, crypto/hmac, crypto/key, +20 more
 //!
 //! SHA-256, from FIPS 180-4.
 //!

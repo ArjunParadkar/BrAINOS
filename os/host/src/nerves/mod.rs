@@ -1,6 +1,6 @@
 //! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
 //! BFS  PURPOSE  Root of the operating-system nerves: shared helpers (stable part keys, the network switch) and the live survey of this machine
-//! BFS  DEFINES  hwmon, machine, ros2, socketcan, nvml, net_allowed, stable_key, read_text, read_f64, Surveyed, acquire_all, survey
+//! BFS  DEFINES  hwmon, machine, packfile, ros2, socketcan, nvml, net_allowed, stable_key, read_text, read_f64, Surveyed, acquire_all, +3 more
 //! BFS  USES     this crate: clock | brainos: abi, body, cognition, crypto, entity, part | external: std
 //! BFS  USED BY  host/tests/nerves_can, host/tests/nerves_live, host/tests/nerves_ros2
 //!
@@ -42,6 +42,7 @@
 
 pub mod hwmon;
 pub mod machine;
+pub mod packfile;
 pub mod ros2;
 #[cfg(feature = "socketcan")]
 mod can_ffi;
@@ -110,6 +111,18 @@ pub struct Surveyed {
 /// of readings. This is §8 run against live hardware: enumerate,
 /// challenge, describe, incorporate, then feel.
 pub fn acquire_all(e: &mut Entity, n: &mut dyn Nerve, at: Instant) -> Vec<Surveyed> {
+    acquire_all_with(e, n, at, &[])
+}
+
+/// The same, attaching any envelope pack that speaks for a part by its
+/// label. A pack that is offered and not accepted is an error for that
+/// part: it is not acquired, rather than acquired without the limits.
+pub fn acquire_all_with(
+    e: &mut Entity,
+    n: &mut dyn Nerve,
+    at: Instant,
+    packs: &[brainos_part::pack::EnvelopePack],
+) -> Vec<Surveyed> {
     let mut out = Vec::new();
     for found in n.enumerate() {
         let Some(schema) = n.describe(&found) else {
@@ -133,7 +146,11 @@ pub fn acquire_all(e: &mut Entity, n: &mut dyn Nerve, at: Instant) -> Vec<Survey
             .iter()
             .map(|x| (x.name.as_str().to_string(), x.quantity.unit()))
             .collect();
-        let acquired = acquire_one(e, n, &found, schema);
+        let pack = packs
+            .iter()
+            .find(|p| matches!(&p.applies_to, brainos_part::pack::AppliesTo::Label(l) if l.as_str() == schema.label()))
+            .cloned();
+        let acquired = acquire_one(e, n, &found, schema, pack);
         match acquired {
             Ok(id) => {
                 let mut sensed = Vec::new();
@@ -165,6 +182,7 @@ fn acquire_one(
     n: &mut dyn Nerve,
     found: &Found,
     schema: brainos_part::schema::PartSchema,
+    pack: Option<brainos_part::pack::EnvelopePack>,
 ) -> Result<brainos_abi::ids::BodyId, PartError> {
     // the answer has to be produced inside the handshake, which holds
     // the entity; the nerve is a separate object, so this is fine
@@ -190,7 +208,7 @@ fn acquire_one(
         found.key,
         |c| n.answer(found, c).unwrap_or_default(),
         schema,
-        Wiring { compute, ..Wiring::default() },
+        Wiring { compute, pack, ..Wiring::default() },
     )
 }
 
@@ -200,11 +218,16 @@ fn acquire_one(
 /// The CPU load needs two samples, so the machine nerve is read twice
 /// a short while apart.
 pub fn survey(e: &mut Entity) -> Vec<Surveyed> {
+    survey_with(e, &[])
+}
+
+/// The survey, with envelope packs attached where they apply.
+pub fn survey_with(e: &mut Entity, packs: &[brainos_part::pack::EnvelopePack]) -> Vec<Surveyed> {
     let at = Instant(crate::clock::now_micros());
     let mut out = Vec::new();
 
     let mut hw = hwmon::HwmonNerve::live();
-    out.extend(acquire_all(e, &mut hw, at));
+    out.extend(acquire_all_with(e, &mut hw, at, packs));
 
     let mut m = machine::MachineNerve::live();
     {
@@ -216,11 +239,11 @@ pub fn survey(e: &mut Entity) -> Vec<Surveyed> {
         }
     }
     std::thread::sleep(std::time::Duration::from_millis(250));
-    out.extend(acquire_all(e, &mut m, Instant(crate::clock::now_micros())));
+    out.extend(acquire_all_with(e, &mut m, Instant(crate::clock::now_micros()), packs));
 
     #[cfg(feature = "nvml")]
     if let Some(mut g) = nvml::NvmlNerve::live() {
-        out.extend(acquire_all(e, &mut g, Instant(crate::clock::now_micros())));
+        out.extend(acquire_all_with(e, &mut g, Instant(crate::clock::now_micros()), packs));
     }
     out
 }

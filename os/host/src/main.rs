@@ -40,7 +40,7 @@ fn main() -> ExitCode {
         "model" => model(),
         "worlds" => worlds(),
         "blur" => blur(&args[2..]),
-        "parts" => parts(),
+        "parts" => parts(&args[2..]),
         "mind-stub" => mind_stub(),
         "help" | "-h" | "--help" => {
             usage();
@@ -56,7 +56,7 @@ fn main() -> ExitCode {
 
 /// Acquire every part of this machine through its live nerves and show
 /// what each one says. Reads only: nothing here writes to hardware.
-fn parts() -> ExitCode {
+fn parts(rest: &[String]) -> ExitCode {
     use brainos_abi::time::Tick;
     use brainos_crypto::key::BrainKey;
     use brainos_entity::entity::Entity;
@@ -66,7 +66,40 @@ fn parts() -> ExitCode {
         eprintln!("the entity did not wake");
         return ExitCode::FAILURE;
     }
-    let found = brainos_host::nerves::survey(&mut e);
+    // `--pack FILE` (repeatable): limits a person states for a part
+    // that states none. The file is unsigned text; this session's Key
+    // signs it, because whoever typed the command is vouching for it.
+    let mut packs = Vec::new();
+    let mut it = rest.iter();
+    while let Some(a) = it.next() {
+        if a != "--pack" {
+            eprintln!("brainos parts: unknown argument `{a}` (only `--pack FILE`)");
+            return ExitCode::FAILURE;
+        }
+        let Some(path) = it.next() else {
+            eprintln!("brainos parts: --pack needs a file");
+            return ExitCode::FAILURE;
+        };
+        let text = match std::fs::read_to_string(path) {
+            Ok(t) => t,
+            Err(err) => {
+                eprintln!("brainos parts: {path}: {err}");
+                return ExitCode::FAILURE;
+            }
+        };
+        match brainos_host::nerves::packfile::parse_pack(&text) {
+            Ok(p) => {
+                let signed = p.signed_by(e.key());
+                println!("pack {path}: {}", signed.describe());
+                packs.push(signed);
+            }
+            Err(err) => {
+                eprintln!("brainos parts: {path}: {err}");
+                return ExitCode::FAILURE;
+            }
+        }
+    }
+    let found = brainos_host::nerves::survey_with(&mut e, &packs);
     println!("Parts of this machine, acquired through live nerves (read-only)\n");
     println!(
         "  {:<8} {:<44} {:<9} {:>6} {:>6} {:>5}  {}",

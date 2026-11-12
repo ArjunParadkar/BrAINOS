@@ -24,7 +24,7 @@ use brainos_abi::error::{DenyCode, Stage};
 use brainos_abi::time::{Instant, Tick};
 use brainos_abi::verb::Verb;
 use brainos_body::policy::Arg;
-use brainos_body::vital::Health;
+use brainos_body::vital::{Band, Health};
 use brainos_cognition::placement::Substrate;
 use brainos_crypto::key::BrainKey;
 use brainos_entity::entity::{Entity, Wiring};
@@ -35,7 +35,9 @@ use brainos_kira::action::Request;
 use brainos_kira::gate::Verdict;
 use brainos_part::class::PartClass;
 use brainos_part::nerve::{Mandate, Nerve, NerveFault};
+use brainos_part::pack::{EnvelopePack, PackError, Source};
 use brainos_part::policy::Guard;
+use brainos_part::schema::VitalKind;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -151,18 +153,63 @@ fn fixture_the_same_hardware_gets_the_same_identity_and_different_hardware_does_
     );
 }
 
+fn fan_pack(label: &str) -> EnvelopePack {
+    EnvelopePack::for_label(label, Source::Human, "fixture: fan rated to 6000 rpm")
+        .limit("fan1.rpm", VitalKind::Faults, Band::rising(6000.0, 7000.0))
+}
+
 #[test]
-fn fixture_a_fan_with_no_stated_limits_has_no_verb_and_gets_one_when_the_wirer_states_them() {
+fn fixture_a_fan_states_no_limits_so_it_has_no_verb_until_a_signed_pack_supplies_them() {
     let root = fixture("fanverb");
     let mut n = HwmonNerve::at(&root);
     let f = by_label(&mut n, "hwmon fanchip");
-    let s = n.describe(&f).unwrap();
-    assert_eq!(s.class, PartClass::Thermal);
-    assert!(s.actionable().is_empty(), "sysfs states no fan limits, so there is no verb");
+    let schema = n.describe(&f).unwrap();
+    assert_eq!(schema.class, PartClass::Thermal);
+    assert!(schema.actionable().is_empty(), "sysfs states no fan limits, so there is no verb");
 
-    let mut n = HwmonNerve::at(&root).with_fan_limits(6000.0, 7000.0);
-    let f = by_label(&mut n, "hwmon fanchip");
-    assert_eq!(n.describe(&f).unwrap().actionable().len(), 1);
+    // without a pack: felt, not commandable
+    let mut e = entity(0x66);
+    let id = e
+        .acquire_part(f.key, |c| n.answer(&f, c).unwrap(), schema.clone(), Wiring::default())
+        .unwrap();
+    assert!(!e.part(&id).unwrap().commandable);
+
+    // with a pack the owner signed: the same hardware is a usable part,
+    // and a different part
+    let mut e = entity(0x66);
+    let pack = fan_pack("hwmon fanchip").signed_by(e.key());
+    let with = e
+        .acquire_part(
+            f.key,
+            |c| n.answer(&f, c).unwrap(),
+            schema.clone(),
+            Wiring { pack: Some(pack), ..Wiring::default() },
+        )
+        .unwrap();
+    assert!(e.part(&with).unwrap().commandable);
+    assert_ne!(with, id, "the limits are part of the identity");
+    assert!(
+        e.recall("limits from a human", 1).first().is_some(),
+        "who vouched for the limits was not remembered"
+    );
+
+    // a pack nobody signed, or signed by someone who is not the owner,
+    // does not get a part acquired with weaker limits: it is not acquired
+    let mut e = entity(0x66);
+    for (bad, why) in [
+        (fan_pack("hwmon fanchip"), PackError::Unsigned),
+        (fan_pack("hwmon fanchip").signed_by(&BrainKey::from_seed(&[0x99; 32])), PackError::NotApproved),
+        (fan_pack("hwmon somethingelse").signed_by(e.key()), PackError::WrongPart),
+    ] {
+        let r = e.acquire_part(
+            f.key,
+            |c| n.answer(&f, c).unwrap(),
+            schema.clone(),
+            Wiring { pack: Some(bad), ..Wiring::default() },
+        );
+        assert_eq!(r, Err(brainos_entity::entity::PartError::Pack(why)));
+    }
+    assert!(e.parts.is_empty());
 }
 
 /// The whole path on a fixture: acquire the fan and the CPU chip,
@@ -172,8 +219,9 @@ fn fixture_a_fan_with_no_stated_limits_has_no_verb_and_gets_one_when_the_wirer_s
 #[test]
 fn fixture_the_fan_write_goes_through_kira_and_is_refused_while_the_chip_is_hot() {
     let root = fixture("gate");
-    let mut n = HwmonNerve::at(&root).with_fan_limits(6000.0, 7000.0);
+    let mut n = HwmonNerve::at(&root);
     let mut e = entity(0x61);
+    let pack = fan_pack("hwmon fanchip").signed_by(e.key());
 
     let cpu = by_label(&mut n, "hwmon coretemp");
     let schema = n.describe(&cpu).unwrap();
@@ -194,12 +242,13 @@ fn fixture_the_fan_write_goes_through_kira_and_is_refused_while_the_chip_is_hot(
                 // not be switched off
                 guards: vec![Guard::sustain(full, "on", cpu_id, "temp1.c", 90.0, 1.0)],
                 relief: vec![full],
+                pack: Some(pack),
                 ..Wiring::default()
             },
         )
         .unwrap();
 
-    let mut feel = |e: &mut Entity, n: &mut HwmonNerve, at: u64| {
+    let feel = |e: &mut Entity, n: &mut HwmonNerve, at: u64| {
         for (f, id) in [(cpu, cpu_id), (fan, fan_id)] {
             let mut out = Vec::new();
             n.read(&f, Instant(at), &mut out);
@@ -342,7 +391,7 @@ fn live_hwmon_temperatures_are_read_and_acquired() {
         assert!((-20.0..=120.0).contains(t), "{t} C is not a temperature this machine is at");
     }
     assert_eq!(e.parts.len(), found.len());
-    // nothing on this path is a verb unless a wirer stated fan limits
+    // nothing on this path is a verb without an envelope pack
     assert!(found.iter().all(|p| p.verbs == 0));
 }
 
@@ -480,4 +529,91 @@ fn live_survey_acquires_everything_and_writes_only_join_records() {
     let unwell = found.iter().filter(|p| p.vitals > 0 && p.health != Health::Nominal).count();
     assert!(e.graph.len() - before >= ok);
     assert!(e.graph.len() - before <= ok + unwell + 2, "steady readings became memories");
+}
+
+#[test]
+fn live_a_signed_pack_turns_this_machines_real_fan_into_a_part_with_a_verb() {
+    // Reads the real fan; commands nothing. The verb is acquired and
+    // offered, and no request is made through it.
+    let mut n = HwmonNerve::live();
+    let Some(fan) = n.enumerate().into_iter().find(|f| {
+        n_has_mode(f.label.as_str())
+    }) else {
+        println!("SKIPPED (no fan chip with a mode switch on this machine)");
+        return;
+    };
+    let schema = n.describe(&fan).unwrap();
+    let rpm_sense = schema
+        .senses()
+        .iter()
+        .find(|s| s.name.as_str().ends_with(".rpm"))
+        .map(|s| s.name.as_str().to_string())
+        .unwrap();
+    assert!(schema.actionable().is_empty());
+
+    let mut e = entity(0x67);
+    let pack = EnvelopePack::for_label(schema.label(), Source::Human, "test: stated for this run only")
+        .limit(&rpm_sense, VitalKind::Faults, Band::rising(9000.0, 12000.0))
+        .signed_by(e.key());
+    let id = e
+        .acquire_part(
+            fan.key,
+            |c| n.answer(&fan, c).unwrap(),
+            schema.clone(),
+            Wiring { pack: Some(pack), ..Wiring::default() },
+        )
+        .unwrap();
+    let mut out = Vec::new();
+    n.read(&fan, Instant(1_000), &mut out);
+    e.feel(&id, &out, Instant(1_000));
+    let rec = e.part(&id).unwrap();
+    println!(
+        "LIVE pack: {} is commandable = {}, verbs {:?}, health {:?}, readings {:?}",
+        schema.label(),
+        rec.commandable,
+        rec.schema.actionable().iter().map(|v| v.as_str().to_string()).collect::<Vec<_>>(),
+        rec.health(),
+        out.iter().map(|s| (s.sense.as_str().to_string(), s.value)).collect::<Vec<_>>()
+    );
+    assert!(rec.commandable);
+    assert!(e.bodies.knows_body(&id));
+    assert_eq!(rec.schema.actionable().len(), 1);
+}
+
+fn n_has_mode(label: &str) -> bool {
+    // the chips that expose pwm1_enable next to a fan input
+    let name = label.trim_start_matches("hwmon ");
+    std::fs::read_dir("/sys/class/hwmon")
+        .map(|rd| {
+            rd.filter_map(|e| e.ok()).any(|e| {
+                let d = e.path();
+                std::fs::read_to_string(d.join("name")).map(|s| s.trim() == name).unwrap_or(false)
+                    && d.join("pwm1_enable").exists()
+                    && d.join("fan1_input").exists()
+            })
+        })
+        .unwrap_or(false)
+}
+
+#[test]
+fn a_pack_file_parses_and_a_typo_in_it_is_an_error() {
+    use brainos_host::nerves::packfile::parse_pack;
+    let ok = "# fans\nlabel hwmon hp\nsource human\nreference measured 2026-11-12\n\
+              limit fan1.rpm faults rising 6000 7000   # comment\nlimit fan2.rpm faults rising 6000 7000\n";
+    let p = parse_pack(ok).unwrap();
+    assert_eq!(p.limits().len(), 2);
+    assert_eq!(p.source, Source::Human);
+    assert_eq!(p.verify(&BrainKey::from_seed(&[1; 32]).public()), Err(PackError::Unsigned));
+    for bad in [
+        "limit fan1.rpm faults rising 6000 7000",
+        "label x\nlimit fan1.rpm faults rising 7000 6000",
+        "label x\nlimit fan1.rpm faults sideways 1 2",
+        "label x\nlimit fan1.rpm speed rising 1 2",
+        "label x\nlimit fan1.rpm faults rising 1",
+        "label x\nlimt fan1.rpm faults rising 1 2",
+        "label x\nsource alien\nlimit a faults rising 1 2",
+        "label x",
+    ] {
+        assert!(parse_pack(bad).is_err(), "accepted: {bad}");
+    }
 }

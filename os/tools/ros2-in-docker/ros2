@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# A `ros2` that runs inside the brainos-ros2 container, so the live-graph
+# reader can be pointed at a real ROS 2 system on a machine that has no
+# ROS 2 installed. See tools/ros2-live.sh.
+exec docker exec brainos-ros2 bash -c 'source /opt/ros/jazzy/setup.bash && ros2 "$@"' _ "$@"

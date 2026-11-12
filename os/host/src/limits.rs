@@ -30,7 +30,7 @@
 //!
 //! The soft ones are the point of the exercise.
 
-use brainos_abi::ids::{BodyId, EntityId};
+use brainos_abi::ids::BodyId;
 use brainos_abi::time::Tick;
 use brainos_abi::verb::{Namespace, Verb};
 use brainos_crypto::key::BrainKey;

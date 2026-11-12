@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  The per-body table of joint corrections and sensor biases learned by probing; kept in the entity's memory and pushed to the body at each power-on
 //! BFS  DEFINES  JointTrim, Calibration
 //! BFS  USES     brainos: abi
-//! BFS  USED BY  blur/acquire, blur/calibrate, blur/policy, body/acquire, body/lib, body/policy, body/tests/body_suite, entity/entity, +17 more
+//! BFS  USED BY  blur/acquire, blur/calibrate, blur/policy, body/acquire, body/lib, body/policy, body/tests/body_suite, entity/entity, +18 more
 //!
 //! Calibration — step 5, and where the Memory-Integrity Law bites.
 //!

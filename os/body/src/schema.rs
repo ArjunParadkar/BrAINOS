@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Defines CapabilitySchema: the verbs a body offers with typed, bounded parameters, used to validate arguments; a parameter with no bounds always fails
 //! BFS  DEFINES  ParamKind, ParamSpec, VerbSpec, CapabilitySchema
 //! BFS  USES     this crate: region | brainos: abi, crypto, rt
-//! BFS  USED BY  adapters/boundary, adapters/mhs, adapters/native, adapters/ros2, adapters/tests/adapters_suite, blur/acquire, blur/firmware, blur/policy, +23 more
+//! BFS  USED BY  adapters/boundary, adapters/mhs, adapters/native, adapters/ros2, adapters/tests/adapters_suite, blur/acquire, blur/firmware, blur/policy, +24 more
 //!
 //! Capability schemas — what a body says it can do, and within what.
 //!

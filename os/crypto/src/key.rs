@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  The entity's ed25519 keypair: signs and verifies labelled messages, answers attestation challenges, derives per-body subkeys, hides the seed
 //! BFS  DEFINES  SIGNATURE_LEN, SEED_LEN, Signature, PublicKey, BrainKey, Attestation, Challenge, ChallengePurpose, body_identity
 //! BFS  USES     this crate: domain, hkdf, sha256 | brainos: abi | external: ed25519-dalek
-//! BFS  USED BY  blur/acquire, blur/firmware, blur/session, blur/tests/blur_suite, body/acquire, body/tests/body_suite, bpu/nerve, bpu/tests/seam, +60 more
+//! BFS  USED BY  blur/acquire, blur/firmware, blur/session, blur/tests/blur_suite, body/acquire, body/tests/body_suite, bpu/nerve, bpu/tests/seam, +62 more
 //!
 //! The BrAIn Key — identity as cryptographic root (Architecture §5).
 //!

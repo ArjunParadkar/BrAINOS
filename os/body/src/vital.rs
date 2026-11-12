@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  One reading of one sense of one part, and the health bands a vital sign is judged against
 //! BFS  DEFINES  SENSE_NAME_MAX, Felt, Health, Band
 //! BFS  USES     brainos: abi
-//! BFS  USED BY  body/lib, body/policy, bpu/nerve, bpu/tests/seam, entity/entity/parts, entity/tests/parts_suite, host/nerves/hwmon, host/nerves/machine, +13 more
+//! BFS  USED BY  body/lib, body/policy, bpu/nerve, bpu/tests/seam, entity/entity/parts, entity/tests/parts_suite, host/nerves/hwmon, host/nerves/machine, +15 more
 //!
 //! Vitals — what a part feels, right now.
 //!

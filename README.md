@@ -57,7 +57,7 @@
 > Stage 5 brain placement, seven property domains, Stage 7 fleet and
 > marketplace, entity export, and a body-side runtime that links
 > `miniblur/core` so the new stack and the firmware agree about the hexapod by
-> construction. 941 tests on 2026-11-10. It builds for both UEFI targets,
+> construction. 955 tests on 2026-11-12. It builds for both UEFI targets,
 > x86_64 and aarch64.
 >
 > ```sh

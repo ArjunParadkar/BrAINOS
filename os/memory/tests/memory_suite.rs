@@ -10,7 +10,7 @@
 //! entity with experience is measurably better than a new one, and its
 //! memory belongs to it rather than to a body, a model, or us.
 
-use brainos_abi::ids::{BodyId, EntityId};
+use brainos_abi::ids::{BodyId};
 use brainos_abi::time::{Duration, Tick};
 use brainos_abi::verb::Verb;
 use brainos_crypto::key::BrainKey;

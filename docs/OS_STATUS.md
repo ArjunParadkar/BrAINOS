@@ -106,7 +106,7 @@ cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 941 tests (2026-11-10)
+cargo test --workspace --release              # 955 tests (2026-11-12)
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -116,8 +116,8 @@ Transcripts of each are in [`artifacts/`](artifacts/).
 ## What exists
 
 Twenty crates plus a standalone tool, about 53,000 lines of Rust under
-`src/`, 941 tests, all passing on 2026-11-10 (it was 802 at the start of
-that day's work and 762 when this document was first written). Every
+`src/`, 955 tests, all passing on 2026-11-12 (it was 802 on the morning
+of 2026-11-10 and 762 when this document was first written). Every
 crate except `host` is `no_std`, forbids `unsafe`, and depends on nothing
 outside the workspace but `ed25519-dalek` and `libm`. One line names a
 third crate, `sha2`, for UEFI targets only; it was already in the tree
@@ -155,7 +155,11 @@ at runtime because it cannot fail at runtime.
 
 **Memory cannot live in a body or a model.** Every mutating method on
 `StateGraph` takes `&MemoryHandle`. The handle is not `Clone`, not
-`Copy`, not `Default`, and is issued once inside the entity. The failure
+`Copy`, not `Default`, and is issued only to the holder of the entity's
+`BrainKey`; the graph is bound to its owner and refuses a handle for
+anyone else on every write. *(This paragraph claimed more than was true
+until 2026-11-12: `issue` took a public entity id, and the graph did not
+check whose handle it was given. Both are fixed; `NERVES.md` §4.)* The failure
 where a driver caches "its" state, or a model wrapper keeps a history
 that is really the entity's memory living in the wrong place, does not
 compile.

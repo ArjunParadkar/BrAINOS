@@ -1,6 +1,6 @@
 # Nerves — every piece of hardware is a body part
 
-**Written 2026-11-10.** Status vocabulary, used strictly: **Verified** (a
+**Written 2026-11-10, updated 2026-11-12.** Status vocabulary, used strictly: **Verified** (a
 test ran and passed; the command is named), **Built** (compiles, not proven
 on the target), **Manual** (needs hands; the runbook is here), **Not
 built**, **Failing**.
@@ -126,6 +126,43 @@ once and then muted, except that a crossing into critical or failed is
 never muted. In the entity suite, 5,000 rounds of steady readings from two
 parts write **zero** memories, and closing the window writes five.
 
+### Envelope packs
+
+`os/part/src/pack.rs`. The limits most hardware does not state exist
+somewhere: in a datasheet, or in the head of whoever built the machine. An
+`EnvelopePack` is how they get in — a small **signed** profile attached to
+a part at acquisition:
+
+```text
+label      hwmon hp                         # or one exact part, by its key
+source     human                            # or: vendor
+reference  measured at full speed, 2026-11-12
+limit      fan1.rpm  faults  rising  6000 7000
+limit      fan2.rpm  faults  rising  6000 7000
+```
+
+```sh
+cd os && cargo run --release --bin brainos -- parts --pack fans.pack
+```
+
+| rule | enforced by |
+|---|---|
+| accepted only if the entity's Key signed it, or approved a vendor's signature. A vendor's signature alone is not enough: nobody but the owner widens what an entity may do to its own body | `EnvelopePack::verify` |
+| an approval names the issuer, so it cannot be moved to another issuer's copy of the same numbers | `approved_by` signs digest ‖ issuer key |
+| it can fill silence and tighten; it can never loosen a limit the hardware stated, or flip its direction | `apply` → `WouldLoosen` |
+| it cannot invent a sense | `apply` → `NoSuchSense` |
+| a pack that is offered and not accepted means the part is **not acquired**, not acquired without limits | `PartError::Pack` |
+| the limits are part of the part's identity; who vouched is written into memory when the part joins | facets digest; the join record |
+
+A pack does not make a number true. It makes it attributable: the gate
+enforces the limit and the memory says who vouched for it.
+
+**Status.** The type, signing, approval and application: **Verified** (9
+unit tests, `nerves_live` fixture and live). The text file is unsigned and
+is signed by the session's Key when given to `brainos parts --pack`: that
+is the human case. A wire format for a pack that arrives already signed by
+a vendor is **Not built**, and so is any distribution of packs.
+
 ---
 
 ## 2. The Nerve trait
@@ -150,7 +187,7 @@ safe        stop, now
 |---|---|---|---|
 | **Platform interfaces** | | | |
 | Linux hwmon / thermal zones, read | `host/src/nerves/hwmon.rs` | **Verified** live | `nerves_live`: 10 chips, 10 temperatures read and acquired on this machine |
-| Linux fan write (`pwm1_enable`) | same | **Verified** on a fixture file; **Manual** on a real fan | needs root; runbook 5.1 |
+| Linux fan write (`pwm1_enable`) | same | **Verified** on a fixture file; **Manual** on a real fan | the real fan is acquired *with its verb* once an envelope pack states its limits (`nerves_live`, live); the write itself needs root; runbook 5.1 |
 | CPU, disk, battery (`/proc`, `/sys`) | `host/src/nerves/machine.rs` | **Verified** live | `nerves_live`: Ryzen AI 9 365, `nvme0n1`, `BAT0` |
 | NVML (NVIDIA) | `host/src/nerves/nvml.rs` | **Verified** live | `nerves_live`: RTX 5070 Laptop GPU; agrees with `nvidia-smi` |
 | NVMe / SMART wear | — | **Not built** | needs an admin ioctl (root); runbook 5.5 states the gap |
@@ -158,8 +195,8 @@ safe        stop, now
 | ACPI (direct), IPMI / Redfish | — | **Not built** | |
 | **Field buses and robot middleware** | | | |
 | CAN, BLUR codec over an in-memory bus | `host/src/nerves/socketcan.rs` | **Verified** | `nerves_can`: census, feedback, e-stop, golden vector |
-| CAN over a real SocketCAN socket | same + `can_ffi.rs` | **Built**, **Manual** | no `vcan0` here and creating one needs root; runbook 5.2, 5.3 |
-| ROS 2, live graph via the `ros2` tool | `host/src/nerves/ros2.rs` | **Built**, **Manual** | ROS 2 is not installed here; parsing is tested; runbook 5.4 |
+| CAN over a real SocketCAN socket | same + `can_ffi.rs` | **Verified** live on a kernel `vcan0` | `os/tools/can-live.sh`: real `AF_CAN` sockets on a real kernel interface, in a private rootless network namespace. Not a physical bus; a real `can0` with nodes is **Manual**, runbook 5.3 |
+| ROS 2, live graph via the `ros2` tool | `host/src/nerves/ros2.rs` | **Verified** live against turtlesim | `os/tools/ros2-live.sh`: a running `turtlesim_node` (ROS 2 Jazzy, in a container), read with the real `ros2` tool, through §8 and the gate |
 | ROS 2, publishing a granted command | — | **Not built** | the reader produces the graph and stops |
 | ROS 2, a described graph | `os/adapters/src/ros2.rs` | **Verified** (pre-existing) | `brainos stack`, adapters suite |
 | Zenoh, micro-ROS, CANopen, EtherCAT, Dynamixel, Modbus, MAVLink | — | **Not built** | |
@@ -169,10 +206,17 @@ safe        stop, now
 | **Simulated** | `os/part/src/sim.rs` | **Verified** (it is a simulation) | a fan and a GPU with a thermal model; the bench for every test that must be able to stop a fan |
 | **BPU** | `os/bpu` | see section 6 | mock only; the silicon does not exist |
 
-"Live" means read from this machine's real hardware during the test run.
-Three of the five reference nerves the brief names are Verified live
-(hwmon read, CPU and storage, NVML). CAN is verified on an in-memory bus
-and Built on the real socket. ROS 2 is Built.
+"Live" means a real signal during the test run: this machine's hardware,
+a kernel CAN interface, a running ROS 2 node. **All five of the reference
+nerves the brief names are now Verified on a live signal** — hwmon read,
+CPU and storage, NVML, CAN, ROS 2. Two of those are live in a narrower
+sense, and it is worth being exact:
+
+* **CAN** is a real SocketCAN socket on a real kernel `vcan` interface. It
+  is not a physical bus: no transceiver, no BLUR node.
+* **ROS 2** is a real running ROS 2 node read with the real tool. ROS runs
+  in a container because it is not installed on the host. The reader reads
+  the graph and the gate rules on it; nothing is published back into ROS.
 
 Reproduce:
 
@@ -182,6 +226,8 @@ cargo run --release --bin brainos -- parts                       # the live surv
 cargo test --release -p brainos-host --test nerves_live -- --nocapture
 cargo test --release -p brainos-host --test nerves_can  -- --nocapture
 cargo test --release -p brainos-host --test nerves_ros2 -- --nocapture
+tools/can-live.sh                                                # CAN on a real kernel vcan0, no root
+tools/ros2-live.sh                                               # ROS 2 against turtlesim in a container
 cargo test --release -p brainos-host --test autonomic_survives -- --nocapture
 cargo test --release -p brainos-entity --test parts_suite
 cargo test --release -p brainos-proof --test vitals_domain
@@ -207,8 +253,11 @@ Two things it showed that are worth knowing:
   senses and not vitals.
 * **The fans state no limit either, so they have no verb.** Rule 2 applied
   to real hardware: sysfs gives fan speed and a mode switch and no fault or
-  maximum, so the entity is given nothing to command. The verb exists only
-  when a human supplies the fan's limits (`HwmonNerve::with_fan_limits`).
+  maximum, so the entity is given nothing to command. The verb becomes
+  usable when the fan is acquired with an *envelope pack* (section 1) that
+  states its limits and is signed by the entity's Key. With one, this
+  laptop's `hp` fan chip is acquired as a commandable part with the verb
+  `fan.full` (`nerves_live`, live; nothing is commanded).
 
 ---
 
@@ -218,7 +267,7 @@ Two things it showed that are worth knowing:
 |---|---|---|
 | nothing reaches a part's verb without a `Granted` | compile-fail doctests in `part/src/nerve.rs`: a `Mandate` cannot be written, a `Granted` cannot be written, a token cannot be used twice | **Verified** `cargo test -p brainos-part --doc` (each confirmed to fail for the intended reason: E0451, private fields, E0382) |
 | a forged command is refused at authenticate; a grant cannot be reused for another command, under another key, or late | `parts_suite` | **Verified** |
-| a nerve cannot write memory | compile-fail doctests (a graph write needs the handle; the handle cannot be copied) + `nostd/tests/discipline.rs` (no nerve file names the state graph; `part` does not depend on `brainos-memory` outside tests) | **Verified**. The types alone do not stop code calling `MemoryHandle::issue`, which is public because the entity is in another crate. The source-level check is what closes that. |
+| a nerve cannot write memory | the types: a graph write needs a `MemoryHandle`; a handle is issued only to the holder of the entity's `BrainKey` (`MemoryHandle::issue(&key)`); the graph refuses, on every write, a handle for any entity but its owner. Compile-fail doctests + `memory_suite` (a handle minted from another key cannot add, link, revise, forget, decay or load). `nostd/tests/discipline.rs` remains as a second line | **Verified**. Until 2026-11-12 `issue` took a public entity id and the graph did not check whose handle it was given; both are fixed. |
 | fan-to-0 over the limit is refused; the autonomic loop keeps cooling | `parts_suite`, `vitals_domain`, `autonomic_survives` | **Verified** on the simulated bench |
 | the loop survives cognition being killed | `autonomic_survives`: a separate cognition process is killed with SIGKILL; 600 further loop steps at full load | **Verified** on the simulated bench. The killed process is the *model*; the gate is on the body side. `parts_suite` separately drops the entire entity. |
 | a part that declares no limits gets no verbs | `parts_suite`, `nerves_live` (fixture and the real fans) | **Verified** |
@@ -247,10 +296,11 @@ cat /sys/class/hwmon/hwmon*/pwm1_enable
 # 2. confirm you can hear the difference by hand, and put it back
 echo 0 | sudo tee /sys/class/hwmon/hwmonN/pwm1_enable    # fans to full
 echo 2 | sudo tee /sys/class/hwmon/hwmonN/pwm1_enable    # back to automatic
-# 3. state the fan's limits (sysfs states none) and run the gated path as root.
-#    There is no CLI for this yet: write a small harness that builds
-#    HwmonNerve::live().with_fan_limits(warn_rpm, critical_rpm), acquires
-#    the fan with a Guard against the part it cools, and applies a Mandate.
+# 3. state the fan's limits in an envelope pack (sysfs states none) and run
+#    the gated path as root. `brainos parts --pack FILE` acquires the fan
+#    with its verb; there is no CLI yet that goes on to *apply* a Mandate.
+#    For that, write a small harness that acquires the fan with the pack
+#    and a Guard against the part it cools, and applies the Mandate.
 #    host/tests/nerves_live.rs::fixture_the_fan_write_goes_through_kira_...
 #    is that harness against a temporary directory; point it at /sys.
 ```
@@ -258,16 +308,17 @@ echo 2 | sudo tee /sys/class/hwmon/hwmonN/pwm1_enable    # back to automatic
 Leaving the fans in automatic mode is always safe: the firmware's own
 control stays in charge.
 
-### 5.2 CAN on a virtual interface — **Manual** (root)
+### 5.2 CAN on a virtual interface — no longer Manual
 
 ```sh
-sudo modprobe vcan
-sudo ip link add dev vcan0 type vcan
-sudo ip link set up vcan0
-cd os && cargo test --release -p brainos-host --test nerves_can -- --nocapture
+cd os && tools/can-live.sh
 # expect: "LIVE socketcan: node N found on vcan0, feedback [...]"
-sudo ip link delete vcan0        # when done
 ```
+
+The script runs the test inside `unshare -Urn`, a private user and network
+namespace, where creating `vcan0` needs no root and leaves no interface on
+the host. To have `vcan0` on the host itself instead:
+`sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0`.
 
 ### 5.3 CAN on the real robot — **Manual** (hardware)
 
@@ -284,27 +335,26 @@ can e-stop them. It does not move joints: that goes through the session
 envelope in `os/blur`. **`safe()` sends ESTOP, which latches every node
 until power-cycle** — do not call it on a robot you want to keep running.
 
-### 5.4 ROS 2, a real running graph — **Manual** (install)
+### 5.4 ROS 2, a real running graph — no longer Manual
 
 ```sh
-# install ROS 2 (any current distribution) and turtlesim, then:
-source /opt/ros/<distro>/setup.bash
-ros2 run turtlesim turtlesim_node &
-cd os && BRAINOS_NET=on cargo test --release -p brainos-host --test nerves_ros2 -- --nocapture
-# expect: "LIVE ros2: N topics, M services"
+cd os && tools/ros2-live.sh
+# expect: "LIVE ros2: 3 topics (1 commands: ["/turtle1/cmd_vel"]), 7 services"
+#         "LIVE ros2: as running, section 8 refuses it (NothingToDo)"
+#         "LIVE ros2: with limits, `tool.cmd_vel` ... -> granted; ... -> Some((Validate, OutOfBounds))"
 ```
 
-Without limits the graph is read and §8 refuses to incorporate it. Supply
-them as a file of `topic field min max` lines, parsed by
-`nerves::ros2::parse_limits`:
+The script starts a ROS 2 Jazzy container (it pulls `ros:jazzy-ros-base`,
+about 1.3 GB, the first time), runs `turtlesim_node` headless, and points
+the reader at it through `tools/ros2-in-docker/ros2`. With ROS 2 installed
+on the host, no container is needed: `BRAINOS_NET=on cargo test --release
+-p brainos-host --test nerves_ros2 -- --nocapture`.
 
-```
-/turtle1/cmd_vel linear_x  -1.0 2.0
-/turtle1/cmd_vel angular_z -2.0 2.0
-```
-
+Without limits the graph is read and §8 refuses to incorporate it. Limits
+are a file of `topic field min max` lines (`nerves::ros2::parse_limits`).
 `BRAINOS_NET=on` is required because ROS 2 discovery opens network
-sockets. Zenoh is **Not built**.
+sockets. Still **Not built**: publishing a granted command into ROS, and
+Zenoh.
 
 ### 5.5 Disk wear — **Not built**
 
@@ -423,7 +473,8 @@ is unproven and no value is published.
 | `cognition` | `bpu.rs` (`BpuDescriptor`, projected energy constants); `Substrate`; `Resource::substrate` (defaults from the site), `on`, `costing`; `Plan::prefer`; `ResourcePool::pick`, `set_available` | none: a plan with no preference picks exactly as `cheapest_for` did |
 | `entity` | `parts`, `intero` fields; `acquire_part`, `feel`, `summarise_parts`, `still_the_same_part`, `release_part` | none for entities with no parts |
 | `proof` | seventh domain `vitals`; `Report::full` includes it | `brainos verify` prints one more section |
-| `host` | `nerves/`, `brainos parts`, features `nvml` and `socketcan` | none |
+| `host` | `nerves/`, `brainos parts [--pack FILE]`, features `nvml` and `socketcan` | none |
+| `memory` | `MemoryHandle::issue` takes the `BrainKey`; `StateGraph` is bound to its owner and refuses other entities' handles | a handle for the wrong entity, which used to be accepted on writes, is now refused |
 | `nostd` | canary touches `part` and `bpu`; three new discipline tests | — |
 | new: `part`, `bpu` | the part model and nerve trait; the BPU seam | — |
 

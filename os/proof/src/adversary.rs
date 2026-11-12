@@ -725,7 +725,6 @@ fn a20_launder_provenance_through_consolidation() -> AttackResult {
     use brainos_memory::provenance::{Origin, Provenance};
     use brainos_memory::skill::SkillGraph;
 
-    let entity = owner().entity_id();
     let h = MemoryHandle::issue(&owner());
     let mut g = StateGraph::new();
     let mut s = SkillGraph::new();
