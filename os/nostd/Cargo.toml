@@ -29,3 +29,4 @@ brainos-export = { workspace = true }
 brainos-blur = { workspace = true }
 brainos-part = { workspace = true }
 brainos-bpu = { workspace = true }
+brainos-motor = { workspace = true }

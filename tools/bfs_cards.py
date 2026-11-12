@@ -39,6 +39,7 @@ LEVELS = [
     ("os/blur", "Domain 2 Autonomic - the BLUR quadruped body (wire, acquisition, supervisor)"),
     ("os/part", "Parts and nerves - every piece of hardware as a body part"),
     ("os/bpu", "Domain 4 substrate - the BPU seam (descriptor, mock, nerve, planner)"),
+    ("os/motor", "Domain 2 Autonomic - motor memory (self-model, mandates, primitives, reflexes)"),
     ("os/kira", "Domain 3 KIRA - the eight-stage gate; the only path to action"),
     ("os/cognition", "Domain 4 Cognition - tiers, placement, attention, escalation"),
     ("os/memory", "Domain 5 State - the state graph; the only memory"),

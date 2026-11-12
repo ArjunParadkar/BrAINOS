@@ -52,6 +52,7 @@ version = "0.3.0"
 dependencies = [
  "brainos-abi",
  "brainos-crypto",
+ "brainos-motor",
  "brainos-rt",
  "brainos-transport",
  "libm",
@@ -143,6 +144,7 @@ dependencies = [
  "brainos-fleet",
  "brainos-kira",
  "brainos-memory",
+ "brainos-motor",
  "brainos-part",
  "brainos-proof",
  "brainos-rt",
@@ -171,6 +173,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "brainos-motor"
+version = "0.3.0"
+dependencies = [
+ "brainos-abi",
+ "brainos-body",
+ "brainos-crypto",
+ "brainos-kira",
+ "brainos-memory",
+ "brainos-part",
+ "brainos-rt",
+ "libm",
+]
+
+[[package]]
 name = "brainos-nostd-check"
 version = "0.3.0"
 dependencies = [
@@ -186,6 +202,7 @@ dependencies = [
  "brainos-fleet",
  "brainos-kira",
  "brainos-memory",
+ "brainos-motor",
  "brainos-part",
  "brainos-proof",
  "brainos-rt",

@@ -41,6 +41,7 @@ fn main() -> ExitCode {
         "worlds" => worlds(),
         "blur" => blur(&args[2..]),
         "parts" => parts(&args[2..]),
+        "motor" => brainos_host::motor::cli(&args[2..]),
         "mind-stub" => mind_stub(),
         "help" | "-h" | "--help" => {
             usage();

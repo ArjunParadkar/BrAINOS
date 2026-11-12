@@ -24,7 +24,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 /// Crates that must compile with no operating system beneath them.
-const CORE_CRATES: [&str; 18] = [
+const CORE_CRATES: [&str; 19] = [
     "abi",
     "crypto",
     "rt",
@@ -32,6 +32,7 @@ const CORE_CRATES: [&str; 18] = [
     "body",
     "part",
     "bpu",
+    "motor",
     "kira",
     "cognition",
     "worlds",
@@ -351,13 +352,15 @@ fn the_x86_uefi_target_pins_the_serial_curve_backend() {
 ///
 /// It is kept because it is cheap and says something the types do not:
 /// no file that implements a nerve, a part policy or a substrate even
-/// *names* the state graph, and the part and BPU crates do not depend
-/// on `brainos-memory` at all outside their tests.
+/// *names* the state graph, and the part, BPU, motor and body-runtime
+/// crates do not depend on `brainos-memory` at all outside their tests.
+/// For motor this is the "bodies hold no memory" rule: a primitive is
+/// stored in the graph by the entity, never by the code that runs it.
 #[test]
 fn no_nerve_part_or_substrate_can_reach_the_state_graph() {
     let root = workspace_root();
     let mut files = Vec::new();
-    for dir in ["part/src", "bpu/src", "host/src/nerves"] {
+    for dir in ["part/src", "bpu/src", "motor/src", "bodyd/src", "host/src/nerves"] {
         let d = root.join(dir);
         if d.exists() {
             files.extend(rust_files(&d));
@@ -374,7 +377,7 @@ fn no_nerve_part_or_substrate_can_reach_the_state_graph() {
             );
         }
     }
-    for krate in ["part", "bpu"] {
+    for krate in ["part", "bpu", "motor", "bodyd"] {
         let manifest = root.join(krate).join("Cargo.toml");
         if !manifest.exists() {
             continue;

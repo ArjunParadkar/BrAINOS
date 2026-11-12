@@ -1,7 +1,7 @@
 //! BFS  LEVEL    Discipline - the no_std canary and its checks  [crate brainos-nostd-check]
 //! BFS  PURPOSE  A library that touches every crate below host, so building it for a bare target proves none of them needs an operating system
 //! BFS  DEFINES  touch_everything
-//! BFS  USES     brainos: abi, adapters, blur, body, bpu, cognition, crypto, entity, export, fleet, +7 more
+//! BFS  USES     brainos: abi, adapters, blur, body, bpu, cognition, crypto, entity, export, fleet, +8 more
 //! BFS  USED BY  -
 //!
 //! The `no_std` canary.
@@ -235,6 +235,22 @@ pub fn touch_everything() -> u64 {
         150.0,
     ));
     n += probe.facets().as_bytes()[0] as u64;
+
+    // motor — a body's model of itself, emitted with no OS underneath
+    {
+        use brainos_motor::model::{Base, BodyModel, JointSpec, Link, Num};
+        let mut m = BodyModel::new("probe", Base::Fixed);
+        let base = m.push(Link::new("base", None));
+        m.push(
+            Link::new("arm", Some(base))
+                .jointed(JointSpec::hinge("j", [0.0, 0.0, 1.0], -90.0, 90.0))
+                .rod([0.1, 0.0, 0.0], 0.01)
+                .weighing(Num::Stated(0.1)),
+        );
+        n += brainos_motor::mjcf::emit(&m, &brainos_motor::mjcf::Emit::default())
+            .map(|t| t.len() as u64)
+            .unwrap_or(0);
+    }
 
     // bpu — the integer contract and the planner, as silicon would run them
     n += brainos_bpu::contract::rne_shift(3 << 4, 5) as u64;

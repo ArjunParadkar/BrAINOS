@@ -1,0 +1,24 @@
+[package]
+name = "brainos-motor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Motor memory: the body's model of itself, bounded run mandates, primitives, int8 policies, impedance, blending, reflex arcs and one-shot recipes."
+
+# Doctests are ON here: the compile_fail examples in src/mandate.rs and
+# src/exec.rs are the check that a primitive cannot run without a
+# mandate, that a mandate cannot be made without a grant, and that the
+# executor cannot hold memory.
+[lib]
+
+[dependencies]
+brainos-abi = { workspace = true }
+brainos-crypto = { workspace = true }
+brainos-rt = { workspace = true }
+brainos-body = { workspace = true }
+brainos-kira = { workspace = true }
+brainos-part = { workspace = true }
+libm = { workspace = true }
+
+[dev-dependencies]
+brainos-memory = { workspace = true }

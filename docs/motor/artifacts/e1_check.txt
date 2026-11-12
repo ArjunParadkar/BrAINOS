@@ -1,0 +1,18 @@
+hexapod     foot position, 1000 poses, as built (shin fixed to thigh) vs LegGeom::foot  42.22036 mm                         <= 0.01 mm              FAIL
+hexapod     post hoc: model with the shin kept vertical vs LegGeom::foot                0.00002 mm                          (<= 0.01 mm)            pass
+hexapod     post hoc: as-built model vs rigid-shin kinematics                           0.00002 mm                          (<= 0.01 mm)            pass
+hexapod     post hoc: LegGeom::foot error at the gait lift of 28 deg                    21.1 mm outward, 5.3 mm up          reported                -   
+hexapod     joint ranges vs servo table                                                 0.00e+00 deg                        <= 1e-3 deg             PASS
+hexapod     2 linked swing pairs agree after 1 s                                        0.0016 deg (leader moved 20.0 deg)  <= 0.1 deg, 2 pairs     PASS
+planar arm  end effector, 1000 poses                                                    0.00027 mm                          <= 0.01 mm              PASS
+planar arm  static shoulder torque, 200 poses                                           57/200 outside, worst 99.5 %        within 1 % or 0.01 N·m  FAIL
+planar arm  post hoc: true moment exceeds the mechanism's figure                        0/200                               (0)                     pass
+planar arm  post hoc: agreement when every link is on one side                          128/128 within 1 %                  (all)                   pass
+desk arm    grasp centre, 1000 poses (not a pre-registered check)                       0.00007 mm                          reported                PASS
+BLUR        world position of 73 bodies, 200 configurations                             0.00010 mm                          <= 0.1 mm               PASS
+BLUR        53 joint ranges                                                             1.14e-07 rad                        <= 1e-6                 PASS
+BLUR        24 joint-actuator force ranges (2 tendon-driven omitted)                    0.00e+00 N·m                        <= 1e-6                 PASS
+BLUR        total mass                                                                  3.67155 vs 3.67155 kg (0.0000 %)    <= 0.1 %                PASS
+
+E1: FAIL
+exit 1

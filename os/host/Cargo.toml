@@ -28,6 +28,7 @@ brainos-memory = { workspace = true }
 brainos-body = { workspace = true }
 brainos-part = { workspace = true }
 brainos-bodyd = { workspace = true }
+brainos-motor = { workspace = true }
 brainos-blur = { workspace = true }
 miniblur-core = { path = "../../miniblur/core" }
 brainos-kira = { workspace = true }
