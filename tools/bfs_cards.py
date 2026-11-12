@@ -69,6 +69,10 @@ LEVELS = [
     ("blur/learn", "BLUR - skill training (PPO, tasks, evaluation)"),
     ("blur/hpcc", "BLUR - cluster campaigns"),
     ("blur", "BLUR - descriptor, tools, prototypes"),
+    ("motor/sim", "Motor - the simulated desk arm (physics only; the seat and the arm's loop are Rust)"),
+    ("motor/gait", "Motor - gait training from the self-model (PPO, int8 export, evaluation)"),
+    ("motor/hpcc", "Motor - cluster runs"),
+    ("motor", "Motor - self-model checks and tooling outside os/"),
     ("tools", "Seed tooling - key/image builders, tether daemon, test suites"),
 ]
 

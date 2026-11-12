@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Crate root: lists the part-model modules and states the five rules every part and nerve must obey
 //! BFS  DEFINES  class, homeostat, intero, nerve, pack, policy, schema, sim
 //! BFS  USES     this crate: class, homeostat, intero, nerve, pack, policy, schema
-//! BFS  USED BY  crate bpu, crate entity, crate host, crate motor, crate nostd, crate proof
+//! BFS  USED BY  crate bodyd, crate bpu, crate entity, crate host, crate motor, crate nostd, crate proof
 //!
 //! brainos-part — every piece of hardware is a body part.
 //!

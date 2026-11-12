@@ -1,7 +1,7 @@
 //! BFS  LEVEL    Domain 2 Autonomic - motor memory (self-model, mandates, primitives, reflexes)  [crate brainos-motor]
 //! BFS  PURPOSE  Crate root for motor memory: lists the modules and states the rules they keep (KIRA below everything, no memory in a body, no_std)
-//! BFS  DEFINES  mjcf, model
-//! BFS  USES     this crate: mjcf, model
+//! BFS  DEFINES  condition, control, mandate, mjcf, model, policy, primitive, recipe, reflex, run
+//! BFS  USES     this crate: mandate, mjcf, model, run
 //! BFS  USED BY  crate bodyd, crate host, crate nostd
 //!
 //! # brainos-motor: motor memory
@@ -25,8 +25,18 @@
 
 extern crate alloc;
 
+pub mod condition;
+pub mod control;
+pub mod mandate;
 pub mod mjcf;
 pub mod model;
+pub mod policy;
+pub mod primitive;
+pub mod recipe;
+pub mod reflex;
+pub mod run;
 
 pub use mjcf::{digest, emit, Drive, Emit};
 pub use model::{Base, BodyModel, Inertial, JointKind, JointSpec, Link, ModelError, Num, Shape, Site};
+pub use mandate::{run_verb, Bounds, Ceiling, MandateRefusal, RunMandate, Workspace};
+pub use run::{Breach, Ending, Felt, Kinematics, Proposal, Runner, Summary};

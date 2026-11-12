@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Turns values into bytes and back so each value has exactly one encoding, which is what makes hashes and signatures over it meaningful
 //! BFS  DEFINES  MAX_LEN, Encoder, Decoder, Encode, Decode
 //! BFS  USES     this crate: error
-//! BFS  USED BY  abi/ids, abi/lib, abi/tests/abi_suite, abi/text, abi/time, abi/verb, abi/version, body/calibration, +18 more
+//! BFS  USED BY  abi/ids, abi/lib, abi/tests/abi_suite, abi/text, abi/time, abi/verb, abi/version, body/calibration, +21 more
 //!
 //! The canonical codec.
 //!

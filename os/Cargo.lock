@@ -51,8 +51,10 @@ name = "brainos-bodyd"
 version = "0.3.0"
 dependencies = [
  "brainos-abi",
+ "brainos-body",
  "brainos-crypto",
  "brainos-motor",
+ "brainos-part",
  "brainos-rt",
  "brainos-transport",
  "libm",

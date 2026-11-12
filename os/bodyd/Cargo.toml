@@ -15,4 +15,6 @@ brainos-rt = { workspace = true }
 brainos-transport = { workspace = true }
 miniblur-core = { path = "../../miniblur/core" }
 brainos-motor = { workspace = true }
+brainos-part = { workspace = true }
+brainos-body = { workspace = true }
 libm = { workspace = true }

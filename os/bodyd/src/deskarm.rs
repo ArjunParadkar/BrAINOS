@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  A small five-joint desk arm with a two-finger gripper, shaped like a LeRobot SO-101: its dimensions, forward kinematics and closed-form inverse kinematics
 //! BFS  DEFINES  PAN, SHOULDER, ELBOW, WRIST, ROLL, GRIP, DOF, Pose, DeskArmConfig, Tool
 //! BFS  USES     external: libm
-//! BFS  USED BY  bodyd/selfmodel, host/motor
+//! BFS  USED BY  bodyd/armloop, bodyd/selfmodel, host/motor, host/motor_mind, host/motor_seat, host/tests/motor_mandate
 //!
 //! A desk arm with a gripper: pan, shoulder, elbow, wrist pitch, wrist
 //! roll, and two fingers that move as one.

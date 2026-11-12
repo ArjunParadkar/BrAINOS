@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  The body's model of itself as a tree of links and joints with limits, where every number says whether its source stated it or it is an assumption
 //! BFS  DEFINES  Num, JointKind, JointSpec, Inertial, Shape, Link, Base, Site, ModelError, BodyModel
 //! BFS  USES     nothing outside core/alloc
-//! BFS  USED BY  bodyd/selfmodel, host/motor, motor/lib, motor/mjcf, motor/tests/selfmodel, nostd/lib
+//! BFS  USED BY  bodyd/armloop, bodyd/selfmodel, host/motor, host/tests/motor_mandate, motor/lib, motor/mjcf, motor/run, motor/tests/selfmodel, +1 more
 //!
 //! The self-model: what a body is, as numbers a simulator can be built
 //! from.
@@ -73,6 +73,10 @@ pub struct JointSpec {
     pub actuated: bool,
     /// this joint follows another: `(index of the leader's link, ratio)`
     pub follows: Option<(usize, f32)>,
+    /// the follower is pushed by the leader's actuator as hard as the
+    /// leader is (two fingers closed by one mechanism), rather than
+    /// dragged along by the leader (two legs on one servo horn)
+    pub shares_drive: bool,
     /// passive stiffness about `spring_ref`, N·m/rad; 0 for none
     pub stiffness: f32,
     pub spring_ref: f32,
@@ -91,6 +95,7 @@ impl JointSpec {
             rate: Num::Assumed(0.0),
             actuated: true,
             follows: None,
+            shares_drive: false,
             stiffness: 0.0,
             spring_ref: 0.0,
         }
@@ -121,6 +126,15 @@ impl JointSpec {
     pub fn following(mut self, leader_link: usize, ratio: f32) -> JointSpec {
         self.follows = Some((leader_link, ratio));
         self.actuated = false;
+        self
+    }
+
+    /// Follow a leader and be driven with it: the leader's actuator
+    /// pushes both joints equally.
+    pub fn mirroring(mut self, leader_link: usize, ratio: f32) -> JointSpec {
+        self.follows = Some((leader_link, ratio));
+        self.actuated = false;
+        self.shares_drive = true;
         self
     }
 

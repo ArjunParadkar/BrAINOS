@@ -256,7 +256,7 @@ pub fn desk_arm(c: &DeskArmConfig) -> BodyModel {
             .at([c.palm_m, -0.004, 0.0])
             .jointed(
                 JointSpec::slide("grip_r", [0.0, -1.0, 0.0], 0.0, c.grip_max_m)
-                    .following(left, 1.0),
+                    .mirroring(left, 1.0),
             )
             .rod([c.finger_m, 0.0, 0.0], 0.004)
             .weighing(Num::Assumed(0.015))

@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Runs a signed request through the eight stages in order and returns either a Granted token or a refusal naming the stage; always audits
 //! BFS  DEFINES  REQUEST_WINDOW, Verdict, Outcome, Kira
 //! BFS  USES     this crate: action, audit, capability, floors, rules, stages | brainos: abi, body, crypto, rt
-//! BFS  USED BY  bpu/tests/seam, entity/entity, entity/tests/parts_suite, host/blur_gate2, host/degrade, host/fullstack, host/life, host/migrate, +10 more
+//! BFS  USED BY  bpu/tests/seam, entity/entity, entity/tests/parts_suite, host/blur_gate2, host/degrade, host/fullstack, host/life, host/migrate, +11 more
 //!
 //! The pipeline.
 //!

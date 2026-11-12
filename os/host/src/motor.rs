@@ -1,8 +1,8 @@
 //! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
 //! BFS  PURPOSE  The `brainos motor` commands: print a body's generated MJCF self-model, and print reference kinematics for checking it against a simulator
 //! BFS  DEFINES  Lcg, read_skeleton, body_model, emit_options, cli
-//! BFS  USES     brainos: bodyd, miniblur-core, motor | external: std
-//! BFS  USED BY  -
+//! BFS  USES     this crate: motor_mind, motor_seat | brainos: bodyd, miniblur-core, motor | external: std
+//! BFS  USED BY  host/tests/motor_mandate
 //!
 //! `brainos motor ...`: the motor-memory commands.
 //!
@@ -314,6 +314,8 @@ pub fn cli(rest: &[String]) -> ExitCode {
     match rest.first().map(|s| s.as_str()) {
         Some("self-model") => self_model(&rest[1..]),
         Some("reference") => reference(&rest[1..]),
+        Some("seat") => crate::motor_seat::run(&rest[1..]),
+        Some("mind") => crate::motor_mind::run(&rest[1..]),
         _ => {
             eprintln!("brainos motor self-model BODY [--servo]\nbrainos motor reference BODY N SEED");
             ExitCode::FAILURE

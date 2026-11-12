@@ -140,6 +140,8 @@ pub struct Frame {
     pub temperature: Option<f32>,
     pub speed: Option<f32>,
     pub clearance: Option<f32>,
+    /// force at a contact, newtons
+    pub force: Option<f32>,
     /// when the seat was last heard from
     pub last_seat_contact: Instant,
 }
@@ -155,6 +157,7 @@ impl Frame {
             Channel::Temperature => self.temperature,
             Channel::Speed => self.speed,
             Channel::Clearance => self.clearance,
+            Channel::Force => self.force,
         }
     }
 

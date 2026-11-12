@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  The Nerve trait every hardware protocol implements, and Mandate: proof of a Granted token, the only thing a nerve acts on
 //! BFS  DEFINES  Found, Sensed, NerveFault, MandateError, Mandate, Nerve
 //! BFS  USES     this crate: homeostat, schema | brainos: abi, body, crypto, kira
-//! BFS  USED BY  bpu/device, bpu/mock, bpu/nerve, bpu/tests/seam, entity/entity/parts, entity/tests/parts_suite, host/nerves/hwmon, host/nerves/machine, +9 more
+//! BFS  USED BY  bpu/device, bpu/mock, bpu/nerve, bpu/tests/seam, entity/entity/parts, entity/tests/parts_suite, host/motor_seat, host/nerves/hwmon, +11 more
 //!
 //! Nerves — the protocols that connect the entity to its parts.
 //!
@@ -227,6 +227,11 @@ impl Mandate {
 
     pub fn scalar(&self, name: &str) -> Option<f64> {
         self.arg(name).and_then(|a| a.as_scalar())
+    }
+
+    /// The names of the arguments that were granted, in the order asked.
+    pub fn arg_names(&self) -> impl Iterator<Item = &str> {
+        self.args.iter().map(|(n, _)| n.as_str())
     }
 }
 

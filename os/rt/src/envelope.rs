@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Numeric limits (angle, speed, current, ...) approved once by the gate; fast loops may command anything inside them and are clamped or stopped
 //! BFS  DEFINES  EnvelopeId, Limit, Channel, Envelope, Violation
 //! BFS  USES     brainos: abi
-//! BFS  USED BY  adapters/mhs, adapters/native, adapters/ros2, adapters/tests/adapters_suite, blur/schema, body/acquire, body/hal, body/policy, +24 more
+//! BFS  USED BY  adapters/mhs, adapters/native, adapters/ros2, adapters/tests/adapters_suite, blur/schema, body/acquire, body/hal, body/policy, +26 more
 //!
 //! Envelopes — the pre-authorized region a reflex operates inside.
 //!
@@ -126,10 +126,12 @@ pub enum Channel {
     Speed = 6,
     /// distance to the nearest obstacle, metres
     Clearance = 7,
+    /// force pushed, squeezed or felt at a contact, newtons
+    Force = 8,
 }
 
 impl Channel {
-    pub const ALL: [Channel; 8] = [
+    pub const ALL: [Channel; 9] = [
         Channel::Angle,
         Channel::Rate,
         Channel::Current,
@@ -138,6 +140,7 @@ impl Channel {
         Channel::Temperature,
         Channel::Speed,
         Channel::Clearance,
+        Channel::Force,
     ];
 
     pub const fn name(self) -> &'static str {
@@ -150,6 +153,7 @@ impl Channel {
             Channel::Temperature => "temperature",
             Channel::Speed => "speed",
             Channel::Clearance => "clearance",
+            Channel::Force => "force",
         }
     }
 
@@ -163,11 +167,12 @@ impl Channel {
             Channel::Temperature => "C",
             Channel::Speed => "m/s",
             Channel::Clearance => "m",
+            Channel::Force => "N",
         }
     }
 }
 
-const CHANNELS: usize = 8;
+const CHANNELS: usize = 9;
 
 /// A pre-authorized region of behaviour.
 ///

@@ -223,9 +223,47 @@ pub fn emit(m: &BodyModel, e: &Emit) -> Result<String, ModelError> {
         out.push_str("  </equality>\n");
     }
 
+    // a leader whose followers share its drive acts through a tendon
+    // over all of them, so each joint is pushed equally
+    let sharers = |leader: usize| -> alloc::vec::Vec<&crate::model::JointSpec> {
+        m.joints()
+            .filter(|(_, j)| j.shares_drive && j.follows.map(|(l, _)| l) == Some(leader))
+            .map(|(_, j)| j)
+            .collect()
+    };
+    let mut any_tendon = false;
+    for (i, j) in m.actuated() {
+        let with = sharers(i);
+        if with.is_empty() {
+            continue;
+        }
+        if !any_tendon {
+            out.push_str("  <tendon>\n");
+            any_tendon = true;
+        }
+        let _ = writeln!(out, "    <fixed name=\"{}_drive\">", j.name);
+        let _ = writeln!(out, "      <joint joint=\"{}\" coef=\"1\"/>", j.name);
+        for f in with {
+            let _ = writeln!(out, "      <joint joint=\"{}\" coef=\"1\"/>", f.name);
+        }
+        out.push_str("    </fixed>\n");
+    }
+    if any_tendon {
+        out.push_str("  </tendon>\n");
+    }
+
     out.push_str("  <actuator>\n");
-    for (_, j) in m.actuated() {
+    for (i, j) in m.actuated() {
         let f = j.effort.value();
+        if !sharers(i).is_empty() {
+            // effort only: the body closes its own loop on the leader
+            let _ = writeln!(
+                out,
+                "    <motor name=\"{}\" tendon=\"{}_drive\" ctrlrange=\"{:.6} {:.6}\"/>",
+                j.name, j.name, -f, f
+            );
+            continue;
+        }
         match e.drive {
             Drive::Effort => {
                 let _ = writeln!(
