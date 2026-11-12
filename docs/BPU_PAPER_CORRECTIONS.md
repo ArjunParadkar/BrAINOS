@@ -63,9 +63,11 @@ can represent; or keep 40 bits and state a saturation rule.
 > an 8-bit SAR ADC
 
 If the paper keeps 40 bits instead, the sentence must say what happens at
-the limit (for example, "saturating at ±2³⁹; this can occur only at dial
-settings above about σ = 0.01 with near-full-scale activations on every
-row"), and the reference contract and the RTL have to implement it. The
+the limit (for example, "saturating at ±2³⁹"), say when that can happen —
+which needs working out properly: the no-noise margin is 1.2 %, so it
+takes near-full-scale activations on every row together with noise that
+is high on most of them — and the reference contract and the RTL have to
+implement it. The
 contract currently says nothing: `docs/reference_contract.md` line 142
 reads "widths chosen so nothing can overflow", which has the same scope
 problem and should be corrected with the paper.

@@ -40,7 +40,7 @@ cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # and read it with none of our code
 cargo run --release --bin brainos -- stat     # what this build contains
 
-cargo test --workspace --release              # 955 tests (2026-11-12)
+cargo test --workspace --release              # 957 tests (2026-11-12)
 tools/check-no-std.sh                         # the bare-metal build: aarch64-unknown-uefi
 ```
 

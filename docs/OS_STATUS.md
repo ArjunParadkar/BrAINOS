@@ -106,7 +106,7 @@ cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 955 tests (2026-11-12)
+cargo test --workspace --release              # 957 tests (2026-11-12)
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -116,7 +116,7 @@ Transcripts of each are in [`artifacts/`](artifacts/).
 ## What exists
 
 Twenty crates plus a standalone tool, about 53,000 lines of Rust under
-`src/`, 955 tests, all passing on 2026-11-12 (it was 802 on the morning
+`src/`, 957 tests, all passing on 2026-11-12 (it was 802 on the morning
 of 2026-11-10 and 762 when this document was first written). Every
 crate except `host` is `no_std`, forbids `unsafe`, and depends on nothing
 outside the workspace but `ed25519-dalek` and `libm`. One line names a
