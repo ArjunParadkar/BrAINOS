@@ -1,0 +1,65 @@
+# The checks the docs quote, run on every push and pull request.
+# Toolchain pinned to the one the counts in docs/OS_STATUS.md were measured on.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_VERSION: "1.96.1"
+
+jobs:
+  os:
+    name: os workspace (tests, no_std, property domains)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rust toolchain with both UEFI targets
+        run: |
+          rustup toolchain install "$RUST_VERSION" --profile minimal --target aarch64-unknown-uefi --target x86_64-unknown-uefi
+          rustup default "$RUST_VERSION"
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            os/target
+          key: os-${{ runner.os }}-${{ env.RUST_VERSION }}-${{ hashFiles('os/Cargo.lock') }}
+      - name: BFS cards and code map are current
+        run: python3 tools/bfs_cards.py --check
+      - name: Workspace tests
+        working-directory: os
+        run: cargo test --workspace --release
+      - name: no_std, by building for targets with no operating system
+        working-directory: os
+        run: ./tools/check-no-std.sh
+      - name: Seven property domains
+        working-directory: os
+        run: cargo run --release --bin brainos -- verify
+
+  september-stack:
+    name: mind and miniblur-core
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_VERSION" --profile minimal
+          rustup default "$RUST_VERSION"
+      - name: mind
+        working-directory: mind
+        run: cargo test --release
+      - name: miniblur-core
+        working-directory: miniblur/core
+        run: cargo test --release
