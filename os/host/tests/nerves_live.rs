@@ -387,7 +387,21 @@ fn live_hwmon_temperatures_are_read_and_acquired() {
     }
     println!("LIVE hwmon: {} parts, {} temperatures: {temps:?}", found.len(), temps.len());
     assert!(found.iter().all(|p| p.error.is_none()), "{found:?}");
-    for t in &temps {
+    // A reading outside the range the nerve itself declares plausible is a
+    // broken sensor: the declared range marks it stale, and a stale vital is
+    // Failed. It says nothing about how warm the machine is. A virtual
+    // machine's emulated chip can report 0 K. Those are named here and left
+    // out of the sanity check.
+    let (lo, hi) = brainos_host::nerves::hwmon::TEMP_PLAUSIBLE_C;
+    let (believed, broken): (Vec<f64>, Vec<f64>) = temps.iter().partition(|t| (lo..=hi).contains(*t));
+    if !broken.is_empty() {
+        println!("LIVE hwmon: {} implausible reading(s), treated as broken sensors: {broken:?}", broken.len());
+    }
+    if believed.is_empty() {
+        println!("SKIPPED (hwmon present but every temperature is implausible: {broken:?})");
+        return;
+    }
+    for t in &believed {
         assert!((-20.0..=120.0).contains(t), "{t} C is not a temperature this machine is at");
     }
     assert_eq!(e.parts.len(), found.len());

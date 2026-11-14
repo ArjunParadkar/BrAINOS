@@ -1,6 +1,6 @@
 //! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
 //! BFS  PURPOSE  The Linux hwmon and thermal-zone nerve: temperature chips and fans read from sysfs, and the fan full-speed switch as a gated verb
-//! BFS  DEFINES  HwmonNerve
+//! BFS  DEFINES  TEMP_PLAUSIBLE_C, HwmonNerve
 //! BFS  USES     this crate: read_f64 | brainos: abi, body, crypto, part | external: std
 //! BFS  USED BY  host/tests/nerves_live
 //!
@@ -74,6 +74,12 @@ struct Chip {
     fan_mode: Option<PathBuf>,
     has_fans: bool,
 }
+
+/// The range, in degrees C, in which a temperature reading is believed.
+/// A reading outside it is treated as a broken sensor (part model rule 3,
+/// docs/NERVES.md), not as a temperature. Some drivers and virtual
+/// machines report 0 K (-273.15 C) for a sensor that has no real reading.
+pub const TEMP_PLAUSIBLE_C: (f64, f64) = (-60.0, 250.0);
 
 /// The nerve.
 pub struct HwmonNerve {
@@ -247,7 +253,7 @@ impl Nerve for HwmonNerve {
         let mut s = PartSchema::new(class, &chip.label, "hwmon");
         for i in &chip.inputs {
             let (lo, hi) = match i.quantity {
-                Quantity::Temperature => (-60.0, 250.0),
+                Quantity::Temperature => TEMP_PLAUSIBLE_C,
                 _ => (0.0, 60_000.0),
             };
             s = s.sense(SenseSpec::new(&i.sense, i.quantity, lo, hi));
