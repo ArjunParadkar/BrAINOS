@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Tripod walking gait: computes each leg's swing/lift angles at any phase and samples a walk command (direction, steps, speed) into timed poses
 //! BFS  DEFINES  Dir, GaitParams, Walk, pose_at, Plan
 //! BFS  USES     this crate: LEGS, LegId | external: libm
-//! BFS  USED BY  bodyd/hexapod, core/policy, core/power, core/runtime, core/schema, core/stability, host/bench, sim/main
+//! BFS  USED BY  bodyd/hexapod, core/policy, core/power, core/runtime, core/schema, core/stability, host/bench, host/motor_gait, +1 more
 //!
 //! The tripod gait: three legs down, three up, alternating. Any stable gait
 //! is enough for Phase 0; elegance comes later (Team Briefing §7).
