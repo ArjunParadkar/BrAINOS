@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Turns a list of goals into one smooth path: minimum-jerk moves that overlap so the body does not stop between strokes, plus the variable-stiffness joint law
 //! BFS  DEFINES  DIMS, minjerk, Goal, Style, Want, Touch, Played, Player, Gain, impedance
 //! BFS  USES     this crate: primitive
-//! BFS  USED BY  bodyd/armloop, host/motor_seat, host/tests/motor_mandate, motor/primitive, motor/tests/control
+//! BFS  USED BY  bodyd/armloop, host/motor_seat, host/tests/motor_mandate, host/tests/motor_standing, motor/primitive, motor/tests/control
 //!
 //! Fluid movement: one path out of many strokes.
 //!

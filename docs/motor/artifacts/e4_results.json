@@ -1,0 +1,2733 @@
+{
+ "clone": {
+  "0": {
+   "brush_from_holder": 8.981765417475823e-13,
+   "covered": 0.0,
+   "mug_moved": 6.0826620022481955e-05,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "1": {
+   "brush_from_holder": 3.9934721027951216e-12,
+   "covered": 0.0,
+   "mug_moved": 0.27409489881337634,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 104.3657817374609,
+   "released": true,
+   "unreachable": true
+  },
+  "10": {
+   "brush_from_holder": 0.5177539424922418,
+   "covered": 0.0,
+   "mug_moved": 1.4625566997076918e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 211.36046487880955,
+   "released": true,
+   "unreachable": true
+  },
+  "11": {
+   "brush_from_holder": 2.4748058109030517e-11,
+   "covered": 0.0,
+   "mug_moved": 1.3400646393166186e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "12": {
+   "brush_from_holder": 1.4603925557414646e-11,
+   "covered": 0.0,
+   "mug_moved": 2.4034902391789957e-11,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "13": {
+   "brush_from_holder": 0.03641357634790316,
+   "covered": 0.0,
+   "mug_moved": 1.6803903331630814,
+   "mug_upright": false,
+   "ok": false,
+   "peak_tool_n": 247.38185299540268,
+   "released": true,
+   "unreachable": true
+  },
+  "14": {
+   "brush_from_holder": 1.1821889373175101e-11,
+   "covered": 0.0,
+   "mug_moved": 0.09281597135736862,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 71.18580834334732,
+   "released": true,
+   "unreachable": true
+  },
+  "15": {
+   "brush_from_holder": 1.8454972895183925e-11,
+   "covered": 0.0,
+   "mug_moved": 1.4408206128361997e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 300.19070586716117,
+   "released": true,
+   "unreachable": true
+  },
+  "16": {
+   "brush_from_holder": 1.8407212120029833e-11,
+   "covered": 0.0,
+   "mug_moved": 1.4981009138059746e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 67.50215530091506,
+   "released": true,
+   "unreachable": true
+  },
+  "17": {
+   "brush_from_holder": 1.606316308268289e-11,
+   "covered": 0.0,
+   "mug_moved": 1.1046609154571613e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "18": {
+   "brush_from_holder": 1.4411747960157204e-11,
+   "covered": 0.0,
+   "mug_moved": 6.787758904010076e-12,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "19": {
+   "brush_from_holder": 1.340192593373237e-11,
+   "covered": 0.0,
+   "mug_moved": 1.7829546023061248e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 94.42131355757638,
+   "released": true,
+   "unreachable": true
+  },
+  "2": {
+   "brush_from_holder": 0.0,
+   "covered": 0.0,
+   "mug_moved": 1.1482999295869765e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "20": {
+   "brush_from_holder": 2.2918593470184633e-11,
+   "covered": 0.0,
+   "mug_moved": 1.2700362744534428e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "21": {
+   "brush_from_holder": 1.852681315184291e-11,
+   "covered": 0.0,
+   "mug_moved": 1.8176303895025825e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "22": {
+   "brush_from_holder": 0.0,
+   "covered": 0.0,
+   "mug_moved": 3.912613061618271e-08,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 116.12697785790327,
+   "released": true,
+   "unreachable": true
+  },
+  "23": {
+   "brush_from_holder": 0.0,
+   "covered": 0.0,
+   "mug_moved": 1.6700393842864943e-05,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "24": {
+   "brush_from_holder": 0.055093850800413034,
+   "covered": 0.03125,
+   "mug_moved": 1.3226707440826563e-07,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 94.73138545025238,
+   "released": true,
+   "unreachable": true
+  },
+  "25": {
+   "brush_from_holder": 0.0,
+   "covered": 0.0,
+   "mug_moved": 1.772559479264809e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "26": {
+   "brush_from_holder": 1.7538579737067488e-11,
+   "covered": 0.0,
+   "mug_moved": 1.4982724494246198e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 137.72331306300728,
+   "released": true,
+   "unreachable": true
+  },
+  "27": {
+   "brush_from_holder": 1.6712869135960793e-11,
+   "covered": 0.0,
+   "mug_moved": 1.462399385495203e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "28": {
+   "brush_from_holder": 0.02270849620439261,
+   "covered": 0.0,
+   "mug_moved": 1.3739834843954315,
+   "mug_upright": false,
+   "ok": false,
+   "peak_tool_n": 336.77507972132815,
+   "released": true,
+   "unreachable": true
+  },
+  "29": {
+   "brush_from_holder": 2.0671017769601207e-11,
+   "covered": 0.0,
+   "mug_moved": 1.5268839915416297e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "3": {
+   "brush_from_holder": 1.5305917858856945e-10,
+   "covered": 0.0,
+   "mug_moved": 1.3965064067104788e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "30": {
+   "brush_from_holder": 1.6146745026419498e-11,
+   "covered": 0.0,
+   "mug_moved": 1.2836046018908471e-11,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "31": {
+   "brush_from_holder": 7.261900266634569e-12,
+   "covered": 0.0,
+   "mug_moved": 1.0557167849943692e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "32": {
+   "brush_from_holder": 0.4076070143647148,
+   "covered": 0.0,
+   "mug_moved": 2.827386144221561e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 100.11421450640707,
+   "released": true,
+   "unreachable": true
+  },
+  "33": {
+   "brush_from_holder": 1.3419979596253329e-11,
+   "covered": 0.0,
+   "mug_moved": 1.169649093316128e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "34": {
+   "brush_from_holder": 0.06422890002183013,
+   "covered": 0.0,
+   "mug_moved": 0.06816209338233149,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 170.63745148986936,
+   "released": true,
+   "unreachable": true
+  },
+  "35": {
+   "brush_from_holder": 0.009290730043599283,
+   "covered": 0.0,
+   "mug_moved": 1.1232350233639068e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 1.3237629088010212,
+   "released": true,
+   "unreachable": true
+  },
+  "36": {
+   "brush_from_holder": 2.2135946909937803e-08,
+   "covered": 0.0,
+   "mug_moved": 2.954375189717546e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "37": {
+   "brush_from_holder": 0.0,
+   "covered": 0.0,
+   "mug_moved": 3.057094358452393e-11,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 113.8960426426762,
+   "released": true,
+   "unreachable": true
+  },
+  "38": {
+   "brush_from_holder": 3.13338046876147e-12,
+   "covered": 0.0,
+   "mug_moved": 0.2341561694852118,
+   "mug_upright": false,
+   "ok": false,
+   "peak_tool_n": 186.0704860395836,
+   "released": true,
+   "unreachable": true
+  },
+  "39": {
+   "brush_from_holder": 2.0598463746708124e-10,
+   "covered": 0.0,
+   "mug_moved": 2.0674010162360504e-07,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "4": {
+   "brush_from_holder": 0.24722679945399453,
+   "covered": 0.0,
+   "mug_moved": 1.6173965626252165e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 181.7479519821535,
+   "released": true,
+   "unreachable": true
+  },
+  "40": {
+   "brush_from_holder": 5.731259006398078e-08,
+   "covered": 0.0,
+   "mug_moved": 1.2415239227559398e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "41": {
+   "brush_from_holder": 3.3510130466655514e-12,
+   "covered": 0.0,
+   "mug_moved": 6.775772752507518e-11,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 59.88329765391365,
+   "released": true,
+   "unreachable": true
+  },
+  "42": {
+   "brush_from_holder": 4.1769701419876557e-10,
+   "covered": 0.0,
+   "mug_moved": 3.018070936835181e-05,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 127.71002071577601,
+   "released": true,
+   "unreachable": true
+  },
+  "43": {
+   "brush_from_holder": 3.4895066744163488e-12,
+   "covered": 0.0,
+   "mug_moved": 0.2890065137982554,
+   "mug_upright": false,
+   "ok": false,
+   "peak_tool_n": 139.52851564376164,
+   "released": true,
+   "unreachable": true
+  },
+  "44": {
+   "brush_from_holder": 1.4307703134034103e-11,
+   "covered": 0.0,
+   "mug_moved": 7.051142790549332e-12,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "45": {
+   "brush_from_holder": 0.0,
+   "covered": 0.0,
+   "mug_moved": 1.6717244207490098e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 120.0478397450572,
+   "released": true,
+   "unreachable": true
+  },
+  "46": {
+   "brush_from_holder": 2.222131248284083e-05,
+   "covered": 0.0,
+   "mug_moved": 1.4366124279210482e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.22176104942968525,
+   "released": true,
+   "unreachable": false
+  },
+  "47": {
+   "brush_from_holder": 4.3252450925960125e-12,
+   "covered": 0.0,
+   "mug_moved": 1.1878469387524877e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "48": {
+   "brush_from_holder": 0.022388694619400854,
+   "covered": 0.0,
+   "mug_moved": 2.1796779020217525e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 1.7963034441073213,
+   "released": true,
+   "unreachable": true
+  },
+  "49": {
+   "brush_from_holder": 0.6576144318563427,
+   "covered": 0.0,
+   "mug_moved": 1.87716842140306e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 81.01074630810027,
+   "released": true,
+   "unreachable": true
+  },
+  "5": {
+   "brush_from_holder": 1.8105011198880727e-12,
+   "covered": 0.0,
+   "mug_moved": 1.422801425519246e-05,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "50": {
+   "brush_from_holder": 1.3279902585888745e-11,
+   "covered": 0.0,
+   "mug_moved": 2.4116200676438666e-11,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "51": {
+   "brush_from_holder": 1.6672257742938665e-11,
+   "covered": 0.0,
+   "mug_moved": 0.0,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 114.42808264822813,
+   "released": true,
+   "unreachable": true
+  },
+  "52": {
+   "brush_from_holder": 1.0656499168543915e-11,
+   "covered": 0.0,
+   "mug_moved": 5.926099712319134e-08,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "53": {
+   "brush_from_holder": 6.16830361839386e-11,
+   "covered": 0.0,
+   "mug_moved": 4.752178653192257e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 69.19796813195619,
+   "released": true,
+   "unreachable": true
+  },
+  "54": {
+   "brush_from_holder": 0.01052907535091308,
+   "covered": 0.0,
+   "mug_moved": 3.2955511438567067e-06,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 113.11508474254654,
+   "released": true,
+   "unreachable": true
+  },
+  "55": {
+   "brush_from_holder": 0.18008554816787797,
+   "covered": 0.0,
+   "mug_moved": 1.0166724341828381e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 136.64510510066384,
+   "released": true,
+   "unreachable": true
+  },
+  "56": {
+   "brush_from_holder": 5.521732804113821e-12,
+   "covered": 0.0,
+   "mug_moved": 2.110256660308943e-06,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": false
+  },
+  "57": {
+   "brush_from_holder": 4.469678863857389e-08,
+   "covered": 0.0,
+   "mug_moved": 3.334793914469238e-05,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "58": {
+   "brush_from_holder": 0.0,
+   "covered": 0.0,
+   "mug_moved": 2.342767136815262e-06,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "59": {
+   "brush_from_holder": 3.933638231637228e-13,
+   "covered": 0.0,
+   "mug_moved": 4.7061955612192166e-08,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "6": {
+   "brush_from_holder": 7.220291046876269e-12,
+   "covered": 0.0,
+   "mug_moved": 9.776457511711728e-11,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 68.25399949726935,
+   "released": true,
+   "unreachable": true
+  },
+  "60": {
+   "brush_from_holder": 0.017850250123142113,
+   "covered": 0.0,
+   "mug_moved": 1.394862023728262e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 134.4481225329884,
+   "released": true,
+   "unreachable": true
+  },
+  "61": {
+   "brush_from_holder": 0.058209801968136445,
+   "covered": 0.0,
+   "mug_moved": 2.178801240028769e-06,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 94.4720652450688,
+   "released": true,
+   "unreachable": true
+  },
+  "62": {
+   "brush_from_holder": 0.41980336694865766,
+   "covered": 0.0,
+   "mug_moved": 1.2894863607288864e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 185.76094537752633,
+   "released": true,
+   "unreachable": true
+  },
+  "63": {
+   "brush_from_holder": 1.2799038154775664e-11,
+   "covered": 0.0,
+   "mug_moved": 2.6048389321930704e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "64": {
+   "brush_from_holder": 1.1932468095939229e-11,
+   "covered": 0.0,
+   "mug_moved": 7.854589254992884e-11,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 180.46287690815535,
+   "released": true,
+   "unreachable": true
+  },
+  "65": {
+   "brush_from_holder": 2.715896149086146e-11,
+   "covered": 0.0,
+   "mug_moved": 1.2523492123627368e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "66": {
+   "brush_from_holder": 1.7441664949533127e-11,
+   "covered": 0.0,
+   "mug_moved": 1.2050551005586347e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "67": {
+   "brush_from_holder": 4.812928832702575e-10,
+   "covered": 0.0,
+   "mug_moved": 7.67484231144217e-07,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "68": {
+   "brush_from_holder": 2.0534704929515973e-11,
+   "covered": 0.0,
+   "mug_moved": 5.465113964031422e-08,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "69": {
+   "brush_from_holder": 4.601102300414881e-06,
+   "covered": 0.0,
+   "mug_moved": 4.5248735289353135e-06,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.31831890307997923,
+   "released": true,
+   "unreachable": false
+  },
+  "7": {
+   "brush_from_holder": 1.1643279851848223e-11,
+   "covered": 0.0,
+   "mug_moved": 1.274269919477846e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "70": {
+   "brush_from_holder": 1.4428210942269083e-11,
+   "covered": 0.0,
+   "mug_moved": 6.729946117448697e-12,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 87.9823940561073,
+   "released": true,
+   "unreachable": true
+  },
+  "71": {
+   "brush_from_holder": 1.2252372979869789e-11,
+   "covered": 0.0,
+   "mug_moved": 1.481293681171685e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "72": {
+   "brush_from_holder": 7.05023975492388e-12,
+   "covered": 0.0,
+   "mug_moved": 2.789176542677827e-12,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "73": {
+   "brush_from_holder": 1.9206286972467487e-11,
+   "covered": 0.0,
+   "mug_moved": 0.10039476247587723,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 75.55116975739462,
+   "released": true,
+   "unreachable": true
+  },
+  "74": {
+   "brush_from_holder": 1.0675342683235279e-11,
+   "covered": 0.0,
+   "mug_moved": 1.9531896277103416e-08,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "75": {
+   "brush_from_holder": 0.031114626922526388,
+   "covered": 0.03125,
+   "mug_moved": 1.6098948279737507e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 136.8566784195937,
+   "released": true,
+   "unreachable": true
+  },
+  "76": {
+   "brush_from_holder": 1.0817913615389991e-05,
+   "covered": 0.0,
+   "mug_moved": 1.7015364503376474e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 63.84711484991017,
+   "released": true,
+   "unreachable": true
+  },
+  "77": {
+   "brush_from_holder": 1.2609118812664658e-11,
+   "covered": 0.0,
+   "mug_moved": 7.035922243165095e-11,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 70.71099616351016,
+   "released": true,
+   "unreachable": true
+  },
+  "78": {
+   "brush_from_holder": 6.700678338845101e-12,
+   "covered": 0.0,
+   "mug_moved": 1.877614360191386e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 58.77224007745221,
+   "released": true,
+   "unreachable": true
+  },
+  "79": {
+   "brush_from_holder": 1.7687735218197883e-11,
+   "covered": 0.0,
+   "mug_moved": 1.0563781541387163e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "8": {
+   "brush_from_holder": 1.4100459451019631e-11,
+   "covered": 0.0,
+   "mug_moved": 3.9497337026798345e-11,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 80.72206660114323,
+   "released": true,
+   "unreachable": true
+  },
+  "80": {
+   "brush_from_holder": 5.067538672264029e-05,
+   "covered": 0.0,
+   "mug_moved": 9.032015124213043e-07,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 112.74805588624831,
+   "released": true,
+   "unreachable": true
+  },
+  "81": {
+   "brush_from_holder": 4.154933318922604e-12,
+   "covered": 0.0,
+   "mug_moved": 5.279421527454393e-06,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "82": {
+   "brush_from_holder": 2.2075147822007502e-08,
+   "covered": 0.0,
+   "mug_moved": 7.988203259571849e-11,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 177.8967640286657,
+   "released": true,
+   "unreachable": true
+  },
+  "83": {
+   "brush_from_holder": 8.891001180058725e-12,
+   "covered": 0.0,
+   "mug_moved": 1.529734751551321e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "84": {
+   "brush_from_holder": 6.580924106555725e-12,
+   "covered": 0.0,
+   "mug_moved": 0.28084012143913895,
+   "mug_upright": false,
+   "ok": false,
+   "peak_tool_n": 272.3365056836883,
+   "released": true,
+   "unreachable": true
+  },
+  "85": {
+   "brush_from_holder": 0.0,
+   "covered": 0.0,
+   "mug_moved": 1.6076177702819154e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "86": {
+   "brush_from_holder": 0.07376244784765469,
+   "covered": 0.0,
+   "mug_moved": 1.5096969078359674e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 78.156340240205,
+   "released": true,
+   "unreachable": true
+  },
+  "87": {
+   "brush_from_holder": 1.5115546579674555,
+   "covered": 0.0,
+   "mug_moved": 1.73774666770592e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 255.62811623129133,
+   "released": true,
+   "unreachable": true
+  },
+  "88": {
+   "brush_from_holder": 1.121253118253264e-11,
+   "covered": 0.0,
+   "mug_moved": 2.017131082109597e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "89": {
+   "brush_from_holder": 0.2297743692328802,
+   "covered": 0.0,
+   "mug_moved": 6.407052013135438e-11,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 110.40206348014229,
+   "released": true,
+   "unreachable": true
+  },
+  "9": {
+   "brush_from_holder": 0.005898077269058137,
+   "covered": 0.0,
+   "mug_moved": 3.0931210994921274e-07,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 93.05714236477348,
+   "released": true,
+   "unreachable": true
+  },
+  "90": {
+   "brush_from_holder": 6.30477288852845e-13,
+   "covered": 0.0,
+   "mug_moved": 4.3325960960218766e-07,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "91": {
+   "brush_from_holder": 7.661328312952187e-12,
+   "covered": 0.0,
+   "mug_moved": 3.060927808001451e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "92": {
+   "brush_from_holder": 8.092914837569025e-10,
+   "covered": 0.0,
+   "mug_moved": 1.1100162836928005e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "93": {
+   "brush_from_holder": 2.665110172221521e-12,
+   "covered": 0.0,
+   "mug_moved": 2.235146210050259e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 87.48833074753642,
+   "released": true,
+   "unreachable": true
+  },
+  "94": {
+   "brush_from_holder": 1.0802564655198282e-11,
+   "covered": 0.0,
+   "mug_moved": 6.171537264540217e-08,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "95": {
+   "brush_from_holder": 9.357726752938397e-11,
+   "covered": 0.0,
+   "mug_moved": 3.1638773108015783e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "96": {
+   "brush_from_holder": 2.2489894187744774e-08,
+   "covered": 0.0,
+   "mug_moved": 1.259977563726443e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "97": {
+   "brush_from_holder": 1.0158904402728665e-11,
+   "covered": 0.0,
+   "mug_moved": 1.213019444027709e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "98": {
+   "brush_from_holder": 0.0,
+   "covered": 0.0,
+   "mug_moved": 1.2019922867718436e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 0.0,
+   "released": true,
+   "unreachable": true
+  },
+  "99": {
+   "brush_from_holder": 1.5497615738193855e-11,
+   "covered": 0.0,
+   "mug_moved": 1.6633870247640447e-10,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 64.27401886225327,
+   "released": true,
+   "unreachable": true
+  }
+ },
+ "meta": {
+  "clone_loss": 0.0004630153125617653,
+  "clone_samples": 1705,
+  "demo_instance": {
+   "brush_deg": -38.0,
+   "brush_r": 0.15,
+   "height": 0.05,
+   "mug_deg": 28.0,
+   "mug_r": 0.15,
+   "mug_yaw": 0.0,
+   "radius": 0.035
+  },
+  "demo_samples": 1706,
+  "demo_seconds": 17.05,
+  "demo_sha256": "7c155da3eb6d806b8d9af55913970be44e2d8398cfacf09c4955863949b3c493",
+  "demo_verdict": {
+   "brush_from_holder": 0.00041666961741300624,
+   "covered": 1.0,
+   "mug_moved": 0.0009723988778472177,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 3.9004281820997733,
+   "released": true
+  },
+  "learner": "1706 samples, 3 steps:\n  grasp brush.grip\n  wipe mug.mouth\n  place holder.rest",
+  "recipe": "grasp frame=brush.grip it=brush to= width_m=width*0.99+0\nwipe frame=mug.mouth it=mug to= radius_m=radius*1+-0.0074119903 depth_m=depth*1+0.0013857111 turns=1 tool_m=0.075 open_m=0.00546\nplace frame=holder.rest it=brush to=holder width_m=width*0.99+0 tool_m=0.07571\n"
+ },
+ "recipe": {
+  "0": {
+   "brush_from_holder": 0.0007470227521840938,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14091,
+   "mug_moved": 0.0007377234612678954,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.82158480098626,
+   "released": true
+  },
+  "1": {
+   "brush_from_holder": 0.001444543728106094,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16913,
+   "mug_moved": 0.003696084518837831,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.686229022731435,
+   "released": true
+  },
+  "10": {
+   "brush_from_holder": 0.0007888268620975067,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14706,
+   "mug_moved": 0.00025406745429947745,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.69828842179039,
+   "released": true
+  },
+  "11": {
+   "brush_from_holder": 0.0005166567341794693,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15200,
+   "mug_moved": 0.0021894801049833737,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.290921752716756,
+   "released": true
+  },
+  "12": {
+   "brush_from_holder": 0.0007354732260282523,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14741,
+   "mug_moved": 0.0023850179188515314,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.109143767177374,
+   "released": true
+  },
+  "13": {
+   "brush_from_holder": 0.0007907332517622876,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15414,
+   "mug_moved": 0.0016070362790179052,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 7.076239521080484,
+   "released": true
+  },
+  "14": {
+   "brush_from_holder": 0.0016047781637724384,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16630,
+   "mug_moved": 0.0001620097259145507,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.839597764141743,
+   "released": true
+  },
+  "15": {
+   "brush_from_holder": 0.0007542669565211851,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14248,
+   "mug_moved": 0.00208437364294789,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.617578390903504,
+   "released": true
+  },
+  "16": {
+   "brush_from_holder": 0.0009825881351253295,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14651,
+   "mug_moved": 0.001058117671028582,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.834039363382278,
+   "released": true
+  },
+  "17": {
+   "brush_from_holder": 0.0008240032409428139,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15581,
+   "mug_moved": 0.0006698399468505363,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.9813359016283,
+   "released": true
+  },
+  "18": {
+   "brush_from_holder": 0.0007707909489007113,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14377,
+   "mug_moved": 0.002347234271945695,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.358307644376368,
+   "released": true
+  },
+  "19": {
+   "brush_from_holder": 0.0008107120695380047,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14158,
+   "mug_moved": 0.0013704279062363375,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.904763097527796,
+   "released": true
+  },
+  "2": {
+   "brush_from_holder": 0.0004511292898154196,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15103,
+   "mug_moved": 0.003982037165161693,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.309147931745627,
+   "released": true
+  },
+  "20": {
+   "brush_from_holder": 0.0011003255543630577,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16694,
+   "mug_moved": 0.001260161777749634,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.579586005055153,
+   "released": true
+  },
+  "21": {
+   "brush_from_holder": 0.0006267857858893022,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14948,
+   "mug_moved": 0.0019422159714869093,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.961120366039893,
+   "released": true
+  },
+  "22": {
+   "brush_from_holder": 0.0013345182817827983,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15543,
+   "mug_moved": 0.0002574172532900631,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.890156693749936,
+   "released": true
+  },
+  "23": {
+   "brush_from_holder": 0.00045634852046623036,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15343,
+   "mug_moved": 0.0015933757329660157,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.218077108083979,
+   "released": true
+  },
+  "24": {
+   "brush_from_holder": 0.0008894008199297811,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15140,
+   "mug_moved": 0.003992904389691804,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.046610830216498,
+   "released": true
+  },
+  "25": {
+   "brush_from_holder": 0.0010442760454583172,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14319,
+   "mug_moved": 0.00018483055821216497,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.6390598107007,
+   "released": true
+  },
+  "26": {
+   "brush_from_holder": 0.0007221242040852567,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16175,
+   "mug_moved": 0.004255297530108639,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.590151877200703,
+   "released": true
+  },
+  "27": {
+   "brush_from_holder": 7.474825744170159e-05,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16227,
+   "mug_moved": 0.004391301910756936,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.183071412075465,
+   "released": true
+  },
+  "28": {
+   "brush_from_holder": 0.00084302758431158,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14530,
+   "mug_moved": 0.0006174492641614666,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 8.275987233994243,
+   "released": true
+  },
+  "29": {
+   "brush_from_holder": 0.00137882567555615,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 17709,
+   "mug_moved": 0.0031364695019176075,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 10.621995318564599,
+   "released": true
+  },
+  "3": {
+   "brush_from_holder": 0.0004570813381581016,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16081,
+   "mug_moved": 0.0017962919390152232,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.450121931396224,
+   "released": true
+  },
+  "30": {
+   "brush_from_holder": 0.0003632105726772318,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16463,
+   "mug_moved": 0.0020033288039771908,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.03873084515911,
+   "released": true
+  },
+  "31": {
+   "brush_from_holder": 0.0009406755437784039,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16684,
+   "mug_moved": 0.0018057538713808028,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.454906904185353,
+   "released": true
+  },
+  "32": {
+   "brush_from_holder": 0.0009869024511245813,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14456,
+   "mug_moved": 0.0005716130426956787,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.531228162115797,
+   "released": true
+  },
+  "33": {
+   "brush_from_holder": 0.0008225073902752228,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14728,
+   "mug_moved": 0.0008164503471380118,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.0434786916017105,
+   "released": true
+  },
+  "34": {
+   "brush_from_holder": 0.0011537273514368126,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15791,
+   "mug_moved": 0.00016164773879695377,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.448251841389912,
+   "released": true
+  },
+  "35": {
+   "brush_from_holder": 0.002896473720712816,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 17463,
+   "mug_moved": 6.196420972950569e-05,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.752055828902108,
+   "released": true
+  },
+  "36": {
+   "brush_from_holder": 0.0007029731235721701,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15491,
+   "mug_moved": 5.307558228775322e-05,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.54022200535233,
+   "released": true
+  },
+  "37": {
+   "brush_from_holder": 0.0009656940607946042,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15735,
+   "mug_moved": 0.002246769587899677,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.285049800380974,
+   "released": true
+  },
+  "38": {
+   "brush_from_holder": 0.0010140602411645083,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15565,
+   "mug_moved": 0.00031158717645742733,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.614765420657097,
+   "released": true
+  },
+  "39": {
+   "brush_from_holder": 0.00020887387548105624,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15925,
+   "mug_moved": 0.003974517400447816,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.765309999575614,
+   "released": true
+  },
+  "4": {
+   "brush_from_holder": 0.000813089941745657,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14567,
+   "mug_moved": 0.0011172710942499438,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 7.233933797763017,
+   "released": true
+  },
+  "40": {
+   "brush_from_holder": 0.0006485242105052703,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14906,
+   "mug_moved": 0.0006873338241839942,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.631350289705196,
+   "released": true
+  },
+  "41": {
+   "brush_from_holder": 0.0019748435443032912,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 17347,
+   "mug_moved": 0.0009544348898955911,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.566385129878139,
+   "released": true
+  },
+  "42": {
+   "brush_from_holder": 0.00113995157379257,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16123,
+   "mug_moved": 0.00022537404072669779,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.79625684337418,
+   "released": true
+  },
+  "43": {
+   "brush_from_holder": 0.0014573582556131072,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16356,
+   "mug_moved": 0.0024690909639620362,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.430124644139304,
+   "released": true
+  },
+  "44": {
+   "brush_from_holder": 0.004947391519630112,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 17945,
+   "mug_moved": 0.0008362247587596426,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 3.5857785849966106,
+   "released": true
+  },
+  "45": {
+   "brush_from_holder": 0.0012311882833569302,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16356,
+   "mug_moved": 0.00032219288030683405,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.60703473189241,
+   "released": true
+  },
+  "46": {
+   "brush_from_holder": 0.0012135670830470044,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16002,
+   "mug_moved": 0.00042974033286083857,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.250809203645922,
+   "released": true
+  },
+  "47": {
+   "brush_from_holder": 0.0004726820537682431,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15395,
+   "mug_moved": 0.0005717597500065387,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.650194317667428,
+   "released": true
+  },
+  "48": {
+   "brush_from_holder": 0.0010021598269228716,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16380,
+   "mug_moved": 0.0007218427192235586,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.446689469698854,
+   "released": true
+  },
+  "49": {
+   "brush_from_holder": 0.0010021011136468509,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15779,
+   "mug_moved": 0.00031484110937200776,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.419078793063333,
+   "released": true
+  },
+  "5": {
+   "brush_from_holder": 0.0006393465114509376,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15649,
+   "mug_moved": 0.0018998790074534473,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.625435733006594,
+   "released": true
+  },
+  "50": {
+   "brush_from_holder": 0.00473203397903401,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 18574,
+   "mug_moved": 0.0004684729165323568,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.628443522598622,
+   "released": true
+  },
+  "51": {
+   "brush_from_holder": 0.0009745005457232194,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14604,
+   "mug_moved": 0.0007377832908975596,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.364075951998301,
+   "released": true
+  },
+  "52": {
+   "brush_from_holder": 0.0006315168658335502,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14588,
+   "mug_moved": 0.0011770688745151039,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.938561327966555,
+   "released": true
+  },
+  "53": {
+   "brush_from_holder": 0.0017313070970571007,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16755,
+   "mug_moved": 0.00013682393607931413,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.436214037775161,
+   "released": true
+  },
+  "54": {
+   "brush_from_holder": 0.0006251612702440049,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15793,
+   "mug_moved": 0.0011376037500704214,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.090234019241312,
+   "released": true
+  },
+  "55": {
+   "brush_from_holder": 0.0009254305682552688,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14963,
+   "mug_moved": 0.0010972176462395033,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 7.688090899107282,
+   "released": true
+  },
+  "56": {
+   "brush_from_holder": 0.0010997107437891369,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16344,
+   "mug_moved": 0.0002719762686817264,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.81357353690975,
+   "released": true
+  },
+  "57": {
+   "brush_from_holder": 0.0006856637663312599,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15616,
+   "mug_moved": 0.0003778472129318454,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.097793362344905,
+   "released": true
+  },
+  "58": {
+   "brush_from_holder": 0.00060355765510231,
+   "covered": 0.96875,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15489,
+   "mug_moved": 0.011649152469696352,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 7.201843578681689,
+   "released": true
+  },
+  "59": {
+   "brush_from_holder": 0.00038564748926497053,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16601,
+   "mug_moved": 0.002349021383395349,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.944905621350212,
+   "released": true
+  },
+  "6": {
+   "brush_from_holder": 0.1343752072885398,
+   "covered": 0.875,
+   "done": "done fail step=1 breach:felt-force applied=6223 peak=4.737 ms=6224",
+   "ended": [
+    "finished",
+    "breach:felt-force",
+    "dropped"
+   ],
+   "gate_calls": 4,
+   "ms": 10328,
+   "mug_moved": 0.003479600903224764,
+   "mug_upright": true,
+   "ok": false,
+   "peak_tool_n": 16.23154658997544,
+   "released": 0.0
+  },
+  "60": {
+   "brush_from_holder": 0.001964171532416557,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16347,
+   "mug_moved": 4.3714884712473185e-05,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.592382368887014,
+   "released": true
+  },
+  "61": {
+   "brush_from_holder": 0.001267827059800178,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15754,
+   "mug_moved": 6.058005771798889e-05,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.2985297449606,
+   "released": true
+  },
+  "62": {
+   "brush_from_holder": 0.0008302222498687713,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15391,
+   "mug_moved": 0.0004606134728234079,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.948388423900339,
+   "released": true
+  },
+  "63": {
+   "brush_from_holder": 0.0002548828182978185,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16389,
+   "mug_moved": 0.0014388533320095346,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.664384456410028,
+   "released": true
+  },
+  "64": {
+   "brush_from_holder": 0.0010217719589172337,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14700,
+   "mug_moved": 0.0016248733741634938,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.387488269891437,
+   "released": true
+  },
+  "65": {
+   "brush_from_holder": 0.0006200280645610381,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15429,
+   "mug_moved": 0.0013982050276781528,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.878992932785713,
+   "released": true
+  },
+  "66": {
+   "brush_from_holder": 0.00125261340154254,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 17398,
+   "mug_moved": 0.004204899681142489,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.981562661753053,
+   "released": true
+  },
+  "67": {
+   "brush_from_holder": 0.0005218978695503729,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15428,
+   "mug_moved": 0.0019190078582430891,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.065408672812134,
+   "released": true
+  },
+  "68": {
+   "brush_from_holder": 0.0013396328864689988,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 17229,
+   "mug_moved": 0.0014302681755991654,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.867217393367728,
+   "released": true
+  },
+  "69": {
+   "brush_from_holder": 0.0012702303329022147,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16612,
+   "mug_moved": 0.0004527594088777789,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.690261487238048,
+   "released": true
+  },
+  "7": {
+   "brush_from_holder": 5.2023253275013504e-05,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16278,
+   "mug_moved": 0.0009714927484517176,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 7.28452354219744,
+   "released": true
+  },
+  "70": {
+   "brush_from_holder": 0.003445780402042192,
+   "covered": 0.9375,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 18081,
+   "mug_moved": 0.02285619435689602,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 7.77217723050286,
+   "released": true
+  },
+  "71": {
+   "brush_from_holder": 0.0005239374433258324,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16312,
+   "mug_moved": 0.0021097919164941373,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.354247718240407,
+   "released": true
+  },
+  "72": {
+   "brush_from_holder": 0.000671865553456115,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14467,
+   "mug_moved": 0.0037158907974029986,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.821726665764203,
+   "released": true
+  },
+  "73": {
+   "brush_from_holder": 0.0017229392073666125,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16663,
+   "mug_moved": 0.002966990309607591,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.337429073484617,
+   "released": true
+  },
+  "74": {
+   "brush_from_holder": 0.002544912422270394,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 17606,
+   "mug_moved": 0.00017633582213298242,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 7.014680900042336,
+   "released": true
+  },
+  "75": {
+   "brush_from_holder": 0.001126036315009276,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15495,
+   "mug_moved": 1.2827095902262087e-05,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.189951758715097,
+   "released": true
+  },
+  "76": {
+   "brush_from_holder": 0.001251102346320797,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16867,
+   "mug_moved": 0.00033334552278288304,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.7120967579035185,
+   "released": true
+  },
+  "77": {
+   "brush_from_holder": 0.0008438045720454824,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14898,
+   "mug_moved": 0.002992406382466501,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 7.182403393508809,
+   "released": true
+  },
+  "78": {
+   "brush_from_holder": 0.0016325768494828044,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 17445,
+   "mug_moved": 0.0030954216630756865,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.087340170754838,
+   "released": true
+  },
+  "79": {
+   "brush_from_holder": 0.0006127967958947509,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14694,
+   "mug_moved": 0.0007604134883094336,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.761325028066723,
+   "released": true
+  },
+  "8": {
+   "brush_from_holder": 0.0011154829584844573,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 17181,
+   "mug_moved": 0.0028824604932712033,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 7.417275401217398,
+   "released": true
+  },
+  "80": {
+   "brush_from_holder": 0.001146615755306917,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15803,
+   "mug_moved": 0.0011711547443838018,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.418510259611836,
+   "released": true
+  },
+  "81": {
+   "brush_from_holder": 0.0006769279376331488,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16202,
+   "mug_moved": 0.0017748214551243674,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.5999003213440375,
+   "released": true
+  },
+  "82": {
+   "brush_from_holder": 0.00383593886421999,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 18525,
+   "mug_moved": 0.0033928703374254384,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.795004473900776,
+   "released": true
+  },
+  "83": {
+   "brush_from_holder": 0.0009059262356944514,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14336,
+   "mug_moved": 0.0006484665648096882,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.523165674353661,
+   "released": true
+  },
+  "84": {
+   "brush_from_holder": 0.0017501585581718901,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 17175,
+   "mug_moved": 0.0006508462725576985,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.748380100801177,
+   "released": true
+  },
+  "85": {
+   "brush_from_holder": 0.00048287049525204943,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16309,
+   "mug_moved": 0.0010932851626482033,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.77664047286966,
+   "released": true
+  },
+  "86": {
+   "brush_from_holder": 0.0009751803238264977,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14476,
+   "mug_moved": 0.0020566892811673754,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.6596731526335775,
+   "released": true
+  },
+  "87": {
+   "brush_from_holder": 0.0006488576338899376,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15869,
+   "mug_moved": 0.00334044089080967,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.872013812593255,
+   "released": true
+  },
+  "88": {
+   "brush_from_holder": 0.0014090815576172468,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 17264,
+   "mug_moved": 0.0021745722032340954,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.376991597049923,
+   "released": true
+  },
+  "89": {
+   "brush_from_holder": 0.0008170943366157134,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14068,
+   "mug_moved": 0.0005171046265255173,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 7.170029041918217,
+   "released": true
+  },
+  "9": {
+   "brush_from_holder": 0.0013575793932634969,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16130,
+   "mug_moved": 0.000198940175418279,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.9817349435456295,
+   "released": true
+  },
+  "90": {
+   "brush_from_holder": 0.0008950291972191535,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15325,
+   "mug_moved": 0.0005358768885323295,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.349633057381112,
+   "released": true
+  },
+  "91": {
+   "brush_from_holder": 0.000500167394867711,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15901,
+   "mug_moved": 0.000411986212660578,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.334134136894862,
+   "released": true
+  },
+  "92": {
+   "brush_from_holder": 2.0079873776030702e-05,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16045,
+   "mug_moved": 0.003976928600753231,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.141679514826654,
+   "released": true
+  },
+  "93": {
+   "brush_from_holder": 0.0010805318795457563,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 15090,
+   "mug_moved": 0.0017462492770231742,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.579616926789309,
+   "released": true
+  },
+  "94": {
+   "brush_from_holder": 0.0006747161769210701,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 14503,
+   "mug_moved": 0.00012272170316827828,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 7.116437468490172,
+   "released": true
+  },
+  "95": {
+   "brush_from_holder": 0.0002667538661062612,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16337,
+   "mug_moved": 0.0032960392859428898,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 6.271783940739238,
+   "released": true
+  },
+  "96": {
+   "brush_from_holder": 0.0009958879148756169,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16798,
+   "mug_moved": 0.0004523424619576633,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 5.8265081958108835,
+   "released": true
+  },
+  "97": {
+   "brush_from_holder": 0.0049759812368098295,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 18369,
+   "mug_moved": 0.0040440336068700185,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.8562021264321436,
+   "released": true
+  },
+  "98": {
+   "brush_from_holder": 0.0005157429941665153,
+   "covered": 0.84375,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 16109,
+   "mug_moved": 0.020661184628895452,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 10.089275284185064,
+   "released": true
+  },
+  "99": {
+   "brush_from_holder": 0.003971819627279298,
+   "covered": 1.0,
+   "done": "done ok",
+   "ended": [
+    "finished",
+    "finished",
+    "finished"
+   ],
+   "gate_calls": 4,
+   "ms": 17879,
+   "mug_moved": 0.0004094132512588801,
+   "mug_upright": true,
+   "ok": true,
+   "peak_tool_n": 4.424532907596726,
+   "released": true
+  }
+ }
+}

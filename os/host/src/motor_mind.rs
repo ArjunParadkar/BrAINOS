@@ -44,15 +44,26 @@ pub fn request(
     step: &Step,
     places: &HashMap<String, (u64, Place)>,
     from: [f32; 3],
+    heading: Option<f32>,
     arm: &DeskArm,
-) -> Result<(Vec<(String, f32)>, [f32; 3]), String> {
+    stop_go: bool,
+) -> Result<(Vec<(String, f32)>, [f32; 3], f32), String> {
     let (_, at) = places
         .get(&step.frame)
         .ok_or_else(|| format!("nothing perceived called {}", step.frame))?;
     let mut args: Vec<(String, f32)> = Vec::new();
     for (name, bind) in &step.params {
+        // a length is read off the place the step acts on, or failing
+        // that off the thing the step is about (how wide the brush is
+        // matters when setting it down, and the holder does not know)
         let v = bind
             .value(at)
+            .or_else(|| {
+                places
+                    .values()
+                    .filter(|(_, p)| p.thing() == step.it)
+                    .find_map(|(_, p)| bind.value(p))
+            })
             .ok_or_else(|| format!("{} has no length for {name}", step.frame))?;
         // inside the range the primitive was built for, or not at all
         let p = prim.param(name).ok_or_else(|| format!("no parameter {name}"))?;
@@ -61,7 +72,19 @@ pub fn request(
         }
         args.push((name.clone(), v.clamp(p.min, p.max)));
     }
-    let mut yaw = at.yaw_deg;
+    // the gate takes no argument on trust and fills none in: whatever
+    // the recipe did not bind is stated here, as the primitive's own
+    // default, so that it is part of what is asked and granted
+    for p in &prim.params {
+        if !args.iter().any(|(n, _)| *n == p.name) {
+            args.push((p.name.clone(), p.default));
+        }
+    }
+    // where the heading does not matter, keep the one the hand has
+    let mut yaw = match heading {
+        Some(h) if !prim.kind.heading_matters() => h,
+        _ => at.yaw_deg,
+    };
     match prim.kind {
         Kind::Push => {
             // the frame's x axis points at where the thing should go
@@ -102,8 +125,21 @@ pub fn request(
         lo[k] = (lo[k] - m).max(reach.min[k] + 1e-4);
         hi[k] = (hi[k] + m).min(reach.max[k] - 1e-4);
     }
-    args.push((P_DURATION_MS.into(), prim.envelope.duration_ms as f32));
-    args.push((P_FORCE_N.into(), prim.envelope.force_n));
+    // the baseline stops after every stroke and holds itself stiff, so
+    // it needs longer and pushes harder; it is granted three times the
+    // time and the arm's whole force, so that what is compared is how it
+    // moves and not whether its mandate ran out
+    let ceiling = arm.ceiling();
+    let (duration, force) = if stop_go {
+        (
+            (prim.envelope.duration_ms as f32 * 3.0).min(ceiling.max_duration_ms as f32),
+            ceiling.max_force_n,
+        )
+    } else {
+        (prim.envelope.duration_ms as f32, prim.envelope.force_n)
+    };
+    args.push((P_DURATION_MS.into(), duration));
+    args.push((P_FORCE_N.into(), force));
     args.push((P_RATE_DPS.into(), prim.envelope.rate_dps));
     for (i, name) in P_BOX.iter().enumerate() {
         args.push(((*name).into(), if i % 2 == 0 { lo[i / 2] } else { hi[i / 2] }));
@@ -112,7 +148,7 @@ pub fn request(
     args.push(("fy".into(), frame.pos[1]));
     args.push(("fz".into(), frame.pos[2]));
     args.push(("fyaw".into(), frame.yaw_deg));
-    Ok((args, end))
+    Ok((args, end, yaw))
 }
 
 fn parse_place(f: &[&str]) -> Option<(u64, Place)> {
@@ -161,6 +197,7 @@ pub fn run(rest: &[String]) -> ExitCode {
     let mut hold_asked = false;
     let mut hold_ok = false;
     let mut predicted_end: Option<[f32; 3]> = None;
+    let mut heading: Option<f32> = None;
     let mut last_end_us = 0u64;
     let mut now_us = 0u64;
     let mut finished = 0usize;
@@ -262,8 +299,9 @@ pub fn run(rest: &[String]) -> ExitCode {
         // where the tool will be when this step starts: where the step
         // before it ends, if one is still running
         let from = if out_standing.is_empty() { here } else { predicted_end.unwrap_or(here) };
-        match request(prim, step, &places, from, &arm) {
-            Ok((args, end)) => {
+        match request(prim, step, &places, from, heading, &arm, stop_go) {
+            Ok((args, end, yaw)) => {
+                heading = Some(yaw);
                 let mut line = format!("ask {next} {}", prim.verb.as_str());
                 for (k, v) in &args {
                     line.push_str(&format!(" {k}={v}"));

@@ -1,0 +1,6 @@
+100000 ticks over 264 granted runs: 99737 applied, 263 refused {"angle": 55, "effort": 52, "expired": 16, "felt-force": 33, "rate": 31, "workspace": 76}
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+599,000 ticks, 5,990 feelings passed up: 0 memories added, 8 in the graph
+test ten_minutes_at_a_thousand_ticks_a_second_adds_a_bounded_number_of_memories ... ok
+100 overloads injected, 100 left a memory; 207 memories in all
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s

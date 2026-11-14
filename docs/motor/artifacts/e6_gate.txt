@@ -1,0 +1,8 @@
+
+20 instances run both ways
+                                    fluid      stop-go    ratio   threshold
+integrated squared jerk (median)    2.308e+05    3.048e+05     0.76   <= 0.50
+pauses (median)                         3         47.5     0.06   <= 0.50
+peak contact force, N (median)         6.24        9.951     0.63   <= 0.70
+seconds (median)                     13.5        27.54     0.49   (reported)
+task success                        18/20         7/20            fluid no more than 5 points below

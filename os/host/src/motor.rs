@@ -1,7 +1,7 @@
 //! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
 //! BFS  PURPOSE  The `brainos motor` commands: print a body's generated MJCF self-model, and print reference kinematics for checking it against a simulator
 //! BFS  DEFINES  Lcg, read_skeleton, body_model, emit_options, cli
-//! BFS  USES     this crate: motor_mind, motor_seat | brainos: bodyd, miniblur-core, motor | external: std
+//! BFS  USES     this crate: motor_gait, motor_mind, motor_seat | brainos: bodyd, miniblur-core, motor | external: std
 //! BFS  USED BY  host/tests/motor_mandate
 //!
 //! `brainos motor ...`: the motor-memory commands.
@@ -147,6 +147,17 @@ pub fn emit_options(name: &str, servo: bool) -> Emit {
         e.timestep_s = 0.001;
         e.damping = 0.002;
         e.armature = 0.00002;
+        // the simulator's default ground is soft enough for a 3 mm foot
+        // to sink 5 mm into it, and a policy trained on that learns to
+        // swim in the ground rather than walk on it (found in gate E2)
+        e.contact_s = 0.004;
+    }
+    if name == "desk-arm" {
+        // small things gripped between two fingers: a short step and
+        // contacts that do not sink in
+        e.timestep_s = 0.001;
+        e.contact_s = 0.004;
+        e.friction_ratio = 10.0;
     }
     if servo {
         e.drive = match name {
@@ -310,10 +321,106 @@ fn reference(rest: &[String]) -> ExitCode {
     ExitCode::SUCCESS
 }
 
+/// `brainos motor learn DEMO [--without KIND]...`: one demonstration in,
+/// a recipe out. The demonstration is text:
+///
+///   d T_MS X Y Z OPEN ROLL GRIP_N TOOL_N       one instant
+///   pl NAME X Y Z YAW k=v ...                  a named place at that instant
+///
+/// `--without wipe` learns with that primitive left out of the library,
+/// which is how the library-size curve is measured.
+fn learn(rest: &[String]) -> ExitCode {
+    use brainos_motor::primitive::{desk_arm_library, Kind};
+    use brainos_motor::recipe::{Place, Sample};
+    let Some(path) = rest.first() else {
+        eprintln!("usage: brainos motor learn DEMO [--without KIND]...");
+        return ExitCode::FAILURE;
+    };
+    let Ok(text) = std::fs::read_to_string(path) else {
+        eprintln!("{path}: cannot read");
+        return ExitCode::FAILURE;
+    };
+    let mut without = Vec::new();
+    let mut it = rest.iter().skip(1);
+    while let Some(a) = it.next() {
+        if a == "--without" {
+            match it.next().and_then(|k| Kind::from_name(k)) {
+                Some(k) => without.push(k),
+                None => {
+                    eprintln!("--without needs a primitive name");
+                    return ExitCode::FAILURE;
+                }
+            }
+        }
+    }
+    let library: Vec<_> = desk_arm_library().into_iter().filter(|p| !without.contains(&p.kind)).collect();
+    let mut samples: Vec<Sample> = Vec::new();
+    for (n, line) in text.lines().enumerate() {
+        let f: Vec<&str> = line.split_whitespace().collect();
+        let num = |i: usize| f.get(i).and_then(|s| s.parse::<f32>().ok());
+        match f.first().copied() {
+            Some("d") => {
+                let (Some(t), Some(x), Some(y), Some(z), Some(open), Some(roll), Some(grip), Some(tool)) =
+                    (num(1), num(2), num(3), num(4), num(5), num(6), num(7), num(8))
+                else {
+                    eprintln!("{path}:{}: not an instant", n + 1);
+                    return ExitCode::FAILURE;
+                };
+                samples.push(Sample {
+                    t_ms: t,
+                    tool: [x, y, z],
+                    open_m: open,
+                    roll_deg: roll,
+                    grip_n: grip,
+                    tool_n: tool,
+                    places: Vec::new(),
+                });
+            }
+            Some("pl") => {
+                let (Some(name), Some(x), Some(y), Some(z), Some(yaw)) = (f.get(1), num(2), num(3), num(4), num(5)) else {
+                    eprintln!("{path}:{}: not a place", n + 1);
+                    return ExitCode::FAILURE;
+                };
+                let attrs = f
+                    .iter()
+                    .skip(6)
+                    .filter_map(|kv| kv.split_once('='))
+                    .filter_map(|(k, v)| v.parse::<f32>().ok().map(|v| (k.to_string(), v)))
+                    .collect();
+                if let Some(s) = samples.last_mut() {
+                    s.places.push(Place {
+                        name: name.to_string(),
+                        pos: [x, y, z],
+                        yaw_deg: yaw,
+                        attrs,
+                    });
+                }
+            }
+            _ => {}
+        }
+    }
+    match brainos_motor::recipe::learn(&samples, &library) {
+        Ok(recipe) => {
+            eprintln!("{} samples, {} steps:", samples.len(), recipe.steps.len());
+            for s in &recipe.steps {
+                eprintln!("  {} {}", s.kind.name(), s.frame);
+            }
+            print!("{}", recipe.to_text());
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            eprintln!("nothing was learned: {e:?}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
 pub fn cli(rest: &[String]) -> ExitCode {
     match rest.first().map(|s| s.as_str()) {
         Some("self-model") => self_model(&rest[1..]),
         Some("reference") => reference(&rest[1..]),
+        Some("learn") => learn(&rest[1..]),
+        Some("gait-reference") => crate::motor_gait::run(&rest[1..]),
         Some("seat") => crate::motor_seat::run(&rest[1..]),
         Some("mind") => crate::motor_mind::run(&rest[1..]),
         _ => {

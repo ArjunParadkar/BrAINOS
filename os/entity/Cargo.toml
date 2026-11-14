@@ -19,3 +19,4 @@ brainos-cognition = { workspace = true }
 brainos-worlds = { workspace = true }
 brainos-rt = { workspace = true }
 brainos-part = { workspace = true }
+brainos-motor = { workspace = true }

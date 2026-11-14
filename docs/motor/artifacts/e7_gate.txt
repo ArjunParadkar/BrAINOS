@@ -1,0 +1,8 @@
+
+event  mind      n  latency ms: median / worst         within threshold
+slip   alive    12  0 / 0                              9/12 (<= 20 ms)  still held: 11/12
+slip   killed   12  0 / 0                              9/12 (<= 20 ms)  still held: 11/12  SIGKILL confirmed: 12/12
+touch  alive    12  0 / 0                              12/12 (<= 10 ms)
+touch  killed   12  0 / 0                              12/12 (<= 10 ms)  SIGKILL confirmed: 12/12
+shove  alive    12  35 / 41                            12/12 (<= 500 ms)  pushed >2 cm off: 11/12, worst 2.7 cm
+shove  killed   12  35 / 41                            12/12 (<= 500 ms)  pushed >2 cm off: 11/12, worst 2.7 cm  SIGKILL confirmed: 12/12

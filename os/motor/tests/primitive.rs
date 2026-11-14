@@ -87,7 +87,9 @@ fn a_wipe_goes_round_at_the_radius_it_was_given() {
     let w = lib(Kind::Wipe);
     let s = program(&Given { primitive: &w, values: &[("radius_m", 0.025), ("press_m", 0.002), ("turns", 2.0)] }).unwrap();
     let far = s.iter().map(|k| (k.to[0] * k.to[0] + k.to[1] * k.to[1]).sqrt()).fold(0.0f32, f32::max);
-    assert!((far - 0.027).abs() < 1e-5, "{far}");
+    // set out so that the chords between points touch 27 mm
+    let chord = far * (core::f32::consts::PI / 16.0).cos();
+    assert!((chord - 0.027).abs() < 1e-5, "{far} {chord}");
     let one = program(&Given { primitive: &w, values: &[("radius_m", 0.025), ("turns", 1.0)] }).unwrap();
     assert!(s.len() > one.len(), "more turns, more strokes");
 }

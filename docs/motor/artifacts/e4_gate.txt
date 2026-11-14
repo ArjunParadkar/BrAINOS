@@ -1,0 +1,10 @@
+recipe  99/100 succeed (99 %), mean covered 1.00
+clone   0/100 succeed (0 %), mean covered 0.00
+wall 0.0 s
+recipe failures: {'6': ('done fail step=1 breach:felt-force applied=6223 peak=4.737 ms=6224', 0.88)}
+gate calls per run: [4]
+meta: {'demo_seconds': 17.05, 'demo_samples': 1706, 'clone_loss': 0.0004630153125617653, 'learner': '1706 samples, 3 steps:\n  grasp brush.grip\n  wipe mug.mouth\n  place holder.rest'}
+grasp frame=brush.grip it=brush to= width_m=width*0.99+0
+wipe frame=mug.mouth it=mug to= radius_m=radius*1+-0.0074119903 depth_m=depth*1+0.0013857111 turns=1 tool_m=0.075 open_m=0.00546
+place frame=holder.rest it=brush to=holder width_m=width*0.99+0 tool_m=0.07571
+

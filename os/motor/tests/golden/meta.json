@@ -1,0 +1,54 @@
+{
+ "what": "random seeded network (not trained); observations recorded from the generated hexapod under seeded random actions",
+ "seed": 20261112,
+ "layers": [
+  {
+   "layer": 0,
+   "rows": 64,
+   "cols": 36,
+   "s_w": 168.90946600448626,
+   "s_in": 127.0,
+   "s_out": 77.26615886631483,
+   "mult": 30215,
+   "shift": 23,
+   "M": 0.00360189968090425,
+   "M_err": 2.4994789979970733e-06,
+   "sat": 0.009734375
+  },
+  {
+   "layer": 1,
+   "rows": 64,
+   "cols": 64,
+   "s_w": 196.23457969437342,
+   "s_in": 77.26615886631483,
+   "s_out": 76.95480884298269,
+   "mult": 21288,
+   "shift": 22,
+   "M": 0.005075407318268085,
+   "M_err": 9.337899996131327e-06,
+   "sat": 0.009765625
+  },
+  {
+   "layer": 2,
+   "rows": 10,
+   "cols": 64,
+   "s_w": 210.85848466567546,
+   "s_in": 76.95480884298269,
+   "s_out": 127.0,
+   "mult": 16414,
+   "shift": 21,
+   "M": 0.007826667355843926,
+   "M_err": 1.760122104399464e-05,
+   "sat": null
+  }
+ ],
+ "clamped_outputs": 1472,
+ "saturated_hidden": 1185,
+ "regenerate": "motor/gait/make_golden.py",
+ "n": 1000,
+ "n_in": 36,
+ "n_out": 10,
+ "negative_outputs": 5811,
+ "zero_outputs": 44,
+ "input_clamped": 2465
+}

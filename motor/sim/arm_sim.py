@@ -51,17 +51,29 @@ def pad(name, pos, half=0.03):
 
 
 BRUSH_GRIP_Z = 0.075     # grip point above the bottom of the head
+BRUSH_HANDLE_HALF = 0.042
 BRUSH_HEAD_R = 0.009
 BRUSH_HEAD_H = 0.016
+# The head is modelled as a rigid cylinder, but a brush has bristles. A
+# rigid cylinder pressed against a wall touches it along one edge, so
+# "touched" would depend on which way the handle happens to lean. A wall
+# cell counts as wiped when the head's surface passes within this
+# distance of it while the brush is held (worked out from where the head
+# is; see mug_task.wiped). Decided on development instances before any
+# gate run.
+BRISTLE_M = 0.002
+# Wet bristles on glazed pottery slide; rubber would drag the mug round.
+BRUSH_HEAD_MU = 0.3
 
 
 def brush(name, pos, yaw=0.0):
     """Stands on its own head. Origin at the bottom centre of the head."""
     fr = 'friction="1.2 0.005 0.0001" contype="1" conaffinity="1"'
     body = (f'<geom name="{name}_head" type="cylinder" size="{BRUSH_HEAD_R} {BRUSH_HEAD_H/2}" '
-            f'pos="0 0 {BRUSH_HEAD_H/2}" mass="0.030" {fr} rgba="0.9 0.9 0.3 1"/>'
+            f'pos="0 0 {BRUSH_HEAD_H/2}" mass="0.030" contype="1" conaffinity="1" friction="{BRUSH_HEAD_MU} 0.005 0.0001" '
+            f'priority="1" rgba="0.9 0.9 0.3 1"/>'
             f'<geom name="{name}_handle" type="box" size="0.006 0.006 0.042" pos="0 0 {BRUSH_HEAD_H+0.042}" '
-            f'mass="0.008" {fr} rgba="0.5 0.3 0.1 1"/>')
+            f'mass="0.008" {fr} priority="1" rgba="0.5 0.3 0.1 1"/>')
     return _free(name, pos, yaw, body)
 
 
@@ -90,8 +102,36 @@ def mug(name, pos, radius, height, yaw=0.0, mass=0.30, friction=1.0, wall=0.004)
 
 
 # ---------------------------------------------------------------- the sim
+def solve(pos, pitch_deg=-90.0, finger_yaw_deg=0.0, grip=0.0):
+    """Closed-form inverse kinematics, the same arithmetic as
+    `bodyd::deskarm::DeskArmConfig::solve`, for the teleoperated demo and
+    the behaviour-cloning baseline, which do not go through the seat."""
+    h, l1, l2, tool = 0.11, 0.12, 0.14, 0.03 + 0.03 + 0.6 * 0.06
+    x, y, z = pos
+    phi = math.radians(pitch_deg)
+    r = math.hypot(x, y)
+    pan = math.atan2(y, x)
+    rw, zw = r - tool * math.cos(phi), z - h - tool * math.sin(phi)
+    c = (rw * rw + zw * zw - l1 * l1 - l2 * l2) / (2 * l1 * l2)
+    if not -1.0 <= c <= 1.0:
+        return None
+    a2 = -math.acos(c)
+    a1 = math.atan2(zw, rw) - math.atan2(l2 * math.sin(a2), l1 + l2 * math.cos(a2))
+    a3 = phi - a1 - a2
+    roll = math.degrees(pan) + 90.0 - finger_yaw_deg
+    while roll > 90:
+        roll -= 180
+    while roll < -90:
+        roll += 180
+    return [math.degrees(pan), math.degrees(a1), math.degrees(a2), math.degrees(a3), roll, grip]
+
+
+TELEOP_KP = [30.0, 60.0, 40.0, 12.0, 4.0]
+TELEOP_KD = [1.2, 2.4, 1.6, 0.35, 0.08]
+
+
 class ArmSim:
-    def __init__(self, things_xml='', places=None, seed=0, style='fluid', record=False):
+    def __init__(self, things_xml='', places=None, seed=0, style='fluid', record=False, teleop=False):
         xml = arm_xml().replace('</worldbody>', things_xml + '</worldbody>')
         self.m = mujoco.MjModel.from_xml_string(xml)
         self.m.opt.timestep = 0.001
@@ -103,18 +143,24 @@ class ArmSim:
         self.site = mujoco.mj_name2id(self.m, mujoco.mjtObj.mjOBJ_SITE, 'grasp')
         arm_bodies = {mujoco.mj_name2id(self.m, B, n) for n in
                       ['pedestal', 'turret', 'upper', 'fore', 'wristlink', 'hand', 'finger_l', 'finger_r']}
+        self.arm_bodies = arm_bodies
         self.arm_geom = np.array([self.m.geom_bodyid[g] in arm_bodies for g in range(self.m.ngeom)])
         fl, fr = (mujoco.mj_name2id(self.m, B, n) for n in ('finger_l', 'finger_r'))
         self.finger_of = np.array([1 if self.m.geom_bodyid[g] == fl else 2 if self.m.geom_bodyid[g] == fr else 0
                                    for g in range(self.m.ngeom)])
         self.ground = mujoco.mj_name2id(self.m, G, 'ground')
+        # only the working end of a tool wipes: a handle leaning on the
+        # rim has cleaned nothing
+        self.head_geom = np.array([(mujoco.mj_id2name(self.m, G, g) or '').endswith('_head')
+                                   for g in range(self.m.ngeom)])
         for a, v in zip(self.qadr[:5], Q0[:5]):
             self.d.qpos[a] = math.radians(v)
         self.d.qpos[self.qadr[5]] = Q0[5]
         self.d.qpos[self.m.jnt_qposadr[mujoco.mj_name2id(self.m, J, 'grip_r')]] = Q0[5]
         mujoco.mj_forward(self.m, self.d)
         self.t_us = 0
-        self.seat = subprocess.Popen([BIN, 'motor', 'seat'] + (['--stop-go'] if style == 'stop-go' else []),
+        self.teleop = teleop
+        self.seat = None if teleop else subprocess.Popen([BIN, 'motor', 'seat'] + (['--stop-go'] if style == 'stop-go' else []),
                                      stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1)
         self.mind = None
         self.mind_q = queue.Queue()
@@ -123,6 +169,7 @@ class ArmSim:
         self.last = dict(tool_n=0.0, grip_n=0.0, slip=0.0)
         self.drive = None
         self.push = None         # (body id, force xyz, until_us): an outside shove
+        self.probe = None        # called every tick with the sim: a task's own bookkeeping
         self.record = record
         self.log = []            # per tick, when recording
         self.touched = set()     # (geom name) pairs touched by anything held
@@ -180,14 +227,22 @@ class ArmSim:
             mine2 = self.arm_geom[g2] or b2 == self.held
             if mine1 != mine2:
                 tool_n += fn
-                if self.held >= 0 and (b1 == self.held or b2 == self.held):
-                    other = g2 if b1 == self.held else g1
-                    self.touched.add(mujoco.mj_id2name(m, G, other))
+                for a, b in ((g1, g2), (g2, g1)):
+                    if m.geom_bodyid[a] == self.held and self.head_geom[a]:
+                        self.touched.add(mujoco.mj_id2name(m, G, b))
             elif self.held >= 0 and ((self.finger_of[g1] and b2 == self.held) or (self.finger_of[g2] and b1 == self.held)):
                 v = self._point_vel(b1, p) - self._point_vel(b2, p)
                 v -= (v @ n) * n
                 slip = max(slip, float(np.linalg.norm(v)))
+        # a shove from outside is something touching the arm, and is felt
+        # as such (a real arm feels it as torque its own motion does not
+        # explain)
+        if self.push and self.t_us < self.push[2] and (
+                self.push[0] in self.arm_bodies or self.push[0] == self.held):
+            tool_n += float(np.linalg.norm(self.push[1]))
         self.last = dict(tool_n=tool_n, grip_n=grip_n, slip=slip)
+        if self.probe:
+            self.probe(self)
         self.peak_tool_n = max(self.peak_tool_n, tool_n)
         q = [math.degrees(d.qpos[a]) for a in self.qadr[:5]] + [d.qpos[self.qadr[5]]]
         dq = [math.degrees(d.qvel[a]) for a in self.vadr[:5]] + [d.qvel[self.vadr[5]]]
@@ -281,6 +336,23 @@ class ArmSim:
                              int(self.drive['slip']), int(self.drive['yielded']), int(self.drive['wait']),
                              self.drive['squeeze']))
         return self.drive
+
+    def step_teleop(self, q_des, squeeze=8.0):
+        """One millisecond with the joints driven straight from here: a
+        plain PD loop to `q_des` with the simulator's own gravity term.
+        No seat, no gate, no primitives. Used only to make a
+        demonstration and to run the behaviour-cloning baseline."""
+        q, dq, tool_n, grip_n, slip = self.sense()
+        for i in range(5):
+            dof = self.vadr[i]
+            u = (TELEOP_KP[i] * math.radians(q_des[i] - q[i]) - TELEOP_KD[i] * math.radians(dq[i])
+                 + self.d.qfrc_bias[dof])
+            self.d.ctrl[i] = max(-2.9, min(2.9, u))
+        f = 2500.0 * (q_des[5] - q[5]) - 25.0 * dq[5]
+        self.d.ctrl[5] = max(-squeeze, min(squeeze, f))
+        mujoco.mj_step(self.m, self.d)
+        self.t_us += 1000
+        return q, tool_n, grip_n
 
     def run(self, ms):
         for _ in range(ms):

@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  The seat for a simulated desk arm: an entity with the arm acquired as a part, the gate asked once per primitive, the grant turned into a run mandate, and the arm's loop ticked from sensor lines on stdin
 //! BFS  DEFINES  Seat, ending, run
 //! BFS  USES     brainos: abi, body, bodyd, crypto, entity, kira, motor, part | external: std
-//! BFS  USED BY  host/motor, host/tests/motor_mandate
+//! BFS  USED BY  host/motor, host/tests/motor_mandate, host/tests/motor_standing
 //!
 //! The seat and the body for a simulated desk arm, in one process.
 //!
@@ -62,7 +62,13 @@ impl Seat {
         let mut e = Entity::new(BrainKey::from_seed(&[0x4D; 32]), Tick(0));
         e.wake(None, None, Tick(1)).map_err(|_| "the entity did not wake".to_string())?;
         let part_key = BrainKey::from_seed(&[0xA7; 32]);
-        let lib = desk_arm_library();
+        // the primitives are memory: written into the graph, and read
+        // back out of it for use. The body is handed copies.
+        for p in &desk_arm_library() {
+            e.learn_primitive(p)
+                .ok_or_else(|| format!("{} does not fit in memory", p.verb.as_str()))?;
+        }
+        let lib = e.primitives_for("desk_arm");
         // the arm's id is not known until it is acquired; the schema
         // does not depend on it
         let probe = DeskArm {
@@ -90,7 +96,9 @@ impl Seat {
         Ok(seat)
     }
 
-    fn feel(&mut self, now: Instant, load: f32, tool_n: f32) {
+    /// What the arm's own senses say, passed up to the entity. The
+    /// entity's interoceptor, not this code, decides what is kept.
+    pub fn feel(&mut self, now: Instant, load: f32, tool_n: f32) -> usize {
         self.e.feel(
             &self.arm,
             &[
@@ -98,7 +106,7 @@ impl Seat {
                 Sensed::new("tool.force", tool_n as f64),
             ],
             now,
-        );
+        )
     }
 
     /// Put a request to the gate and, if it is granted, turn the grant
@@ -160,7 +168,12 @@ impl Seat {
     }
 
     pub fn tick(&mut self, now: Instant, s: &Sense) -> (Drive, Option<Event>) {
-        let (drive, event) = self.body.tick(now, s);
+        let (drive, events) = self.tick_all(now, s);
+        (drive, events[1].or(events[0]))
+    }
+
+    pub fn tick_all(&mut self, now: Instant, s: &Sense) -> (Drive, [Option<Event>; 2]) {
+        let (drive, event) = self.body.tick_all(now, s);
         let load = (0..5)
             .map(|i| drive.effort[i].abs() / self.body.arm.config.torque_nm)
             .fold(0.0f32, f32::max);
@@ -178,7 +191,12 @@ impl Seat {
 pub fn ending(s: &Summary) -> String {
     let how = match s.ending {
         Ending::Finished => "finished".to_string(),
-        Ending::Breached(b) => format!("breach:{}", b.name()),
+        Ending::Breached(b) => match b {
+            brainos_motor::run::Breach::Angle { joint }
+            | brainos_motor::run::Breach::Rate { joint }
+            | brainos_motor::run::Breach::Effort { joint } => format!("breach:{}:j{joint}", b.name()),
+            _ => format!("breach:{}", b.name()),
+        },
     };
     format!(
         "{how} applied={} peak={:.3} ms={}",
@@ -210,6 +228,8 @@ pub fn run(rest: &[String]) -> ExitCode {
     // ids of the runs in order: the one running, then the one queued
     let mut ids: std::collections::VecDeque<String> = std::collections::VecDeque::new();
     let mut hold_id: Option<String> = None;
+    let mut candidates: std::collections::HashMap<String, brainos_motor::recipe::Recipe> =
+        std::collections::HashMap::new();
     for line in stdin.lock().lines() {
         let Ok(line) = line else { break };
         let mut f = line.split_whitespace();
@@ -230,7 +250,8 @@ pub fn run(rest: &[String]) -> ExitCode {
                 s.slip_mps = v[15];
                 q = s.q;
                 sensed = true;
-                let (d, event) = seat.tick(now, &s);
+                let (d, events) = seat.tick_all(now, &s);
+                for event in events {
                 match event {
                     Some(Event::Ended(sum)) => {
                         let id = ids.pop_front().unwrap_or_default();
@@ -262,6 +283,7 @@ pub fn run(rest: &[String]) -> ExitCode {
                         let _ = writeln!(out, "up {id} ended {}", ending(&sum));
                     }
                     Some(Event::Joined) | None => {}
+                }
                 }
                 let e = d.effort;
                 let _ = writeln!(
@@ -298,6 +320,39 @@ pub fn run(rest: &[String]) -> ExitCode {
                         let _ = writeln!(out, "up {id} {why}");
                     }
                 }
+                let _ = out.flush();
+            }
+            // `recipe NAME PATH` then `judge NAME pass|fail DETAIL...`:
+            // the recipe is believed only if its trial passed
+            Some("recipe") => {
+                if let (Some(name), Some(path)) = (f.next(), f.next()) {
+                    if let Some(r) = std::fs::read_to_string(path)
+                        .ok()
+                        .and_then(|t| brainos_motor::recipe::Recipe::from_text(&t))
+                    {
+                        candidates.insert(name.to_string(), r);
+                    }
+                }
+            }
+            Some("judge") => {
+                let (Some(name), Some(verdict)) = (f.next(), f.next()) else { continue };
+                let detail: Vec<&str> = f.collect();
+                let bound = candidates.get(name).and_then(|r| {
+                    seat.e.consider_recipe(
+                        name,
+                        r,
+                        &brainos_entity::entity::Trial {
+                            passed: verdict == "pass",
+                            detail: detail.join(" "),
+                        },
+                    )
+                });
+                let _ = writeln!(
+                    out,
+                    "up belief {name} {} believed={}",
+                    if bound.is_some() { "bound" } else { "not-bound" },
+                    seat.e.believed_recipe(name).is_some()
+                );
                 let _ = out.flush();
             }
             Some("style") => {

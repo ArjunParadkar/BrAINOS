@@ -1,6 +1,6 @@
 //! BFS  LEVEL    Host - the only crate with an operating system (CLI, scenarios, OS nerves)  [crate brainos-host]
 //! BFS  PURPOSE  Crate root of the only crate with an operating system: lists the scenario modules the brainos binary runs
-//! BFS  DEFINES  clock, ros2_stack, store, worlds_run, bench, compound, day, degrade, demo, fleet_experiment, fullstack, incident, +11 more
+//! BFS  DEFINES  clock, ros2_stack, store, worlds_run, bench, compound, day, degrade, demo, fleet_experiment, fullstack, incident, +12 more
 //! BFS  USES     this crate: clock, store
 //! BFS  USED BY  -
 //!
@@ -36,6 +36,7 @@ pub mod limits;
 pub mod migrate;
 pub mod model;
 pub mod motor;
+pub mod motor_gait;
 pub mod motor_mind;
 pub mod motor_seat;
 pub mod nerves;

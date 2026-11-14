@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  One-shot learning: cuts a single demonstration into primitives at changes of grip and contact, expresses each step's lengths relative to the object it acts on, and checks the steps chain
 //! BFS  DEFINES  Place, Sample, Bind, Step, Recipe, LearnError, learn
 //! BFS  USES     this crate: condition, primitive
-//! BFS  USED BY  host/motor_mind, motor/tests/recipe
+//! BFS  USED BY  entity/entity/motor, entity/tests/motor_memory, host/motor, host/motor_mind, host/motor_seat, motor/tests/recipe
 //!
 //! One demonstration, one recipe.
 //!
@@ -230,6 +230,8 @@ pub fn learn(samples: &[Sample], library: &[MotorPrimitive]) -> Result<Recipe, L
     events.sort_by_key(|e| e.0);
 
     let mut touch_from: Option<usize> = None;
+    // the furthest out and the deepest the wipe in progress has reached
+    let mut wiped: Option<(f32, f32)> = None;
     for (i, what, on) in events {
         let s = &samples[i];
         match (what, on) {
@@ -239,7 +241,8 @@ pub fn learn(samples: &[Sample], library: &[MotorPrimitive]) -> Result<Recipe, L
                     .filter(|p| dist(&p.pos, &s.tool) < NEAR_M)
                     .ok_or(LearnError::NothingNear(s.t_ms))?;
                 has(Kind::Grasp)?;
-                let width = 2.0 * s.open_m + 0.012;
+                // the gap between the fingers at the instant they first feel it
+                let width = 2.0 * s.open_m;
                 steps.push(Step {
                     kind: Kind::Grasp,
                     frame: p.name.clone(),
@@ -320,14 +323,26 @@ pub fn learn(samples: &[Sample], library: &[MotorPrimitive]) -> Result<Recipe, L
                             last_angle = Some(a);
                         }
                     }
+                    let turns = (swept / core::f32::consts::TAU / 2.0).clamp(1.0, 3.0);
                     // a wipe that directly follows a wipe of the same
-                    // place is the same wipe, interrupted
-                    if let Some(prev) = steps.last() {
+                    // place is the same wipe, interrupted: keep the
+                    // furthest it reached either time
+                    if let Some(prev) = steps.last_mut() {
                         if prev.kind == Kind::Wipe && prev.frame == p.name {
+                            let (r0, d0) = wiped.unwrap_or((0.0, 0.0));
+                            let (r1, d1) = (radius.max(r0), depth.max(d0));
+                            wiped = Some((r1, d1));
+                            for (n, b) in prev.params.iter_mut() {
+                                if n == "radius_m" {
+                                    *b = offset_from(r1, p, "radius");
+                                } else if n == "depth_m" {
+                                    *b = offset_from(d1 / crate::primitive::DEEP, p, "depth");
+                                }
+                            }
                             continue;
                         }
                     }
-                    let turns = (swept / core::f32::consts::TAU / 2.0).clamp(1.0, 3.0);
+                    wiped = Some((radius, depth));
                     steps.push(Step {
                         kind: Kind::Wipe,
                         frame: p.name.clone(),
@@ -335,7 +350,7 @@ pub fn learn(samples: &[Sample], library: &[MotorPrimitive]) -> Result<Recipe, L
                         to: String::new(),
                         params: alloc::vec![
                             ("radius_m".to_string(), offset_from(radius, p, "radius")),
-                            ("depth_m".to_string(), offset_from(depth / 0.8, p, "depth")),
+                            ("depth_m".to_string(), offset_from(depth / crate::primitive::DEEP, p, "depth")),
                             ("turns".to_string(), Bind::Fixed(libm::roundf(turns))),
                             ("tool_m".to_string(), Bind::Fixed(tool_len)),
                             ("open_m".to_string(), Bind::Fixed(mid.open_m)),
@@ -344,8 +359,13 @@ pub fn learn(samples: &[Sample], library: &[MotorPrimitive]) -> Result<Recipe, L
                 } else {
                     // touching with an empty hand: a push, if the thing
                     // nearest the tool moved
-                    let Some(p0) = nearest(&piece[0].places, &piece[0].tool, &["side"], "") else {
-                        return Err(LearnError::Unnamed { from_ms: piece[0].t_ms, to_ms: s.t_ms });
+                    // (brushing against something with nothing pushable
+                    // nearby is not a step: the fingers leaving what
+                    // they just set down, for one)
+                    let Some(p0) = nearest(&piece[0].places, &piece[0].tool, &["side"], "")
+                        .filter(|p| dist(&p.pos, &piece[0].tool) < NEAR_M + 0.04)
+                    else {
+                        continue;
                     };
                     let p1 = s.places.iter().find(|p| p.name == p0.name).unwrap_or(p0);
                     let moved = dist(&p0.pos, &p1.pos);

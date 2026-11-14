@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Crate root for motor memory: lists the modules and states the rules they keep (KIRA below everything, no memory in a body, no_std)
 //! BFS  DEFINES  condition, control, mandate, mjcf, model, policy, primitive, recipe, reflex, run
 //! BFS  USES     this crate: mandate, mjcf, model, run
-//! BFS  USED BY  crate bodyd, crate host, crate nostd
+//! BFS  USED BY  crate bodyd, crate entity, crate host, crate nostd
 //!
 //! # brainos-motor: motor memory
 //!

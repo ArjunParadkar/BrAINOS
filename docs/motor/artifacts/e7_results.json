@@ -1,0 +1,578 @@
+{
+ "shove/alive/0": {
+  "event": "shove",
+  "killed": false,
+  "mind_gone": false,
+  "pushed_off": true,
+  "recover_ms": 36,
+  "worst_off_path": 0.026273040156216166
+ },
+ "shove/alive/1": {
+  "event": "shove",
+  "killed": false,
+  "mind_gone": false,
+  "pushed_off": true,
+  "recover_ms": 41,
+  "worst_off_path": 0.027356278764117087
+ },
+ "shove/alive/10": {
+  "event": "shove",
+  "killed": false,
+  "mind_gone": false,
+  "pushed_off": true,
+  "recover_ms": 9,
+  "worst_off_path": 0.020147571566730704
+ },
+ "shove/alive/11": {
+  "event": "shove",
+  "killed": false,
+  "mind_gone": false,
+  "pushed_off": true,
+  "recover_ms": 28,
+  "worst_off_path": 0.024316345686688737
+ },
+ "shove/alive/2": {
+  "event": "shove",
+  "killed": false,
+  "mind_gone": false,
+  "pushed_off": true,
+  "recover_ms": 31,
+  "worst_off_path": 0.024851822483245314
+ },
+ "shove/alive/3": {
+  "event": "shove",
+  "killed": false,
+  "mind_gone": false,
+  "pushed_off": true,
+  "recover_ms": 35,
+  "worst_off_path": 0.026025646200888375
+ },
+ "shove/alive/4": {
+  "event": "shove",
+  "killed": false,
+  "mind_gone": false,
+  "pushed_off": true,
+  "recover_ms": 40,
+  "worst_off_path": 0.02491114142654804
+ },
+ "shove/alive/5": {
+  "event": "shove",
+  "killed": false,
+  "mind_gone": false,
+  "pushed_off": true,
+  "recover_ms": 1,
+  "worst_off_path": 0.02053671046574289
+ },
+ "shove/alive/6": {
+  "event": "shove",
+  "killed": false,
+  "mind_gone": false,
+  "pushed_off": true,
+  "recover_ms": 38,
+  "worst_off_path": 0.02664392739643594
+ },
+ "shove/alive/7": {
+  "event": "shove",
+  "killed": false,
+  "mind_gone": false,
+  "pushed_off": false,
+  "recover_ms": 1,
+  "worst_off_path": 0.019466546318398257
+ },
+ "shove/alive/8": {
+  "event": "shove",
+  "killed": false,
+  "mind_gone": false,
+  "pushed_off": true,
+  "recover_ms": 35,
+  "worst_off_path": 0.025913055015268548
+ },
+ "shove/alive/9": {
+  "event": "shove",
+  "killed": false,
+  "mind_gone": false,
+  "pushed_off": true,
+  "recover_ms": 41,
+  "worst_off_path": 0.02735381612047516
+ },
+ "shove/killed/0": {
+  "event": "shove",
+  "killed": true,
+  "mind_gone": true,
+  "pushed_off": true,
+  "recover_ms": 36,
+  "worst_off_path": 0.026273040257393243
+ },
+ "shove/killed/1": {
+  "event": "shove",
+  "killed": true,
+  "mind_gone": true,
+  "pushed_off": true,
+  "recover_ms": 41,
+  "worst_off_path": 0.027356278764117087
+ },
+ "shove/killed/10": {
+  "event": "shove",
+  "killed": true,
+  "mind_gone": true,
+  "pushed_off": true,
+  "recover_ms": 9,
+  "worst_off_path": 0.020147571566730704
+ },
+ "shove/killed/11": {
+  "event": "shove",
+  "killed": true,
+  "mind_gone": true,
+  "pushed_off": true,
+  "recover_ms": 28,
+  "worst_off_path": 0.024316345686688737
+ },
+ "shove/killed/2": {
+  "event": "shove",
+  "killed": true,
+  "mind_gone": true,
+  "pushed_off": true,
+  "recover_ms": 31,
+  "worst_off_path": 0.024851822403964267
+ },
+ "shove/killed/3": {
+  "event": "shove",
+  "killed": true,
+  "mind_gone": true,
+  "pushed_off": true,
+  "recover_ms": 35,
+  "worst_off_path": 0.026025646200888375
+ },
+ "shove/killed/4": {
+  "event": "shove",
+  "killed": true,
+  "mind_gone": true,
+  "pushed_off": true,
+  "recover_ms": 40,
+  "worst_off_path": 0.02491114142654804
+ },
+ "shove/killed/5": {
+  "event": "shove",
+  "killed": true,
+  "mind_gone": true,
+  "pushed_off": true,
+  "recover_ms": 1,
+  "worst_off_path": 0.02053671046574289
+ },
+ "shove/killed/6": {
+  "event": "shove",
+  "killed": true,
+  "mind_gone": true,
+  "pushed_off": true,
+  "recover_ms": 38,
+  "worst_off_path": 0.02664392739643594
+ },
+ "shove/killed/7": {
+  "event": "shove",
+  "killed": true,
+  "mind_gone": true,
+  "pushed_off": false,
+  "recover_ms": 1,
+  "worst_off_path": 0.019466546318398257
+ },
+ "shove/killed/8": {
+  "event": "shove",
+  "killed": true,
+  "mind_gone": true,
+  "pushed_off": true,
+  "recover_ms": 35,
+  "worst_off_path": 0.025913055015268548
+ },
+ "shove/killed/9": {
+  "event": "shove",
+  "killed": true,
+  "mind_gone": true,
+  "pushed_off": true,
+  "recover_ms": 41,
+  "worst_off_path": 0.02735381612047516
+ },
+ "slip/alive/0": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false,
+  "squeeze_after": 9.104
+ },
+ "slip/alive/1": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false,
+  "squeeze_after": 11.108
+ },
+ "slip/alive/10": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false,
+  "squeeze_after": 11.108
+ },
+ "slip/alive/11": {
+  "event": "slip",
+  "felt": false,
+  "held_after": true,
+  "killed": false,
+  "latency_ms": null,
+  "mind_gone": false,
+  "squeeze_after": 11.108
+ },
+ "slip/alive/2": {
+  "event": "slip",
+  "felt": false,
+  "held_after": true,
+  "killed": false,
+  "latency_ms": null,
+  "mind_gone": false,
+  "squeeze_after": 9.104
+ },
+ "slip/alive/3": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false,
+  "squeeze_after": 11.108
+ },
+ "slip/alive/4": {
+  "event": "slip",
+  "felt": true,
+  "held_after": false,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false,
+  "squeeze_after": 8.0
+ },
+ "slip/alive/5": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false,
+  "squeeze_after": 9.104
+ },
+ "slip/alive/6": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false,
+  "squeeze_after": 9.104
+ },
+ "slip/alive/7": {
+  "event": "slip",
+  "felt": false,
+  "held_after": true,
+  "killed": false,
+  "latency_ms": null,
+  "mind_gone": false,
+  "squeeze_after": 11.108
+ },
+ "slip/alive/8": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false,
+  "squeeze_after": 11.108
+ },
+ "slip/alive/9": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false,
+  "squeeze_after": 11.108
+ },
+ "slip/killed/0": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true,
+  "squeeze_after": 9.104
+ },
+ "slip/killed/1": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true,
+  "squeeze_after": 11.108
+ },
+ "slip/killed/10": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true,
+  "squeeze_after": 11.108
+ },
+ "slip/killed/11": {
+  "event": "slip",
+  "felt": false,
+  "held_after": true,
+  "killed": true,
+  "latency_ms": null,
+  "mind_gone": true,
+  "squeeze_after": 11.108
+ },
+ "slip/killed/2": {
+  "event": "slip",
+  "felt": false,
+  "held_after": true,
+  "killed": true,
+  "latency_ms": null,
+  "mind_gone": true,
+  "squeeze_after": 9.104
+ },
+ "slip/killed/3": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true,
+  "squeeze_after": 11.108
+ },
+ "slip/killed/4": {
+  "event": "slip",
+  "felt": true,
+  "held_after": false,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true,
+  "squeeze_after": 8.0
+ },
+ "slip/killed/5": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true,
+  "squeeze_after": 9.104
+ },
+ "slip/killed/6": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true,
+  "squeeze_after": 9.104
+ },
+ "slip/killed/7": {
+  "event": "slip",
+  "felt": false,
+  "held_after": true,
+  "killed": true,
+  "latency_ms": null,
+  "mind_gone": true,
+  "squeeze_after": 11.108
+ },
+ "slip/killed/8": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true,
+  "squeeze_after": 11.108
+ },
+ "slip/killed/9": {
+  "event": "slip",
+  "felt": true,
+  "held_after": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true,
+  "squeeze_after": 11.108
+ },
+ "touch/alive/0": {
+  "event": "touch",
+  "felt": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false
+ },
+ "touch/alive/1": {
+  "event": "touch",
+  "felt": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false
+ },
+ "touch/alive/10": {
+  "event": "touch",
+  "felt": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false
+ },
+ "touch/alive/11": {
+  "event": "touch",
+  "felt": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false
+ },
+ "touch/alive/2": {
+  "event": "touch",
+  "felt": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false
+ },
+ "touch/alive/3": {
+  "event": "touch",
+  "felt": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false
+ },
+ "touch/alive/4": {
+  "event": "touch",
+  "felt": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false
+ },
+ "touch/alive/5": {
+  "event": "touch",
+  "felt": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false
+ },
+ "touch/alive/6": {
+  "event": "touch",
+  "felt": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false
+ },
+ "touch/alive/7": {
+  "event": "touch",
+  "felt": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false
+ },
+ "touch/alive/8": {
+  "event": "touch",
+  "felt": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false
+ },
+ "touch/alive/9": {
+  "event": "touch",
+  "felt": true,
+  "killed": false,
+  "latency_ms": 0,
+  "mind_gone": false
+ },
+ "touch/killed/0": {
+  "event": "touch",
+  "felt": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true
+ },
+ "touch/killed/1": {
+  "event": "touch",
+  "felt": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true
+ },
+ "touch/killed/10": {
+  "event": "touch",
+  "felt": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true
+ },
+ "touch/killed/11": {
+  "event": "touch",
+  "felt": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true
+ },
+ "touch/killed/2": {
+  "event": "touch",
+  "felt": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true
+ },
+ "touch/killed/3": {
+  "event": "touch",
+  "felt": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true
+ },
+ "touch/killed/4": {
+  "event": "touch",
+  "felt": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true
+ },
+ "touch/killed/5": {
+  "event": "touch",
+  "felt": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true
+ },
+ "touch/killed/6": {
+  "event": "touch",
+  "felt": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true
+ },
+ "touch/killed/7": {
+  "event": "touch",
+  "felt": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true
+ },
+ "touch/killed/8": {
+  "event": "touch",
+  "felt": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true
+ },
+ "touch/killed/9": {
+  "event": "touch",
+  "felt": true,
+  "killed": true,
+  "latency_ms": 0,
+  "mind_gone": true
+ }
+}

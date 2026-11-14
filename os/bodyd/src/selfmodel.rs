@@ -247,7 +247,7 @@ pub fn desk_arm(c: &DeskArmConfig) -> BodyModel {
         Link::new("finger_l", Some(hand))
             .at([c.palm_m, 0.004, 0.0])
             .jointed(grip)
-            .rod([c.finger_m, 0.0, 0.0], 0.004)
+            .slab(c.finger_m, 0.004, 0.008)
             .weighing(Num::Assumed(0.015))
             .touching(),
     );
@@ -258,7 +258,7 @@ pub fn desk_arm(c: &DeskArmConfig) -> BodyModel {
                 JointSpec::slide("grip_r", [0.0, -1.0, 0.0], 0.0, c.grip_max_m)
                     .mirroring(left, 1.0),
             )
-            .rod([c.finger_m, 0.0, 0.0], 0.004)
+            .slab(c.finger_m, 0.004, 0.008)
             .weighing(Num::Assumed(0.015))
             .touching(),
     );

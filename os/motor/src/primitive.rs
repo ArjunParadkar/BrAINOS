@@ -1,8 +1,8 @@
 //! BFS  LEVEL    Domain 2 Autonomic - motor memory (self-model, mandates, primitives, reflexes)  [crate brainos-motor]
 //! BFS  PURPOSE  MotorPrimitive: one learned piece of movement (grasp, place, push, wipe, turn, pour) as strokes in an object's own frame, with what it needs, what it achieves, its bounds and its success tests
-//! BFS  DEFINES  Kind, Contact, Until, Stroke, MAX_STROKES, Program, Param, SuccessTest, Policy, Envelope, MotorPrimitive, Given, +4 more
+//! BFS  DEFINES  Kind, Contact, Until, Stroke, MAX_STROKES, Program, Param, SuccessTest, Policy, Envelope, MotorPrimitive, Given, +5 more
 //! BFS  USES     this crate: condition, control | brainos: abi
-//! BFS  USED BY  bodyd/armloop, host/motor_mind, host/motor_seat, motor/control, motor/recipe, motor/tests/control, motor/tests/primitive, motor/tests/recipe
+//! BFS  USED BY  bodyd/armloop, entity/entity/motor, entity/tests/motor_memory, host/motor, host/motor_mind, host/motor_seat, motor/control, motor/recipe, +3 more
 //!
 //! Motor primitives: muscle memory.
 //!
@@ -74,6 +74,13 @@ impl Kind {
 
     pub fn from_name(s: &str) -> Option<Kind> {
         Kind::ALL.iter().copied().find(|k| k.name() == s)
+    }
+
+    /// Does it matter which way the fingers face? Not for going round
+    /// the inside of a mouth, and not for setting down what is already
+    /// in the hand: there the heading the hand already has is kept.
+    pub const fn heading_matters(self) -> bool {
+        !matches!(self, Kind::Wipe | Kind::Place)
     }
 
     /// The name of the affordance frame this kind is described in.
@@ -202,7 +209,7 @@ impl Stroke {
 }
 
 /// The most strokes one program may have.
-pub const MAX_STROKES: usize = 96;
+pub const MAX_STROKES: usize = 128;
 
 pub type Program = Vec<Stroke>;
 
@@ -441,7 +448,12 @@ impl Given<'_> {
     }
 }
 
+/// How far down a wipe's lower ring is, as a fraction of the depth.
+/// Short of the bottom, so the tool is not dragged across the floor.
+pub const DEEP: f32 = 0.7;
 const HOVER: f32 = 0.06;
+/// The clearance used when something long is in the hand.
+const LOW_HOVER: f32 = 0.03;
 
 /// The strokes for one run, in the affordance frame.
 ///
@@ -495,7 +507,7 @@ pub fn program(g: &Given) -> core::result::Result<Program, &'static str> {
             let half = g.get("width_m") * 0.5;
             let held = (half - 0.006).max(0.0);
             let tool = g.get("tool_m");
-            out.push(Stroke::to([0.0, 0.0, HOVER + tool], 900).open(held).squeeze(squeeze).touching());
+            out.push(Stroke::to([0.0, 0.0, LOW_HOVER + tool], 900).open(held).squeeze(squeeze).touching());
             out.push(
                 Stroke::to([0.0, 0.0, tool - 0.004], 900)
                     .open(held)
@@ -505,7 +517,7 @@ pub fn program(g: &Given) -> core::result::Result<Program, &'static str> {
                     .until(Until::Touch(g.get("touch_n"))),
             );
             out.push(Stroke::to([0.0, 0.0, tool], 500).open(half + 0.014).touching().resting());
-            out.push(Stroke::to([0.0, 0.0, HOVER + tool], 700).open(half + 0.014));
+            out.push(Stroke::to([0.0, 0.0, LOW_HOVER + tool], 700).open(half + 0.014));
         }
         Kind::Push => {
             let r = g.get("radius_m");
@@ -532,18 +544,24 @@ pub fn program(g: &Given) -> core::result::Result<Program, &'static str> {
             let held = g.get("open_m");
             let press = g.get("press_m");
             let grip = |s: Stroke| s.open(held).squeeze(squeeze);
-            out.push(grip(Stroke::to([0.0, 0.0, HOVER + tool], 900)).touching());
+            // arrive over the mouth and stop there before going in: a
+            // descent blended into the approach clips the rim
+            out.push(grip(Stroke::to([0.0, 0.0, HOVER + tool], 900)).touching().resting());
             out.push(grip(Stroke::to([0.0, 0.0, tool - depth * 0.5], 700)).touching().soft(0.5));
             // two levels, so the whole wall is reached, each traced as a
             // ring pressed a little past the wall
-            let ring = radius + press;
-            let per_turn = 10usize;
-            for (level, z) in [depth * 0.35, depth * 0.8].iter().enumerate() {
-                for k in 0..=(turns * per_turn) {
+            // the path between two points of the ring cuts inside it, so
+            // the points are set out by as much as a chord falls short
+            let per_turn = 16usize;
+            let ring = (radius + press) / libm::cosf(core::f32::consts::PI / per_turn as f32);
+            for (level, z) in [depth * 0.35, depth * DEEP].iter().enumerate() {
+                // a fifth of a turn over, so the ring closes on itself
+                for k in 0..=(turns * per_turn + 3) {
                     let a = (k as f32) * core::f32::consts::TAU / per_turn as f32
                         + level as f32 * 0.3;
                     let at = [ring * libm::cosf(a), ring * libm::sinf(a), tool - z];
-                    out.push(grip(Stroke::to(at, if k == 0 { 500 } else { 260 })).touching().soft(0.3));
+                    // soft enough that a light mug is not pushed across the table
+                    out.push(grip(Stroke::to(at, if k == 0 { 500 } else { 190 })).touching().soft(0.18));
                 }
             }
             out.push(grip(Stroke::to([0.0, 0.0, tool - depth * 0.5], 400)).touching().soft(0.5));
@@ -676,7 +694,7 @@ pub fn desk_arm_library() -> Vec<MotorPrimitive> {
                 Param::new("turns", 1.0, 3.0, 1.0),
                 Param::new("tool_m", 0.0, 0.14, 0.08),
                 Param::new("open_m", 0.0, 0.045, 0.004),
-                Param::new("press_m", 0.0, 0.01, 0.003),
+                Param::new("press_m", 0.0, 0.01, 0.004),
             ]),
             Effect {
                 needs: alloc::vec![f(Pred::Holding, "tool")],

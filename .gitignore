@@ -53,3 +53,7 @@ blur/schema/runs/
 blur/learn/runs/
 blur/logs/
 blur/pi/__pycache__/
+
+# Motor tooling: run outputs are regenerated, not source.
+motor/gait/runs/
+motor/runs/

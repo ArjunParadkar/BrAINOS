@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Runs a trained policy shipped as int8 weights using integer arithmetic only between input and output, so the body's result matches the training tool's bit for bit
 //! BFS  DEFINES  MAGIC, MAX_WIDTH, PolicyError, Int8Mlp
 //! BFS  USES     nothing outside core/alloc
-//! BFS  USED BY  -
+//! BFS  USED BY  motor/tests/policy_golden
 //!
 //! A learned policy, as the body runs it: int8 weights, integer sums.
 //!
@@ -11,7 +11,7 @@
 //! the inputs and the last scaling of the outputs everything is integer
 //! arithmetic, so there is exactly one right answer for a given input
 //! and blob, and a microcontroller, a laptop and the Python reference
-//! all get it. `motor/int8_ref.py` is that reference; the gate compares
+//! all get it. `motor/gait/int8_ref.py` is that reference; the gate compares
 //! the two on recorded observations.
 //!
 //! Blob, little-endian:
@@ -118,7 +118,10 @@ impl Int8Mlp {
             if rows == 0 || rows > MAX_WIDTH {
                 return Err(PolicyError::TooWide);
             }
-            if shift == 0 || shift > 40 {
+            // with at most 256 inputs of magnitude 127, weights of 127 and
+            // a 32-bit bias, a sum is below 2^32; times a positive 32-bit
+            // multiplier it is below 2^63, so the product cannot overflow
+            if shift == 0 || shift > 40 || mult <= 0 {
                 return Err(PolicyError::BadShift);
             }
             let w: Vec<i8> = c.take(rows * cols)?.iter().map(|b| *b as i8).collect();

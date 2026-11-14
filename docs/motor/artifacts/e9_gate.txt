@@ -1,0 +1,14 @@
+0 {'grasped': True, 'mind_gone': True, 'standing_ticks': 10000, 'held_ticks': 10000, 'drift_m': 1.0305445172144523e-05, 'gate_calls_after_kill': 0, 'refused': 0, 'later_asks': []}
+1 {'grasped': True, 'mind_gone': True, 'standing_ticks': 10000, 'held_ticks': 10000, 'drift_m': 9.708237205196988e-06, 'gate_calls_after_kill': 0, 'refused': 0, 'later_asks': []}
+2 {'grasped': True, 'mind_gone': True, 'standing_ticks': 10000, 'held_ticks': 10000, 'drift_m': 1.0078179853976468e-05, 'gate_calls_after_kill': 0, 'refused': 0, 'later_asks': []}
+3 {'grasped': True, 'mind_gone': True, 'standing_ticks': 10000, 'held_ticks': 10000, 'drift_m': 9.733193829272824e-06, 'gate_calls_after_kill': 0, 'refused': 0, 'later_asks': []}
+4 {'grasped': True, 'mind_gone': True, 'standing_ticks': 10000, 'held_ticks': 10000, 'drift_m': 9.649864953468187e-06, 'gate_calls_after_kill': 0, 'refused': 0, 'later_asks': []}
+5 {'grasped': True, 'mind_gone': True, 'standing_ticks': 10000, 'held_ticks': 10000, 'drift_m': 9.663266212732543e-06, 'gate_calls_after_kill': 0, 'refused': 0, 'later_asks': []}
+6 {'grasped': True, 'mind_gone': True, 'standing_ticks': 10000, 'held_ticks': 10000, 'drift_m': 9.944663756964416e-06, 'gate_calls_after_kill': 0, 'refused': 0, 'later_asks': []}
+7 {'grasped': True, 'mind_gone': True, 'standing_ticks': 10000, 'held_ticks': 10000, 'drift_m': 1.025695988437143e-05, 'gate_calls_after_kill': 0, 'refused': 0, 'later_asks': []}
+8 {'grasped': True, 'mind_gone': True, 'standing_ticks': 10000, 'held_ticks': 10000, 'drift_m': 9.677117699507994e-06, 'gate_calls_after_kill': 0, 'refused': 0, 'later_asks': []}
+9 {'grasped': True, 'mind_gone': True, 'standing_ticks': 10000, 'held_ticks': 10000, 'drift_m': 1.0277313956181797e-05, 'gate_calls_after_kill': 0, 'refused': 0, 'later_asks': []}
+
+10/10: cognition killed, posture and brush held for all 10,000 ticks, drift under 5 mm, gate not asked
+worst drift 0.01 mm
+wall 13.3 s

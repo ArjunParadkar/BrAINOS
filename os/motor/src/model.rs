@@ -166,6 +166,11 @@ pub enum Shape {
     Rod { radius: f32 },
     /// a box centred on the link origin, half-sizes
     Block { half: [f32; 3] },
+    /// a flat bar from the link origin along +x to `tip`: `half_t` thick
+    /// across y, `half_w` wide across z. A finger: two of these grip
+    /// with faces, where two rods would grip along a line and let what
+    /// they hold swing
+    Slab { half_t: f32, half_w: f32 },
     /// no solid: mass properties come from `Link::inertial`
     None,
 }
@@ -232,6 +237,12 @@ impl Link {
     pub fn rod(mut self, tip: [f32; 3], radius: f32) -> Link {
         self.tip = tip;
         self.shape = Shape::Rod { radius };
+        self
+    }
+
+    pub fn slab(mut self, length: f32, half_t: f32, half_w: f32) -> Link {
+        self.tip = [length, 0.0, 0.0];
+        self.shape = Shape::Slab { half_t, half_w };
         self
     }
 

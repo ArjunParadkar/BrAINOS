@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  The desk arm's tick: plays a primitive's goals as one path, solves the joints, lets the reflex arcs answer what is felt, has the runner check the tick against the mandate, and only then computes efforts
 //! BFS  DEFINES  FREE_FINGER_N, DeskArm, Sense, Drive, Event, GAINS, ArmBody, HOLD, HOLD_MAX_MS, part_schema
 //! BFS  USES     this crate: deskarm | brainos: abi, body, motor, part, rt | external: libm
-//! BFS  USED BY  host/motor_mind, host/motor_seat, host/tests/motor_mandate
+//! BFS  USED BY  host/motor_mind, host/motor_seat, host/tests/motor_mandate, host/tests/motor_standing
 //!
 //! The desk arm's loop: one tick, a thousand times a second.
 //!
@@ -223,10 +223,23 @@ fn goal_of(tool: &Tool, twist: f32, open: f32) -> [f32; DIMS] {
 
 /// Make a list of goals fit this arm and this grant before it is
 /// played: the fingers are symmetric, so each heading is taken on the
-/// half-turn nearest the one before it; and a stroke that turns the
-/// wrist is given at least the time that turn needs at 80 % of the
-/// granted rate. Strokes are only ever made slower.
-fn fit(from: &[f32; DIMS], mut goals: Vec<Goal>, rate_dps: f32) -> Vec<Goal> {
+/// half-turn nearest the one before it; and each stroke is given at
+/// least the time its largest joint movement needs at two fifths of the
+/// granted rate (strokes overlap, and a straight line past the base
+/// asks more of the pan joint than its end points suggest). Strokes are
+/// only ever made slower. A stroke whose ends cannot be solved is left
+/// alone: the loop reports it as unreachable when it gets there.
+fn fit(config: &DeskArmConfig, from: &[f32; DIMS], mut goals: Vec<Goal>, rate_dps: f32) -> Vec<Goal> {
+    let pose = |at: &[f32; DIMS]| {
+        config.solve(
+            &Tool {
+                pos: [at[0], at[1], at[2]],
+                pitch_deg: at[4],
+                finger_yaw_deg: at[3],
+            },
+            at[6].clamp(0.0, config.grip_max_m),
+        )
+    };
     let mut prev = *from;
     for g in goals.iter_mut() {
         while g.at[3] - prev[3] > 90.0 {
@@ -235,11 +248,16 @@ fn fit(from: &[f32; DIMS], mut goals: Vec<Goal>, rate_dps: f32) -> Vec<Goal> {
         while g.at[3] - prev[3] < -90.0 {
             g.at[3] += 180.0;
         }
-        let turn = (3..6)
+        let mut turn = (3..6)
             .map(|k| libm::fabsf(g.at[k] - prev[k]))
             .fold(0.0f32, f32::max);
+        if let (Some(a), Some(b)) = (pose(&prev), pose(&g.at)) {
+            for i in 0..4 {
+                turn = turn.max(libm::fabsf(b[i] - a[i]));
+            }
+        }
         // a minimum-jerk move peaks at 1.875 times its mean rate
-        let need_ms = 1.875 * turn / (0.8 * rate_dps.max(1.0)) * 1000.0;
+        let need_ms = 1.875 * turn / (0.4 * rate_dps.max(1.0)) * 1000.0;
         if (g.ms as f32) < need_ms {
             g.ms = need_ms as u32 + 1;
         }
@@ -310,9 +328,16 @@ impl ArmBody {
             return Ok(());
         }
         let rate = mandate.bounds().rate_dps.min(self.arm.config.rate_dps);
+        // while a standing run is holding the arm, a task starts from
+        // the posture being commanded, not the one measured: the two
+        // differ by the tracking error (and, for fingers squeezing
+        // something, by the thing's width), and starting from the
+        // measured one would be a jump in what is commanded
+        let from = if self.standing.is_running() { self.last_target } else { *q };
+        let q = &from;
         self.task.begin(mandate, &self.arm, q, now)?;
         let here = goal_of(&self.arm.config.tool(q), 0.0, q[GRIP]);
-        let goals = fit(&here, goals, rate);
+        let goals = fit(&self.arm.config, &here, goals, rate);
         self.player = Some(Player::new(here, goals, self.style));
         self.last_target = *q;
         self.last_want = None;
@@ -346,16 +371,17 @@ impl ArmBody {
             },
             at[6].clamp(0.0, self.arm.config.grip_max_m),
         )?;
-        // stay on the same half-turn of the roll as the last tick, then
-        // add the twist the stroke asked for
-        let mut roll = q[ROLL];
-        while roll - self.last_target[ROLL] + at[5] > 90.0 {
+        // add the twist the stroke asked for, then take the half-turn of
+        // the roll nearest the last tick's: the fingers are the same
+        // either way round, and the wrist should not spin to prove it
+        let mut roll = q[ROLL] + at[5];
+        while roll - self.last_target[ROLL] > 90.0 {
             roll -= 180.0;
         }
-        while roll - self.last_target[ROLL] + at[5] < -90.0 {
+        while roll - self.last_target[ROLL] < -90.0 {
             roll += 180.0;
         }
-        q[ROLL] = roll + at[5];
+        q[ROLL] = roll;
         if self.arm.config.admits(&q) {
             Some(q)
         } else {
@@ -363,7 +389,7 @@ impl ArmBody {
         }
     }
 
-    fn efforts(&self, s: &Sense, target: &Pose, stiff: f32, squeeze: f32, dt_s: f32) -> Pose {
+    fn efforts(&self, s: &Sense, target: &Pose, stiff: f32, squeeze: f32, holding: bool, dt_s: f32) -> Pose {
         let ff = self.arm.holding_torque(&s.q, self.payload_kg);
         let mut out = [0.0f32; DOF];
         for i in 0..5 {
@@ -383,7 +409,15 @@ impl ArmBody {
                 self.arm.config.torque_nm,
             );
         }
-        out[GRIP] = impedance(GAINS[GRIP], 1.0, target[GRIP], 0.0, s.q[GRIP], s.dq[GRIP], 0.0, squeeze);
+        out[GRIP] = if holding {
+            // squeezing: a force, not a position. A position target a
+            // fraction of a millimetre inside the thing held gives
+            // whatever force the spring happens to make of it, which is
+            // how a grip goes slack without anything letting go
+            (-squeeze - GAINS[GRIP].kd * s.dq[GRIP]).clamp(-squeeze, squeeze)
+        } else {
+            impedance(GAINS[GRIP], 1.0, target[GRIP], 0.0, s.q[GRIP], s.dq[GRIP], 0.0, squeeze)
+        };
         out
     }
 
@@ -397,8 +431,28 @@ impl ArmBody {
         out
     }
 
-    /// One tick.
+    /// One tick. At most one thing worth reporting happens in a tick,
+    /// except where one run is joined onto another and the new one ends
+    /// at once; `tick_all` reports both.
     pub fn tick(&mut self, now: Instant, s: &Sense) -> (Drive, Option<Event>) {
+        let (drive, events) = self.tick_all(now, s);
+        (drive, events[1].or(events[0]))
+    }
+
+    /// One tick, with everything that happened in it, in order.
+    pub fn tick_all(&mut self, now: Instant, s: &Sense) -> (Drive, [Option<Event>; 2]) {
+        let before = self.last_at;
+        let (drive, first, second) = self.tick_inner(now, before, s);
+        // whenever no task is running, the posture to hold is the last
+        // one that was applied, which is also where the standing run
+        // last saw the arm: there is nothing to jump from
+        if !self.task.is_running() {
+            self.stand_at = self.last_target;
+        }
+        (drive, [first, second])
+    }
+
+    fn tick_inner(&mut self, now: Instant, before: Instant, s: &Sense) -> (Drive, Option<Event>, Option<Event>) {
         self.ticks += 1;
         let dt_ms = (now.since(self.last_at).as_micros() as f32 * 0.001).clamp(0.0, 10.0);
         self.last_at = now;
@@ -408,6 +462,9 @@ impl ArmBody {
         };
         let mut drive = Drive::default();
         let mut event = None;
+        // a run that was joined onto, reported before anything the run
+        // that replaced it does
+        let mut earlier: Option<Event> = None;
 
         if self.task.is_running() && self.player.is_some() {
             let cap = self.task.bounds().map(|b| b.force_n).unwrap_or(0.0);
@@ -442,7 +499,7 @@ impl ArmBody {
             let step_ms = if answer.hold_path { 0.0 } else { dt_ms };
             let (want, played) = match self.player.as_mut() {
                 Some(p) => p.step(step_ms, &touch),
-                None => return (drive, None),
+                None => return (drive, None, None),
             };
 
             // join a queued run onto this one at the seam
@@ -450,13 +507,16 @@ impl ArmBody {
             if at_seam && played != Played::NothingGripped {
                 if let Some((mandate, goals)) = self.queued.take() {
                     let rate = mandate.bounds().rate_dps.min(self.arm.config.rate_dps);
-                    match self.task.begin(mandate, &self.arm, &self.last_target, now) {
+                    // the new run starts from the last tick that was
+                    // applied, at the time it was applied, so that this
+                    // tick is its first step and not a step of no time
+                    match self.task.begin(mandate, &self.arm, &self.last_target, before) {
                         Ok(previous) => {
-                            let goals = fit(&want.at, goals, rate);
+                            let goals = fit(&self.arm.config, &want.at, goals, rate);
                             if let Some(p) = self.player.as_mut() {
                                 p.append(&goals);
                             }
-                            event = previous.map(Event::Ended).or(Some(Event::Joined));
+                            earlier = previous.map(Event::Ended).or(Some(Event::Joined));
                         }
                         Err(_) => {
                             self.ticks_refused += 1;
@@ -464,7 +524,7 @@ impl ArmBody {
                     }
                 }
             }
-            let joined = matches!(event, Some(Event::Ended(_)) | Some(Event::Joined));
+            let joined = earlier.is_some();
 
             match self.solve(&want.at) {
                 None => {
@@ -508,7 +568,7 @@ impl ArmBody {
                                 }
                             }
                             let stiff = want.stiff * answer.stiff_scale;
-                            drive.effort = self.efforts(s, &target, stiff, squeeze, dt_ms * 0.001);
+                            drive.effort = self.efforts(s, &target, stiff, squeeze, want.squeeze_n > 0.0, dt_ms * 0.001);
                             drive.running = true;
                             drive.goal = want.goal as u16;
                             drive.stiff = stiff;
@@ -524,13 +584,11 @@ impl ArmBody {
                                 Played::Done => {
                                     self.player = None;
                                     event = self.task.finish(now).map(Event::Ended);
-                                    self.stand_at = target;
                                 }
                                 Played::NothingGripped => {
                                     self.player = None;
                                     self.queued = None;
                                     event = self.task.finish(now).map(Event::NothingGripped);
-                                    self.stand_at = target;
                                 }
                             }
                         }
@@ -566,7 +624,7 @@ impl ArmBody {
                 &felt,
             ) {
                 Ok(()) => {
-                    drive.effort = self.efforts(s, &target, 1.0, squeeze, dt_ms * 0.001);
+                    drive.effort = self.efforts(s, &target, 1.0, squeeze, self.last_want.map(|w| w.squeeze_n > 0.0).unwrap_or(false), dt_ms * 0.001);
                     drive.standing = true;
                     drive.stiff = 1.0;
                     drive.squeeze_n = squeeze;
@@ -581,7 +639,10 @@ impl ArmBody {
         } else {
             drive.effort = self.float(s);
         }
-        (drive, event)
+        match earlier {
+            Some(e) => (drive, Some(e), event),
+            None => (drive, event, None),
+        }
     }
 }
 

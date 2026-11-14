@@ -106,6 +106,7 @@ dependencies = [
  "brainos-fleet",
  "brainos-kira",
  "brainos-memory",
+ "brainos-motor",
  "brainos-part",
  "brainos-rt",
  "brainos-worlds",

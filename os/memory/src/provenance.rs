@@ -2,7 +2,7 @@
 //! BFS  PURPOSE  Tags every memory with its source (self, body, human, internet, peer, model) so untrusted sources are capped and can be filtered out
 //! BFS  DEFINES  Origin, Provenance
 //! BFS  USES     brainos: abi
-//! BFS  USED BY  entity/entity, entity/entity/parts, host/limits, host/worlds_run, memory/belief, memory/consolidate, memory/episode, memory/graph, +9 more
+//! BFS  USED BY  entity/entity, entity/entity/motor, entity/entity/parts, host/limits, host/worlds_run, memory/belief, memory/consolidate, memory/episode, +10 more
 //!
 //! Provenance — where a memory came from, attached to the memory.
 //!
