@@ -1,0 +1,1364 @@
+{
+ "clone": {
+  "1": {
+   "loss": 0.0004852312267757952,
+   "samples": 1705,
+   "trials": {
+    "0": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "1": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "10": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "11": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "12": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "13": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "14": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "15": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "16": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "17": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "18": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "19": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "2": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "20": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "21": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "22": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "23": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "24": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "25": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "26": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "27": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "28": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "29": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "3": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "30": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "31": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "32": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "33": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "34": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "35": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "36": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "37": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "38": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "39": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "4": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "40": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "41": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "42": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "43": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "44": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "45": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "46": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "47": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "48": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "49": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "5": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "6": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "7": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "8": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "9": {
+     "covered": 0.0,
+     "ok": false
+    }
+   }
+  },
+  "10": {
+   "loss": 0.0009025696199387312,
+   "samples": 17050,
+   "trials": {
+    "0": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "1": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "10": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "11": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "12": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "13": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "14": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "15": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "16": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "17": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "18": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "19": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "2": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "20": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "21": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "22": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "23": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "24": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "25": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "26": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "27": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "28": {
+     "covered": 0.09375,
+     "ok": false
+    },
+    "29": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "3": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "30": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "31": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "32": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "33": {
+     "covered": 0.09375,
+     "ok": false
+    },
+    "34": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "35": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "36": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "37": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "38": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "39": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "4": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "40": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "41": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "42": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "43": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "44": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "45": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "46": {
+     "covered": 0.09375,
+     "ok": false
+    },
+    "47": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "48": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "49": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "5": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "6": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "7": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "8": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "9": {
+     "covered": 0.0625,
+     "ok": false
+    }
+   }
+  },
+  "2": {
+   "loss": 0.0005136399995535612,
+   "samples": 3410,
+   "trials": {
+    "0": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "1": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "10": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "11": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "12": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "13": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "14": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "15": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "16": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "17": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "18": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "19": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "2": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "20": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "21": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "22": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "23": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "24": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "25": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "26": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "27": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "28": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "29": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "3": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "30": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "31": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "32": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "33": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "34": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "35": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "36": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "37": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "38": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "39": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "4": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "40": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "41": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "42": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "43": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "44": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "45": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "46": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "47": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "48": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "49": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "5": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "6": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "7": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "8": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "9": {
+     "covered": 0.0,
+     "ok": false
+    }
+   }
+  },
+  "20": {
+   "loss": 0.0008124741725623608,
+   "samples": 34100,
+   "trials": {
+    "0": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "1": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "10": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "11": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "12": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "13": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "14": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "15": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "16": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "17": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "18": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "19": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "2": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "20": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "21": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "22": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "23": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "24": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "25": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "26": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "27": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "28": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "29": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "3": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "30": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "31": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "32": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "33": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "34": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "35": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "36": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "37": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "38": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "39": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "4": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "40": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "41": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "42": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "43": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "44": {
+     "covered": 0.09375,
+     "ok": false
+    },
+    "45": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "46": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "47": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "48": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "49": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "5": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "6": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "7": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "8": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "9": {
+     "covered": 0.03125,
+     "ok": false
+    }
+   }
+  },
+  "5": {
+   "loss": 0.0009595377487130463,
+   "samples": 8525,
+   "trials": {
+    "0": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "1": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "10": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "11": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "12": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "13": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "14": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "15": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "16": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "17": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "18": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "19": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "2": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "20": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "21": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "22": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "23": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "24": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "25": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "26": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "27": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "28": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "29": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "3": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "30": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "31": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "32": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "33": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "34": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "35": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "36": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "37": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "38": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "39": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "4": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "40": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "41": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "42": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "43": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "44": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "45": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "46": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "47": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "48": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "49": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "5": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "6": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "7": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "8": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "9": {
+     "covered": 0.0,
+     "ok": false
+    }
+   }
+  },
+  "50": {
+   "loss": 0.0010219960240647197,
+   "samples": 85250,
+   "trials": {
+    "0": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "1": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "10": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "11": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "12": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "13": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "14": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "15": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "16": {
+     "covered": 0.0625,
+     "ok": false
+    },
+    "17": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "18": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "19": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "2": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "20": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "21": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "22": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "23": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "24": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "25": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "26": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "27": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "28": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "29": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "3": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "30": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "31": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "32": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "33": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "34": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "35": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "36": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "37": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "38": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "39": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "4": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "40": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "41": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "42": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "43": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "44": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "45": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "46": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "47": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "48": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "49": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "5": {
+     "covered": 0.03125,
+     "ok": false
+    },
+    "6": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "7": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "8": {
+     "covered": 0.0,
+     "ok": false
+    },
+    "9": {
+     "covered": 0.0,
+     "ok": false
+    }
+   }
+  }
+ },
+ "demos": {
+  "0": true,
+  "1": true,
+  "10": true,
+  "11": true,
+  "12": true,
+  "13": true,
+  "14": true,
+  "15": true,
+  "16": true,
+  "17": true,
+  "18": true,
+  "19": true,
+  "2": true,
+  "20": true,
+  "21": true,
+  "22": true,
+  "23": true,
+  "24": true,
+  "25": true,
+  "26": true,
+  "27": true,
+  "28": true,
+  "29": true,
+  "3": true,
+  "30": false,
+  "31": true,
+  "32": true,
+  "33": true,
+  "34": true,
+  "35": true,
+  "36": true,
+  "37": true,
+  "38": true,
+  "39": true,
+  "4": true,
+  "40": true,
+  "41": true,
+  "42": true,
+  "43": true,
+  "44": false,
+  "45": true,
+  "46": true,
+  "47": true,
+  "48": true,
+  "49": true,
+  "5": true,
+  "50": true,
+  "51": true,
+  "52": true,
+  "53": true,
+  "54": true,
+  "55": true,
+  "56": true,
+  "57": true,
+  "6": true,
+  "7": true,
+  "8": true,
+  "9": true
+ },
+ "library": {
+  "0": {
+   "have": [],
+   "learned": false,
+   "why": "nothing was learned: NotInLibrary(Grasp)"
+  },
+  "1": {
+   "have": [
+    "grasp"
+   ],
+   "learned": false,
+   "why": "nothing was learned: NotInLibrary(Wipe)"
+  },
+  "2": {
+   "have": [
+    "grasp",
+    "place"
+   ],
+   "learned": false,
+   "why": "nothing was learned: NotInLibrary(Wipe)"
+  },
+  "3": {
+   "have": [
+    "grasp",
+    "place",
+    "wipe"
+   ],
+   "learned": true,
+   "why": "1706 samples, 3 steps:"
+  },
+  "4": {
+   "have": [
+    "grasp",
+    "place",
+    "wipe",
+    "push"
+   ],
+   "learned": true,
+   "why": "1706 samples, 3 steps:"
+  },
+  "5": {
+   "have": [
+    "grasp",
+    "place",
+    "wipe",
+    "push",
+    "turn"
+   ],
+   "learned": true,
+   "why": "1706 samples, 3 steps:"
+  },
+  "6": {
+   "have": [
+    "grasp",
+    "place",
+    "wipe",
+    "push",
+    "turn",
+    "pour"
+   ],
+   "learned": true,
+   "why": "1706 samples, 3 steps:"
+  }
+ }
+}

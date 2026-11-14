@@ -605,7 +605,9 @@ by content hash for cluster campaigns and a comment edit would change the hash.
 | `motor/gait/train.py` | Motor - gait training from the self-model (PPO, int8 export, evaluation) | Gate E2 training: PPO on the generated hexapod, from the self-model alone | git_commit, main |
 | `motor/sim/arm_sim.py` | Motor - the simulated desk arm (physics only; the seat and the arm's loop are Rust) | Physics for the simulated desk arm, and the wire to the Rust seat | arm_xml, block, puck, pad, brush, mug, solve, ArmSim, +1 more |
 | `motor/sim/bc.py` | Motor - the simulated desk arm (physics only; the seat and the arm's loop are Rust) | The baseline: behaviour cloning from demonstrations | read_demo, observe, dataset, train, rollout |
+| `motor/sim/e3_gate.py` | Motor - the simulated desk arm (physics only; the seat and the arm's loop are Rust) | Gate E3: each primitive on its own, over randomised objects | polar, knob, make, trial, main |
 | `motor/sim/e4_gate.py` | Motor - the simulated desk arm (physics only; the seat and the arm's loop are Rust) | Gate E4: one demonstration, novel mugs | load, save, clean, main |
+| `motor/sim/e5_gate.py` | Motor - the simulated desk arm (physics only; the seat and the arm's loop are Rust) | Gate E5, reduced: demonstrations needed against library size, on ONE task | load, kept, main |
 | `motor/sim/e6_gate.py` | Motor - the simulated desk arm (physics only; the seat and the arm's loop are Rust) | Gate E6: fluidity. The same task, body and recipe, two ways of moving | metrics, main |
 | `motor/sim/e7_gate.py` | Motor - the simulated desk arm (physics only; the seat and the arm's loop are Rust) | Gate E7: reflex arcs, with cognition alive and with cognition killed | reference_path, off_path, trial, main |
 | `motor/sim/e9_gate.py` | Motor - the simulated desk arm (physics only; the seat and the arm's loop are Rust) | Gate E9, the standing half: posture held under a standing grant | trial |

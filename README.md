@@ -57,7 +57,8 @@
 > Stage 5 brain placement, seven property domains, Stage 7 fleet and
 > marketplace, entity export, and a body-side runtime that links
 > `miniblur/core` so the new stack and the firmware agree about the hexapod by
-> construction. 957 tests on 2026-11-12. It builds for both UEFI targets,
+> construction. 957 tests on 2026-11-12 on `nerves-x86-bpu`; 1035 on the
+> `motor` branch on 2026-11-13. It builds for both UEFI targets,
 > x86_64 and aarch64.
 >
 > ```sh
@@ -72,6 +73,14 @@
 > nerves are verified on live hardware; there is a seam and a bit-exact
 > mock for the BPU. What is verified, what is only built and the runbook
 > for everything that needs hands: **[`docs/NERVES.md`](docs/NERVES.md)**.
+>
+> **Motor memory (branch `motor`, November 2026, simulation only).** A
+> body's model of itself, bounded run mandates checked on every tick,
+> six motor primitives, reflex arcs and one-shot recipes. In simulation
+> a desk arm shown one demonstration of wiping a mug succeeds on 99 of
+> 100 mugs it has not seen. Four of nine gates are failing on at least
+> one pre-registered row, one could not be run, and nothing has moved a
+> real motor: **[`docs/motor/MOTOR.md`](docs/motor/MOTOR.md)**.
 >
 > **Reading the code.** Every Rust file opens with the same five lines:
 > its level in the architecture, its purpose, what it defines, what it

@@ -1,0 +1,7 @@
+
+grasp  100/100  100.0 %   threshold 90 %   PASS
+place  100/100  100.0 %   threshold 90 %   PASS
+push    82/100   82.0 %   threshold 85 %   below
+wipe    99/100   99.0 %   threshold 85 %   PASS
+turn    82/100   82.0 %   threshold 85 %   below
+pour   not run

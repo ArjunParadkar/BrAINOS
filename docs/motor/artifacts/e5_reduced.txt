@@ -1,0 +1,17 @@
+behaviour cloning of the whole task, by number of demonstrations:
+   1 demonstrations:   0 % of 50 trials, mean covered 0.00
+   2 demonstrations:   0 % of 50 trials, mean covered 0.00
+   5 demonstrations:   0 % of 50 trials, mean covered 0.00
+  10 demonstrations:   0 % of 50 trials, mean covered 0.03
+  20 demonstrations:   0 % of 50 trials, mean covered 0.03
+  50 demonstrations:   0 % of 50 trials, mean covered 0.01
+
+library size -> demonstrations needed to reach 80 % on the mug task
+  0  (none)                                     not reached with up to 50 (cloning; best 0 %)
+  1  grasp                                      not reached with up to 50 (cloning; best 0 %)
+  2  grasp,place                                not reached with up to 50 (cloning; best 0 %)
+  3  grasp,place,wipe                           1   (recipe: 99 % on 100 novel mugs)
+  4  grasp,place,wipe,push                      1   (recipe: 99 % on 100 novel mugs)
+  5  grasp,place,wipe,push,turn                 1   (recipe: 99 % on 100 novel mugs)
+  6  grasp,place,wipe,push,turn,pour            1   (recipe: 99 % on 100 novel mugs)
+wall 0.0 s

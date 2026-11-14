@@ -67,9 +67,16 @@ def train(paths, epochs=1500, seed=0):
     net = torch.nn.Sequential(torch.nn.Linear(X.shape[1], 128), torch.nn.ReLU(),
                               torch.nn.Linear(128, 128), torch.nn.ReLU(), torch.nn.Linear(128, 4))
     opt = torch.optim.Adam(net.parameters(), lr=1e-3)
+    # the same number of updates whatever the number of demonstrations;
+    # above 8,192 samples each update sees a random 8,192 of them
+    batch = 8192
     for _ in range(epochs):
         opt.zero_grad()
-        loss = torch.nn.functional.mse_loss(net(x), y)
+        if len(x) > batch:
+            i = torch.randint(0, len(x), (batch,))
+            loss = torch.nn.functional.mse_loss(net(x[i]), y[i])
+        else:
+            loss = torch.nn.functional.mse_loss(net(x), y)
         loss.backward()
         opt.step()
     return net, float(loss.detach()), len(X)

@@ -289,6 +289,9 @@ pub fn run(rest: &[String]) -> ExitCode {
         } else {
             out_standing.len() < 2 && places.contains_key(&step.frame)
         };
+        // a push needs to have seen where the thing is to go as well
+        let ready = ready
+            && (step.kind != Kind::Push || places.contains_key(&format!("{}.rest", step.to)));
         if !ready {
             continue;
         }

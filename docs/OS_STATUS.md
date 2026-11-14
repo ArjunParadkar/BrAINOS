@@ -19,6 +19,17 @@ did touch the older trees: every Rust file in the repository now opens
 with a five-line header card (see [`CODE_MAP.md`](CODE_MAP.md)). It is a
 comment and nothing else.
 
+**Updated 2026-11-13** (branch `motor`, off `nerves-x86-bpu`). A
+twenty-first crate, `brainos-motor`, and additions to `bodyd`, `entity`
+and `host`: motor memory. It is simulation only and its own report,
+with a gate table that includes four failing gates, is
+[`motor/MOTOR.md`](motor/MOTOR.md). One thing it found concerns this
+document's subject directly: `miniblur_core::geometry::LegGeom::foot`
+keeps the shin vertical at every lift angle, which a two-servo leg
+cannot do, so the tip-over margins computed from it are for a leg that
+is not the one in the bill of materials. Nothing in `miniblur-core` was
+changed. One thing was added below `host`: `Channel::Force` in `rt`.
+
 ---
 
 ## If you read one section, read this one
@@ -106,7 +117,7 @@ cargo run --release --bin brainos -- limits   # where this breaks
 cargo run --release --bin brainos -- leave    # the freedom principle, exercised
 cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # read it back with none of our code
-cargo test --workspace --release              # 957 tests (2026-11-12)
+cargo test --workspace --release              # 957 tests (2026-11-12); 1035 on branch motor (2026-11-13)
 ```
 
 Transcripts of each are in [`artifacts/`](artifacts/).
@@ -116,7 +127,8 @@ Transcripts of each are in [`artifacts/`](artifacts/).
 ## What exists
 
 Twenty crates plus a standalone tool, about 53,000 lines of Rust under
-`src/`, 957 tests, all passing on 2026-11-12 (it was 802 on the morning
+`src/`, 957 tests, all passing on 2026-11-12 (1035 with the twenty-first
+crate on branch `motor`, 2026-11-13; it was 802 on the morning
 of 2026-11-10 and 762 when this document was first written). Every
 crate except `host` is `no_std`, forbids `unsafe`, and depends on nothing
 outside the workspace but `ed25519-dalek` and `libm`. One line names a

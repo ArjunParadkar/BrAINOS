@@ -40,7 +40,7 @@ cargo run --release --bin brainos -- export FILE   # write an entity out
 cargo run -p read-export --release -- FILE         # and read it with none of our code
 cargo run --release --bin brainos -- stat     # what this build contains
 
-cargo test --workspace --release              # 957 tests (2026-11-12)
+cargo test --workspace --release              # 957 tests (2026-11-12); 1035 on branch motor (2026-11-13)
 tools/check-no-std.sh                         # the bare-metal build: aarch64-unknown-uefi
 ```
 
@@ -57,6 +57,7 @@ minutes.
 | `rt` | pre-authorized envelopes, reflexes that can only stop, rate-monotonic scheduling with response-time analysis, three kinds of watchdog | Domain 2 |
 | `memory` | the state graph with provenance, retrieval with no model in it, the skill graph, consolidation, the segmented signed journal | Domain 5, Stage 3 |
 | `body` | §8 as a state machine; capability schemas; per-body policy | §8 |
+| `motor` | motor memory: a body's model of itself, bounded run mandates and the per-tick runner, primitives, reflex arcs, int8 policies, one-shot recipes. Simulation only: `docs/motor/MOTOR.md` | Domain 2 |
 | `kira` | the eight-stage gate, capability attenuation, the audit trail | Domain 3 |
 | `cognition` | four tiers, brain placement, the ambient loop, escalation under a budget | Domain 4, Stage 5 |
 | `worlds` | self / human / internet, ingress tainting, advocacy | §3.8 |

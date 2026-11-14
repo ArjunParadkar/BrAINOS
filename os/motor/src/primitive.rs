@@ -451,6 +451,9 @@ impl Given<'_> {
 /// How far down a wipe's lower ring is, as a fraction of the depth.
 /// Short of the bottom, so the tool is not dragged across the floor.
 pub const DEEP: f32 = 0.7;
+/// How far the desk arm's fingertips reach below its grasp centre. This
+/// library is compiled for that body class.
+const TIP_BELOW: f32 = 0.026;
 const HOVER: f32 = 0.06;
 /// The clearance used when something long is in the hand.
 const LOW_HOVER: f32 = 0.03;
@@ -522,19 +525,25 @@ pub fn program(g: &Given) -> core::result::Result<Program, &'static str> {
         Kind::Push => {
             let r = g.get("radius_m");
             let d = g.get("distance_m");
-            let low = g.get("height_m");
-            let gap = 0.012;
-            out.push(Stroke::to([-(r + 0.035), 0.0, HOVER], 900).heading(90.0));
-            out.push(Stroke::to([-(r + 0.035), 0.0, low], 600).heading(90.0).resting());
+            // `height_m` is how high the fingertips ride; the grasp centre
+            // this body steers is that much above them
+            let low = g.get("height_m") + TIP_BELOW;
+            // the fingers are closed and in line with the push, so the thing
+            // meets the flat outer face of the leading finger. Side by side,
+            // a round thing wedges itself into the seam between them
+            let gap = 0.010;
+            // arrive behind the thing and stop before coming down: a descent
+            // blended into the approach can land on it
+            out.push(Stroke::to([-(r + 0.035), 0.0, HOVER], 900).resting());
+            out.push(Stroke::to([-(r + 0.035), 0.0, low], 600).resting());
             out.push(
                 Stroke::to([d - r - gap, 0.0, low], (6000.0 * (d + 0.035)) as u32 + 400)
-                    .heading(90.0)
-                    .soft(0.6)
+                    
                     .touching()
                     .resting(),
             );
-            out.push(Stroke::to([d - r - gap - 0.03, 0.0, low], 400).heading(90.0).touching());
-            out.push(Stroke::to([d - r - gap - 0.03, 0.0, HOVER], 600).heading(90.0));
+            out.push(Stroke::to([d - r - gap - 0.03, 0.0, low], 400).touching());
+            out.push(Stroke::to([d - r - gap - 0.03, 0.0, HOVER], 600));
         }
         Kind::Wipe => {
             let radius = g.get("radius_m");
@@ -569,7 +578,10 @@ pub fn program(g: &Given) -> core::result::Result<Program, &'static str> {
         }
         Kind::Turn => {
             let half = g.get("width_m") * 0.5;
+            // seen from above, the thing turns anticlockwise for a positive
+            // angle; the wrist's roll runs the other way
             let angle = g.get("angle_deg");
+            let twist = -angle;
             let held = (half - 0.006).max(0.0);
             out.push(Stroke::to([0.0, 0.0, HOVER], 900).open(half + 0.014));
             out.push(Stroke::to([0.0, 0.0, 0.0], 700).open(half + 0.014).resting());
@@ -584,12 +596,12 @@ pub fn program(g: &Given) -> core::result::Result<Program, &'static str> {
                 Stroke::to([0.0, 0.0, 0.0], (libm::fabsf(angle) * 14.0) as u32 + 500)
                     .open(held)
                     .squeeze(squeeze)
-                    .twisted(angle)
+                    .twisted(twist)
                     .touching()
                     .resting(),
             );
-            out.push(Stroke::to([0.0, 0.0, 0.0], 400).open(half + 0.014).twisted(angle).touching().resting());
-            out.push(Stroke::to([0.0, 0.0, HOVER], 700).open(half + 0.014).twisted(angle));
+            out.push(Stroke::to([0.0, 0.0, 0.0], 400).open(half + 0.014).twisted(twist).touching().resting());
+            out.push(Stroke::to([0.0, 0.0, HOVER], 700).open(half + 0.014).twisted(twist));
         }
         Kind::Pour => {
             let held = g.get("open_m");
